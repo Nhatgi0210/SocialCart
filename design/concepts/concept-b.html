@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SocialCart — Concept B: Soft Daylight</title>
+<meta name="description" content="Light, clean, warm design concept for SocialCart unified inbox">
+<style>
+/* ============================================================
+   CONCEPT B — SOFT DAYLIGHT
+   Visual system: Light mode, warm neutrals, soft shadows, 
+   rounded shapes, subtle pastels. Inspired by modern SaaS tools
+   like Linear, Notion. Clean white backgrounds with warm grey 
+   borders and gentle elevation.
+   
+   Layout: Medium-width conversation sidebar with message 
+   preview + compact chat + slide-in customer info.
+   
+   Rationale: Most Vietnamese sellers already work with bright
+   screens (Shopee, Facebook). A light UI feels native. Warm 
+   tones reduce clinical coldness common in CRM tools.
+   
+   Interaction risks:
+   - Light backgrounds may cause fatigue for all-day use — 
+     mitigated with warm off-white (#fafaf8) not pure white.
+   - AI indicators need to stand out against light bg — using
+     strong teal and orange.
+   
+   Review notes:
+   - Handoff uses orange banner with icon — professional but clear.
+   - AI messages have a subtle teal left border.
+   - Conversation items use card-style with light shadows.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-base: #fafaf8;
+  --bg-white: #ffffff;
+  --bg-warm-grey: #f5f4f1;
+  --bg-hover: #f0eeeb;
+  --bg-active: #e8e6e1;
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b6966;
+  --text-muted: #9c9892;
+  --border-light: #e8e6e1;
+  --border-medium: #d5d3ce;
+  
+  --teal: #0d9488;
+  --teal-light: #ccfbf1;
+  --teal-bg: #f0fdfa;
+  --teal-dark: #065f53;
+  
+  --orange: #ea580c;
+  --orange-light: #ffedd5;
+  --orange-bg: #fff7ed;
+  
+  --seller-blue: #2563eb;
+  --seller-blue-light: #dbeafe;
+  --seller-blue-bg: #eff6ff;
+  
+  --facebook-blue: #1877f2;
+  --zalo-blue: #0068ff;
+  
+  --grey-neutral: #78716c;
+  --grey-light-bg: #f5f5f4;
+  
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --success: #16a34a;
+  --success-bg: #f0fdf4;
+  
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+  
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.02);
+  
+  --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font-family);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+/* ---- LAYOUT ---- */
+.app-shell {
+  display: flex;
+  height: 100vh;
+  background: var(--bg-base);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 360px;
+  min-width: 300px;
+  background: var(--bg-white);
+  border-right: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 1px 0 4px rgba(0,0,0,0.03);
+}
+
+.sidebar-header {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.sidebar-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--teal);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-header h1 .logo-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--teal), #2dd4bf);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  background: var(--bg-warm-grey);
+  border-radius: var(--radius-full);
+  padding: 3px;
+  gap: 2px;
+}
+
+.filter-btn {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-family: var(--font-family);
+  font-weight: 500;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.filter-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+.filter-btn.active {
+  background: var(--bg-white);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+}
+
+/* Conversation list */
+.conversation-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.conversation-list::-webkit-scrollbar { width: 6px; }
+.conversation-list::-webkit-scrollbar-track { background: transparent; }
+.conversation-list::-webkit-scrollbar-thumb { background: var(--border-medium); border-radius: 3px; }
+
+.conversation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+  background: var(--bg-white);
+}
+
+.conversation-item:hover {
+  background: var(--bg-warm-grey);
+  box-shadow: var(--shadow-card);
+}
+
+.conversation-item.active {
+  background: var(--teal-bg);
+  border-color: var(--teal);
+  box-shadow: 0 0 0 1px var(--teal), var(--shadow-sm);
+}
+
+.conversation-item.unread { border-left: 3px solid var(--teal); }
+
+.conv-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.conv-avatar-img {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--seller-blue);
+}
+
+.platform-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  border: 2px solid var(--bg-white);
+  color: white;
+  font-weight: 700;
+}
+
+.platform-badge.facebook { background: var(--facebook-blue); }
+.platform-badge.zalo { background: var(--zalo-blue); }
+
+.conv-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.conv-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3px;
+}
+
+.conv-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.conversation-item.unread .conv-name { font-weight: 700; }
+
+.conv-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.conv-preview {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 8px;
+}
+
+.conv-preview .ai-tag {
+  color: var(--teal);
+  font-weight: 600;
+  font-size: 11px;
+  background: var(--teal-light);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  margin-right: 4px;
+}
+
+.conv-bottom-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ai-status-badge.ai-active {
+  background: var(--teal-light);
+  color: var(--teal-dark);
+}
+
+.ai-status-badge.need-seller {
+  background: var(--orange-light);
+  color: var(--orange);
+  animation: gentlePulse 2.5s infinite;
+}
+
+.ai-status-badge.seller-handling {
+  background: var(--grey-light-bg);
+  color: var(--grey-neutral);
+}
+
+.processing-status {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg-warm-grey);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--teal);
+  flex-shrink: 0;
+}
+
+/* ---- CHAT AREA ---- */
+.chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg-base);
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-white);
+}
+
+.chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chat-header-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--seller-blue);
+}
+
+.chat-header-info h2 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.chat-header-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary {
+  background: var(--teal);
+  color: white;
+}
+.btn-primary:hover { background: var(--teal-dark); }
+
+.btn-ghost {
+  background: var(--bg-warm-grey);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+}
+.btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.btn-ai-off {
+  background: var(--orange-bg);
+  color: var(--orange);
+  border: 1px solid #fed7aa;
+}
+.btn-ai-off:hover { background: var(--orange-light); }
+
+.btn-ai-on {
+  background: var(--teal-bg);
+  color: var(--teal);
+  border: 1px solid #99f6e4;
+}
+.btn-ai-on:hover { background: var(--teal-light); }
+
+.btn-order {
+  background: var(--seller-blue);
+  color: white;
+}
+.btn-order:hover { background: #1d4ed8; }
+
+/* Messages */
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg-base);
+}
+
+.message {
+  display: flex;
+  gap: 8px;
+  max-width: 65%;
+  animation: fadeIn 0.25s ease;
+}
+
+.message.customer { align-self: flex-start; }
+.message.ai { align-self: flex-start; }
+.message.seller { align-self: flex-end; flex-direction: row-reverse; }
+.message.system { align-self: center; max-width: 100%; }
+
+.message-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  font-weight: 600;
+}
+
+.message.customer .message-avatar { background: var(--bg-warm-grey); color: var(--text-secondary); }
+.message.ai .message-avatar { background: var(--teal-light); color: var(--teal); }
+
+.message-bubble {
+  padding: 10px 16px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.message.customer .message-bubble {
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-bottom-left-radius: 4px;
+  box-shadow: var(--shadow-sm);
+}
+
+.message.ai .message-bubble {
+  background: var(--teal-bg);
+  border-left: 3px solid var(--teal);
+  border-bottom-left-radius: 4px;
+}
+
+.message.ai .ai-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--teal);
+  margin-bottom: 4px;
+  background: var(--teal-light);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.message.seller .message-bubble {
+  background: var(--seller-blue);
+  color: white;
+  border-bottom-right-radius: 4px;
+  box-shadow: var(--shadow-sm);
+}
+
+.message.system .message-bubble {
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+  padding: 8px 16px;
+}
+
+.message.system.handoff .message-bubble {
+  background: var(--orange-light);
+  border: 1px solid #fed7aa;
+  color: var(--orange);
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: var(--radius-md);
+  padding: 12px 20px;
+  box-shadow: var(--shadow-md);
+}
+
+.message-time {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.message.seller .message-time { text-align: right; }
+
+/* Typing indicator */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+}
+
+.typing-indicator .message-avatar {
+  background: var(--teal-light);
+  color: var(--teal);
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 18px;
+  background: var(--teal-bg);
+  border-left: 3px solid var(--teal);
+  border-radius: var(--radius-lg);
+  border-bottom-left-radius: 4px;
+}
+
+.typing-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  background: var(--teal);
+  opacity: 0.4;
+  animation: typingBounce 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+.typing-label {
+  font-size: 11px;
+  color: var(--teal);
+  font-weight: 500;
+}
+
+/* Chat input */
+.chat-input-area {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-white);
+}
+
+.chat-input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  background: var(--bg-base);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 8px 12px;
+  transition: border-color 0.2s;
+}
+
+.chat-input-wrapper:focus-within {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+.chat-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 14px;
+  resize: none;
+  outline: none;
+  min-height: 24px;
+  max-height: 120px;
+}
+
+.chat-input::placeholder { color: var(--text-muted); }
+
+.send-btn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--teal);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.send-btn:hover:not(:disabled) { background: var(--teal-dark); transform: scale(1.05); }
+.send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ---- INFO PANEL ---- */
+.info-panel {
+  width: 300px;
+  border-left: 1px solid var(--border-light);
+  background: var(--bg-white);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.info-panel-header {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--border-light);
+  text-align: center;
+  background: linear-gradient(180deg, var(--bg-base), var(--bg-white));
+}
+
+.info-avatar-large {
+  width: 68px;
+  height: 68px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--seller-blue);
+  margin: 0 auto 12px;
+  box-shadow: var(--shadow-md);
+}
+
+.info-panel-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.info-platform-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 4px 12px;
+  background: var(--bg-warm-grey);
+  border-radius: var(--radius-full);
+  margin-top: 8px;
+}
+
+.info-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.info-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.info-field {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.info-field-label { font-size: 13px; color: var(--text-secondary); }
+.info-field-value { font-size: 13px; color: var(--text-primary); font-weight: 500; }
+
+.info-order-item {
+  padding: 10px 12px;
+  background: var(--bg-warm-grey);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-bottom: 8px;
+}
+
+.info-order-item:hover { background: var(--bg-hover); }
+.info-order-id { font-weight: 600; }
+
+.info-order-status {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.info-notes {
+  width: 100%;
+  min-height: 80px;
+  background: var(--bg-warm-grey);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 13px;
+  padding: 10px;
+  resize: vertical;
+  outline: none;
+}
+
+.info-notes:focus { border-color: var(--teal); }
+
+/* ---- EMPTY STATE ---- */
+.empty-state {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  padding: 40px;
+}
+
+.empty-state.visible { display: flex; }
+
+.empty-state-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+  background: var(--teal-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.empty-state h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+.empty-state p { font-size: 14px; color: var(--text-secondary); max-width: 320px; }
+
+/* ---- ORDER MODAL ---- */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.visible { display: flex; }
+
+.modal {
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  width: 520px;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  animation: modalSlideUp 0.3s ease;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.modal-header h2 { font-size: 18px; font-weight: 700; }
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--bg-warm-grey);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+
+.modal-close:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.form-label .required { color: var(--danger); margin-left: 2px; }
+
+.form-input, .form-select, .form-textarea {
+  padding: 10px 14px;
+  background: var(--bg-base);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.08);
+}
+
+.form-input.error, .form-select.error { border-color: var(--danger); }
+
+.form-error {
+  font-size: 12px;
+  color: var(--danger);
+  display: none;
+}
+
+.form-error.visible { display: block; }
+
+.form-textarea { min-height: 60px; resize: vertical; }
+
+.product-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.product-row .form-group { flex: 1; }
+.product-row .qty-group { width: 80px; flex: none; }
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ---- LOGIN ---- */
+.login-screen {
+  display: none;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0fdfa 0%, #ecfdf5 50%, #fafaf8 100%);
+}
+
+.login-screen.visible { display: flex; }
+.app-shell.hidden { display: none; }
+
+.login-card {
+  width: 420px;
+  max-width: 90vw;
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: 48px 40px;
+  box-shadow: var(--shadow-lg);
+}
+
+.login-card h1 {
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 8px;
+  color: var(--teal);
+}
+
+.login-card .subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 15px;
+  margin-bottom: 36px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.login-form .btn-primary {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  justify-content: center;
+  margin-top: 8px;
+  border-radius: var(--radius-md);
+}
+
+/* ---- SKELETON ---- */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-warm-grey) 25%, var(--bg-hover) 50%, var(--bg-warm-grey) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 4px;
+}
+
+.skeleton-avatar { width: 44px; height: 44px; border-radius: var(--radius-full); }
+.skeleton-lines { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.skeleton-line { height: 12px; border-radius: 6px; }
+.skeleton-line.short { width: 60%; }
+
+/* ---- ANIMATIONS ---- */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gentlePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typing-dots span { animation: none; opacity: 0.6; }
+  .skeleton { animation: none; }
+  .message { animation: none; }
+  .modal { animation: none; }
+  .ai-status-badge.need-seller { animation: none; }
+}
+
+@media (max-width: 1024px) { .info-panel { display: none; } }
+
+@media (max-width: 768px) {
+  .sidebar { width: 100%; position: absolute; z-index: 10; }
+  .sidebar.hidden { display: none; }
+  .chat-area { width: 100%; }
+  .back-btn { display: inline-flex !important; }
+  .modal { width: 100%; max-width: 100vw; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+}
+
+.back-btn { display: none; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen visible" id="loginScreen">
+  <div class="login-card">
+    <h1>🛒 SocialCart</h1>
+    <p class="subtitle">Unified Inbox — Quản lý hội thoại thông minh</p>
+    <form class="login-form" id="loginForm">
+      <div class="form-group">
+        <label class="form-label" for="loginEmail">Email <span class="required">*</span></label>
+        <input class="form-input" type="email" id="loginEmail" placeholder="seller@example.com" required>
+        <span class="form-error" id="emailError">Vui lòng nhập email hợp lệ</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="loginPassword">Mật khẩu <span class="required">*</span></label>
+        <input class="form-input" type="password" id="loginPassword" placeholder="••••••••" required>
+        <span class="form-error" id="passwordError">Vui lòng nhập mật khẩu</span>
+      </div>
+      <button class="btn btn-primary" type="submit" id="loginBtn">Đăng nhập</button>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app-shell hidden" id="appShell">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h1><span class="logo-icon">🛒</span> SocialCart</h1>
+      <div class="filters">
+        <div class="filter-group" role="radiogroup" aria-label="Lọc theo nền tảng">
+          <button class="filter-btn active" data-filter="platform" data-value="all">Tất cả</button>
+          <button class="filter-btn" data-filter="platform" data-value="facebook"><span aria-hidden="true">📘</span><span class="sr-only">Facebook</span></button>
+          <button class="filter-btn" data-filter="platform" data-value="zalo"><span aria-hidden="true">💬</span><span class="sr-only">Zalo</span></button>
+        </div>
+        <div class="filter-group" role="radiogroup" aria-label="Lọc theo trạng thái">
+          <button class="filter-btn active" data-filter="status" data-value="all">Tất cả</button>
+          <button class="filter-btn" data-filter="status" data-value="new">Mới</button>
+          <button class="filter-btn" data-filter="status" data-value="processing">Đang xử lý</button>
+          <button class="filter-btn" data-filter="status" data-value="done">Đã xử lý</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="conversation-list" id="conversationList" role="listbox" aria-label="Danh sách hội thoại">
+      <div class="skeleton-row" id="skeleton1"><div class="skeleton skeleton-avatar"></div><div class="skeleton-lines"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div></div>
+      <div class="skeleton-row" id="skeleton2"><div class="skeleton skeleton-avatar"></div><div class="skeleton-lines"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div></div>
+      <div class="skeleton-row" id="skeleton3"><div class="skeleton skeleton-avatar"></div><div class="skeleton-lines"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div></div>
+    </div>
+  </div>
+
+  <div class="chat-area" id="chatArea">
+    <div class="empty-state visible" id="emptyChatState">
+      <div class="empty-state-icon">💬</div>
+      <h3>Chọn một hội thoại</h3>
+      <p>Chọn hội thoại từ danh sách bên trái để bắt đầu xem và trả lời tin nhắn.</p>
+    </div>
+
+    <div id="chatContent" style="display:none; flex-direction:column; height:100%;">
+      <div class="chat-header">
+        <div class="chat-header-left">
+          <button class="btn btn-ghost back-btn" id="backBtn" aria-label="Quay lại">←</button>
+          <div class="chat-header-avatar" id="chatAvatar">T</div>
+          <div class="chat-header-info">
+            <h2 id="chatName">Trần Thị Mai</h2>
+            <div class="chat-header-meta">
+              <span class="platform-badge facebook" style="position:static;border:none;width:14px;height:14px;font-size:8px;" aria-label="Facebook">f</span>
+              <span id="chatAiStatus" class="ai-status-badge ai-active">🤖 AI đang xử lý</span>
+            </div>
+          </div>
+        </div>
+        <div class="chat-header-actions">
+          <button class="btn btn-ai-off" id="toggleAiBtn">🚫 Tắt AI</button>
+          <button class="btn btn-order" id="createOrderBtn">📦 Tạo đơn hàng</button>
+        </div>
+      </div>
+
+      <div class="chat-messages" id="chatMessages" role="log" aria-label="Tin nhắn" aria-live="polite"></div>
+
+      <div class="chat-input-area">
+        <div class="chat-input-wrapper">
+          <textarea class="chat-input" id="messageInput" placeholder="Nhập tin nhắn..." rows="1" aria-label="Nhập tin nhắn"></textarea>
+          <button class="send-btn" id="sendBtn" disabled aria-label="Gửi tin nhắn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-panel" id="infoPanel" style="display:none;">
+    <div class="info-panel-header">
+      <div class="info-avatar-large" id="infoAvatar">T</div>
+      <h3 id="infoName">Trần Thị Mai</h3>
+      <div class="info-platform-label" id="infoPlatform">📘 Facebook Messenger</div>
+    </div>
+    <div class="info-section">
+      <div class="info-section-title">Thông tin</div>
+      <div class="info-field"><span class="info-field-label">Nền tảng</span><span class="info-field-value" id="infoPlatformValue">Facebook</span></div>
+      <div class="info-field"><span class="info-field-label">Cuộc hội thoại</span><span class="info-field-value">3 lần</span></div>
+      <div class="info-field"><span class="info-field-label">Lần cuối</span><span class="info-field-value">Hôm nay</span></div>
+    </div>
+    <div class="info-section">
+      <div class="info-section-title">Đơn hàng gần đây</div>
+      <div class="info-order-item">
+        <div class="info-order-id">#ORD-2024-001</div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px">
+          <span style="font-size:12px;color:var(--text-secondary)">Áo thun trắng × 2</span>
+          <span class="info-order-status">Đã giao</span>
+        </div>
+      </div>
+    </div>
+    <div class="info-section">
+      <div class="info-section-title">Ghi chú</div>
+      <textarea class="info-notes" placeholder="Thêm ghi chú..."></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER MODAL -->
+<div class="modal-overlay" id="orderModal" role="dialog" aria-modal="true" aria-label="Tạo đơn hàng">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>📦 Tạo đơn hàng</h2>
+      <button class="modal-close" id="closeOrderModal" aria-label="Đóng">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label" for="orderName">Tên khách hàng <span class="required">*</span></label>
+        <input class="form-input" type="text" id="orderName" maxlength="100">
+        <span class="form-error" id="orderNameError">Vui lòng nhập tên</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="orderPhone">Số điện thoại <span class="required">*</span></label>
+        <input class="form-input" type="tel" id="orderPhone" placeholder="0901234567">
+        <span class="form-error" id="orderPhoneError">Số điện thoại 10-11 số</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="orderAddress">Địa chỉ giao hàng <span class="required">*</span></label>
+        <textarea class="form-textarea" id="orderAddress" maxlength="500"></textarea>
+        <span class="form-error" id="orderAddressError">Vui lòng nhập địa chỉ</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sản phẩm <span class="required">*</span></label>
+        <div class="product-row">
+          <div class="form-group" style="gap:4px">
+            <select class="form-select" id="orderProduct">
+              <option value="">Chọn sản phẩm</option>
+              <option value="tshirt">Áo thun basic — 150,000₫</option>
+              <option value="hoodie">Áo hoodie — 350,000₫</option>
+              <option value="pants">Quần jogger — 280,000₫</option>
+              <option value="bag" disabled>Túi tote — Hết hàng</option>
+            </select>
+          </div>
+          <div class="form-group qty-group" style="gap:4px">
+            <input class="form-input" type="number" id="orderQty" min="1" value="1">
+          </div>
+        </div>
+        <span class="form-error" id="orderProductError">Chọn sản phẩm</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="orderNotes">Ghi chú</label>
+        <textarea class="form-textarea" id="orderNotes" placeholder="Không bắt buộc"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="cancelOrder">Hủy</button>
+      <button class="btn btn-primary" id="submitOrder" disabled>Tạo đơn hàng</button>
+    </div>
+  </div>
+</div>
+
+<span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);" aria-live="assertive" id="liveRegion"></span>
+
+<script>
+// Same mock data & logic as Concept A — adapted for Concept B visual system
+const conversations = [
+  {
+    id: 1, name: 'Trần Thị Mai', avatar: 'TM', platform: 'facebook',
+    aiStatus: 'ai-active', processingStatus: 'processing', unread: true,
+    lastMessage: 'Cho mình hỏi còn size L không ạ?', lastMessageIsAi: false,
+    time: '3 phút trước',
+    messages: [
+      { type: 'customer', text: 'Chào shop, cho mình hỏi về áo thun basic ạ', time: '10:30' },
+      { type: 'ai', text: 'Chào bạn! 👋 Áo thun basic hiện có các size S, M, L, XL với giá 150,000₫. Bạn muốn xem size nào ạ?', time: '10:30' },
+      { type: 'customer', text: 'Cho mình hỏi còn size L không ạ?', time: '10:33' },
+    ]
+  },
+  {
+    id: 2, name: 'Nguyễn Văn Hùng', avatar: 'NH', platform: 'zalo',
+    aiStatus: 'need-seller', processingStatus: 'processing', unread: true,
+    lastMessage: 'Tôi muốn đổi hàng, sản phẩm bị lỗi', lastMessageIsAi: false,
+    time: '15 phút trước',
+    messages: [
+      { type: 'customer', text: 'Shop ơi, đơn hàng tôi nhận bị lỗi rồi', time: '10:15' },
+      { type: 'ai', text: 'Xin lỗi bạn về sự bất tiện! Bạn có thể mô tả lỗi cụ thể để mình hỗ trợ ạ?', time: '10:15' },
+      { type: 'customer', text: 'Áo bị rách ở đường may bên hông', time: '10:18' },
+      { type: 'ai', text: 'Mình rất tiếc. Trường hợp này cần người bán hỗ trợ trực tiếp. Đang chuyển cho bạn ạ.', time: '10:18' },
+      { type: 'system', text: '🔔 AI đã chuyển hội thoại cho bạn', handoff: true, time: '10:18' },
+      { type: 'customer', text: 'Tôi muốn đổi hàng, sản phẩm bị lỗi', time: '10:20' },
+    ]
+  },
+  {
+    id: 3, name: 'Lê Hoàng Anh', avatar: 'LA', platform: 'facebook',
+    aiStatus: 'seller-handling', processingStatus: 'done', unread: false,
+    lastMessage: 'Cảm ơn shop nhiều!', lastMessageIsAi: false,
+    time: '1 giờ trước',
+    messages: [
+      { type: 'customer', text: 'Mình muốn mua 2 cái áo hoodie', time: '09:00' },
+      { type: 'seller', text: 'Chào bạn! Hoodie hiện có size M, L, XL. Bạn muốn size nào ạ?', time: '09:05' },
+      { type: 'customer', text: '1 cái M, 1 cái L nhé shop', time: '09:07' },
+      { type: 'seller', text: 'Mình đã tạo đơn cho bạn rồi ạ. Tổng 700,000₫. Xác nhận giúp mình nhé!', time: '09:10' },
+      { type: 'customer', text: 'Cảm ơn shop nhiều!', time: '09:12' },
+    ]
+  },
+  {
+    id: 4, name: 'Phạm Minh Tuấn', avatar: 'PT', platform: 'zalo',
+    aiStatus: 'ai-active', processingStatus: 'new', unread: true,
+    lastMessage: '[AI] Chào bạn! Mình có thể giúp gì ạ?', lastMessageIsAi: true,
+    time: '25 phút trước',
+    messages: [
+      { type: 'customer', text: 'Xin chào, shop còn quần jogger không?', time: '10:05' },
+      { type: 'ai', text: 'Chào bạn! Quần jogger hiện còn hàng, giá 280,000₫. Có size S đến XL. Bạn muốn đặt không ạ?', time: '10:05' },
+    ]
+  },
+  {
+    id: 5, name: 'Đỗ Thu Hà', avatar: 'DH', platform: 'facebook',
+    aiStatus: 'ai-active', processingStatus: 'processing', unread: false,
+    lastMessage: '[AI] Vâng, mình sẽ kiểm tra lại cho bạn ạ', lastMessageIsAi: true,
+    time: '45 phút trước',
+    messages: [
+      { type: 'customer', text: 'Đơn hàng #ORD-2024-005 giao đến đâu rồi shop?', time: '09:30' },
+      { type: 'ai', text: 'Để mình kiểm tra đơn hàng #ORD-2024-005 cho bạn ạ...', time: '09:30' },
+      { type: 'ai', text: 'Đơn hàng đang được vận chuyển, dự kiến giao ngày mai.', time: '09:31' },
+      { type: 'customer', text: 'Ship bằng gì vậy shop?', time: '09:40' },
+      { type: 'ai', text: 'Vâng, mình sẽ kiểm tra lại cho bạn ạ', time: '09:40' },
+    ]
+  }
+];
+
+let currentConv = null;
+let platformFilter = 'all';
+let statusFilter = 'all';
+
+const loginScreen = document.getElementById('loginScreen');
+const appShell = document.getElementById('appShell');
+const loginForm = document.getElementById('loginForm');
+const convList = document.getElementById('conversationList');
+const chatContent = document.getElementById('chatContent');
+const emptyChatState = document.getElementById('emptyChatState');
+const chatMessages = document.getElementById('chatMessages');
+const chatName = document.getElementById('chatName');
+const chatAvatar = document.getElementById('chatAvatar');
+const chatAiStatus = document.getElementById('chatAiStatus');
+const toggleAiBtn = document.getElementById('toggleAiBtn');
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+const infoPanel = document.getElementById('infoPanel');
+const orderModal = document.getElementById('orderModal');
+const liveRegion = document.getElementById('liveRegion');
+const sidebar = document.getElementById('sidebar');
+
+loginForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value;
+  const pw = document.getElementById('loginPassword').value;
+  let ok = true;
+  if (!email || !email.includes('@')) { document.getElementById('emailError').classList.add('visible'); document.getElementById('loginEmail').classList.add('error'); ok = false; }
+  else { document.getElementById('emailError').classList.remove('visible'); document.getElementById('loginEmail').classList.remove('error'); }
+  if (!pw) { document.getElementById('passwordError').classList.add('visible'); document.getElementById('loginPassword').classList.add('error'); ok = false; }
+  else { document.getElementById('passwordError').classList.remove('visible'); document.getElementById('loginPassword').classList.remove('error'); }
+  if (ok) { loginScreen.classList.remove('visible'); appShell.classList.remove('hidden'); setTimeout(() => renderConversations(), 800); }
+});
+
+function renderConversations() {
+  const filtered = conversations.filter(c => {
+    if (platformFilter !== 'all' && c.platform !== platformFilter) return false;
+    if (statusFilter !== 'all' && c.processingStatus !== statusFilter) return false;
+    return true;
+  });
+  convList.innerHTML = '';
+  if (filtered.length === 0) {
+    convList.innerHTML = `<div class="empty-state visible" style="padding:40px 20px;"><div class="empty-state-icon" style="width:60px;height:60px;font-size:24px;">🔍</div><h3 style="font-size:15px;">Không có hội thoại nào khớp bộ lọc</h3></div>`;
+    return;
+  }
+  filtered.forEach(conv => {
+    const statusLabel = { 'ai-active': { icon: '🤖', text: 'AI đang xử lý', cls: 'ai-active' }, 'need-seller': { icon: '🔔', text: 'Cần người bán', cls: 'need-seller' }, 'seller-handling': { icon: '👤', text: 'Người bán xử lý', cls: 'seller-handling' } }[conv.aiStatus];
+    const procLabel = { new: 'Mới', processing: 'Đang xử lý', done: 'Đã xử lý' }[conv.processingStatus];
+    const preview = conv.lastMessageIsAi ? `<span class="ai-tag">AI</span>${conv.lastMessage.replace('[AI] ', '')}` : conv.lastMessage;
+    const el = document.createElement('div');
+    el.className = `conversation-item ${conv.unread ? 'unread' : ''} ${currentConv?.id === conv.id ? 'active' : ''}`;
+    el.setAttribute('role', 'option');
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('aria-label', `${conv.name}, ${conv.platform}, ${statusLabel.text}`);
+    el.innerHTML = `
+      <div class="conv-avatar"><div class="conv-avatar-img">${conv.avatar}</div><div class="platform-badge ${conv.platform}" aria-label="${conv.platform==='facebook'?'Facebook':'Zalo'}">${conv.platform==='facebook'?'f':'Z'}</div></div>
+      <div class="conv-content">
+        <div class="conv-top-row"><span class="conv-name">${conv.name}</span><span class="conv-time">${conv.time}</span></div>
+        <div class="conv-preview">${preview}</div>
+        <div class="conv-bottom-row">
+          <span class="ai-status-badge ${statusLabel.cls}">${statusLabel.icon} ${statusLabel.text}</span>
+          <span class="processing-status">${procLabel}</span>
+          ${conv.unread ? '<span class="unread-dot"></span>' : ''}
+        </div>
+      </div>`;
+    el.addEventListener('click', () => openConversation(conv));
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter') openConversation(conv); });
+    convList.appendChild(el);
+  });
+}
+
+function openConversation(conv) {
+  currentConv = conv;
+  conv.unread = false;
+  emptyChatState.classList.remove('visible');
+  chatContent.style.display = 'flex';
+  infoPanel.style.display = 'flex';
+  chatName.textContent = conv.name;
+  chatAvatar.textContent = conv.avatar;
+  document.getElementById('infoAvatar').textContent = conv.avatar;
+  document.getElementById('infoName').textContent = conv.name;
+  document.getElementById('infoPlatformValue').textContent = conv.platform === 'facebook' ? 'Facebook' : 'Zalo';
+  updateAiStatusUI(conv);
+  renderMessages(conv);
+  renderConversations();
+  if (window.innerWidth <= 768) sidebar.classList.add('hidden');
+}
+
+function updateAiStatusUI(conv) {
+  const m = { 'ai-active': { icon: '🤖', text: 'AI đang xử lý', cls: 'ai-active' }, 'need-seller': { icon: '🔔', text: 'Cần người bán', cls: 'need-seller' }, 'seller-handling': { icon: '👤', text: 'Người bán xử lý', cls: 'seller-handling' } };
+  const s = m[conv.aiStatus];
+  chatAiStatus.className = `ai-status-badge ${s.cls}`;
+  chatAiStatus.textContent = `${s.icon} ${s.text}`;
+  if (conv.aiStatus === 'ai-active') { toggleAiBtn.textContent = '🚫 Tắt AI'; toggleAiBtn.className = 'btn btn-ai-off'; }
+  else { toggleAiBtn.textContent = '🤖 Bật lại AI'; toggleAiBtn.className = 'btn btn-ai-on'; }
+}
+
+toggleAiBtn.addEventListener('click', () => {
+  if (!currentConv) return;
+  if (currentConv.aiStatus === 'ai-active') { currentConv.aiStatus = 'seller-handling'; announce('AI đã tắt.'); }
+  else { currentConv.aiStatus = 'ai-active'; announce('AI đã bật lại.'); }
+  updateAiStatusUI(currentConv);
+  renderConversations();
+});
+
+function renderMessages(conv) {
+  chatMessages.innerHTML = '';
+  conv.messages.forEach(msg => {
+    const el = document.createElement('div');
+    if (msg.type === 'system') {
+      el.className = `message system ${msg.handoff ? 'handoff' : ''}`;
+      el.innerHTML = `<div class="message-bubble">${msg.text}</div>`;
+    } else if (msg.type === 'ai') {
+      el.className = 'message ai';
+      el.innerHTML = `<div class="message-avatar">🤖</div><div><div class="message-bubble"><div class="ai-label">🤖 AI</div><div>${msg.text}</div></div><div class="message-time">${msg.time}</div></div>`;
+    } else if (msg.type === 'customer') {
+      el.className = 'message customer';
+      el.innerHTML = `<div class="message-avatar">${conv.avatar}</div><div><div class="message-bubble">${msg.text}</div><div class="message-time">${msg.time}</div></div>`;
+    } else if (msg.type === 'seller') {
+      el.className = 'message seller';
+      el.innerHTML = `<div><div class="message-bubble">${msg.text}</div><div class="message-time">${msg.time}</div></div>`;
+    }
+    chatMessages.appendChild(el);
+  });
+  if (conv.aiStatus === 'ai-active' && conv.messages[conv.messages.length - 1]?.type === 'customer') {
+    const t = document.createElement('div');
+    t.className = 'typing-indicator';
+    t.innerHTML = `<div class="message-avatar">🤖</div><div><div class="typing-dots"><span></span><span></span><span></span></div><span class="typing-label">AI đang trả lời…</span></div>`;
+    chatMessages.appendChild(t);
+  }
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+messageInput.addEventListener('input', () => {
+  sendBtn.disabled = !messageInput.value.trim();
+  messageInput.style.height = 'auto';
+  messageInput.style.height = messageInput.scrollHeight + 'px';
+});
+
+messageInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+sendBtn.addEventListener('click', sendMessage);
+
+function sendMessage() {
+  if (!currentConv || !messageInput.value.trim()) return;
+  const text = messageInput.value.trim();
+  currentConv.messages.push({ type: 'seller', text, time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) });
+  currentConv.lastMessage = text;
+  currentConv.lastMessageIsAi = false;
+  currentConv.time = 'Vừa xong';
+  if (currentConv.aiStatus === 'need-seller') { currentConv.aiStatus = 'seller-handling'; updateAiStatusUI(currentConv); }
+  messageInput.value = '';
+  messageInput.style.height = 'auto';
+  sendBtn.disabled = true;
+  renderMessages(currentConv);
+  renderConversations();
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const t = btn.dataset.filter, v = btn.dataset.value;
+    btn.closest('.filter-group').querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (t === 'platform') platformFilter = v;
+    if (t === 'status') statusFilter = v;
+    renderConversations();
+  });
+});
+
+document.getElementById('createOrderBtn').addEventListener('click', () => {
+  if (currentConv) document.getElementById('orderName').value = currentConv.name;
+  orderModal.classList.add('visible');
+  document.getElementById('orderName').focus();
+});
+
+document.getElementById('closeOrderModal').addEventListener('click', closeOrderModal);
+document.getElementById('cancelOrder').addEventListener('click', closeOrderModal);
+orderModal.addEventListener('click', (e) => { if (e.target === orderModal) closeOrderModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && orderModal.classList.contains('visible')) closeOrderModal(); });
+
+function closeOrderModal() { orderModal.classList.remove('visible'); document.getElementById('createOrderBtn').focus(); }
+
+['orderName', 'orderPhone', 'orderAddress', 'orderProduct'].forEach(id => { document.getElementById(id).addEventListener('input', validateOrder); });
+
+function validateOrder() {
+  const ok = document.getElementById('orderName').value.trim() && /^\d{10,11}$/.test(document.getElementById('orderPhone').value.trim()) && document.getElementById('orderAddress').value.trim() && document.getElementById('orderProduct').value;
+  document.getElementById('submitOrder').disabled = !ok;
+}
+
+document.getElementById('submitOrder').addEventListener('click', () => {
+  let ok = true;
+  if (!document.getElementById('orderName').value.trim()) { document.getElementById('orderNameError').classList.add('visible'); ok = false; } else document.getElementById('orderNameError').classList.remove('visible');
+  if (!/^\d{10,11}$/.test(document.getElementById('orderPhone').value.trim())) { document.getElementById('orderPhoneError').classList.add('visible'); ok = false; } else document.getElementById('orderPhoneError').classList.remove('visible');
+  if (!document.getElementById('orderAddress').value.trim()) { document.getElementById('orderAddressError').classList.add('visible'); ok = false; } else document.getElementById('orderAddressError').classList.remove('visible');
+  if (!document.getElementById('orderProduct').value) { document.getElementById('orderProductError').classList.add('visible'); ok = false; } else document.getElementById('orderProductError').classList.remove('visible');
+  if (ok) {
+    if (currentConv) { currentConv.messages.push({ type: 'system', text: '📦 Đơn hàng đã được tạo — Chờ xác nhận' }); renderMessages(currentConv); }
+    closeOrderModal();
+    announce('Đơn hàng đã được tạo.');
+  }
+});
+
+document.getElementById('backBtn').addEventListener('click', () => {
+  sidebar.classList.remove('hidden');
+  chatContent.style.display = 'none';
+  emptyChatState.classList.add('visible');
+  infoPanel.style.display = 'none';
+  currentConv = null;
+});
+
+function announce(text) { liveRegion.textContent = text; setTimeout(() => { liveRegion.textContent = ''; }, 3000); }
+</script>
+</body>
+</html>
