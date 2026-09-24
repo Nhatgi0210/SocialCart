@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SocialCart — Unified Inbox Prototype</title>
+  <meta name="description" content="SocialCart prototype: Unified Inbox, AI-assisted chat, handoff, quick order creation. Concept B — Soft Daylight.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ================================================================
+     SCREEN: LOGIN
+     ================================================================ -->
+<div id="screen-login" class="screen" role="main">
+  <div class="login-card" role="region" aria-label="Đăng nhập">
+    <div class="login-logo" aria-hidden="true">
+      <div class="login-logo-icon">🛒</div>
+      <span class="login-logo-text">SocialCart</span>
+    </div>
+
+    <h1>Đăng nhập</h1>
+    <p class="subtitle">Quản lý hội thoại và đơn hàng từ một nơi</p>
+
+    <div
+      id="login-error-banner"
+      class="login-error-banner"
+      role="alert"
+      aria-live="assertive"
+    >
+      ❌ Email hoặc mật khẩu không đúng. Vui lòng thử lại.
+    </div>
+
+    <form id="login-form" novalidate aria-label="Form đăng nhập">
+      <div class="form-group">
+        <label for="login-email">Email</label>
+        <input
+          type="email"
+          id="login-email"
+          name="email"
+          autocomplete="email"
+          placeholder="ban@example.com"
+          aria-describedby="login-email-error"
+          aria-required="true"
+        >
+        <span id="login-email-error" class="field-error" role="alert" aria-live="polite"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="login-password">Mật khẩu</label>
+        <input
+          type="password"
+          id="login-password"
+          name="password"
+          autocomplete="current-password"
+          placeholder="••••••••"
+          aria-describedby="login-password-error"
+          aria-required="true"
+        >
+        <span id="login-password-error" class="field-error" role="alert" aria-live="polite"></span>
+      </div>
+
+      <button type="submit" class="btn-login" id="btn-login">
+        <span>🔑</span> Đăng nhập
+      </button>
+
+      <p class="form-hint">
+        🔐 Demo: <strong>lan@socialsells.vn</strong> / <strong>demo123</strong>
+      </p>
+    </form>
+  </div>
+</div>
+
+<!-- ================================================================
+     SCREEN: APP (Inbox + Chat)
+     ================================================================ -->
+<div id="screen-app" class="screen" aria-label="SocialCart Inbox">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar" aria-label="Danh sách hội thoại">
+
+    <!-- Header -->
+    <div class="sidebar-header">
+      <div class="sidebar-top">
+        <div class="sidebar-logo" aria-label="SocialCart">
+          <div class="sidebar-logo-icon" aria-hidden="true">🛒</div>
+          <span class="sidebar-logo-text">SocialCart</span>
+        </div>
+
+        <!-- Seller avatar menu -->
+        <div style="position:relative">
+          <button
+            class="seller-avatar-btn"
+            id="seller-avatar-btn"
+            aria-label="Menu tài khoản người bán"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            <span id="seller-avatar-initials">NL</span>
+          </button>
+          <div class="seller-dropdown" id="seller-dropdown" role="menu" aria-label="Tài khoản">
+            <div class="seller-dropdown-header">
+              <div class="seller-dropdown-name" id="dropdown-seller-name">Nguyễn Thị Lan</div>
+              <div class="seller-dropdown-email" id="dropdown-seller-email">lan@socialsells.vn</div>
+            </div>
+            <button class="dropdown-btn" role="menuitem">⚙️ Cài đặt</button>
+            <button class="dropdown-btn danger" id="btn-logout" role="menuitem">🚪 Đăng xuất</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-row" role="group" aria-label="Lọc hội thoại">
+        <!-- Platform filter -->
+        <div class="filter-group" role="group" aria-label="Nền tảng">
+          <button class="filter-btn active" data-platform-filter="all" aria-pressed="true">Tất cả</button>
+          <button class="filter-btn" data-platform-filter="facebook" aria-pressed="false">
+            <span aria-hidden="true">f</span> Facebook
+          </button>
+          <button class="filter-btn" data-platform-filter="zalo" aria-pressed="false">
+            <span aria-hidden="true">Z</span> Zalo
+          </button>
+        </div>
+        <!-- Status filter -->
+        <div class="filter-group" role="group" aria-label="Trạng thái xử lý">
+          <button class="filter-btn active" data-status-filter="all" aria-pressed="true">Tất cả</button>
+          <button class="filter-btn" data-status-filter="moi" aria-pressed="false">Mới</button>
+          <button class="filter-btn" data-status-filter="dang-xu-ly" aria-pressed="false">Đang xử lý</button>
+          <button class="filter-btn" data-status-filter="da-xu-ly" aria-pressed="false">Đã xử lý</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conversation List -->
+    <div
+      class="conversation-list"
+      id="conversation-list"
+      role="list"
+      aria-label="Hội thoại"
+      aria-live="polite"
+    >
+      <!-- Rendered by app.js -->
+    </div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <div class="main-area" id="main-area">
+    <!-- Default: empty state, replaced by chat when conversation selected -->
+    <div class="inbox-empty-state">
+      <div class="icon" aria-hidden="true">💬</div>
+      <h2>Chọn một hội thoại</h2>
+      <p>Chọn hội thoại từ danh sách bên trái để bắt đầu trả lời khách hàng.</p>
+    </div>
+  </div>
+
+  <!-- CUSTOMER INFO PANEL -->
+  <aside class="info-panel" id="info-panel" aria-label="Thông tin khách hàng">
+    <!-- Rendered by app.js when conversation opens -->
+  </aside>
+
+</div><!-- /#screen-app -->
+
+<!-- ================================================================
+     ORDER MODAL
+     ================================================================ -->
+<div
+  id="order-modal-overlay"
+  class="modal-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="order-modal-title"
+  aria-hidden="true"
+>
+  <div class="modal" id="order-modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="order-modal-title">📋 Tạo đơn hàng</h2>
+      <button
+        class="modal-close"
+        id="btn-close-order-modal"
+        aria-label="Đóng modal tạo đơn hàng"
+      >✕</button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- Form section -->
+      <div id="order-form-section">
+
+        <!-- Customer name -->
+        <div class="modal-form-group">
+          <label for="order-customer-name">
+            Tên khách hàng <span class="required-star" aria-hidden="true">*</span>
+          </label>
+          <input
+            type="text"
+            id="order-customer-name"
+            maxlength="100"
+            placeholder="Nhập tên khách hàng"
+            aria-required="true"
+            aria-describedby="err-name"
+          >
+          <span id="err-name" class="modal-field-error" role="alert"></span>
+        </div>
+
+        <!-- Phone -->
+        <div class="modal-form-group">
+          <label for="order-phone">
+            Số điện thoại <span class="required-star" aria-hidden="true">*</span>
+          </label>
+          <input
+            type="tel"
+            id="order-phone"
+            placeholder="0901234567"
+            inputmode="numeric"
+            aria-required="true"
+            aria-describedby="err-phone"
+          >
+          <span id="err-phone" class="modal-field-error" role="alert"></span>
+        </div>
+
+        <!-- Address -->
+        <div class="modal-form-group">
+          <label for="order-address">
+            Địa chỉ giao hàng <span class="required-star" aria-hidden="true">*</span>
+          </label>
+          <input
+            type="text"
+            id="order-address"
+            maxlength="500"
+            placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
+            aria-required="true"
+            aria-describedby="err-address"
+          >
+          <span id="err-address" class="modal-field-error" role="alert"></span>
+        </div>
+
+        <!-- Products -->
+        <div class="modal-form-group">
+          <label>
+            Sản phẩm <span class="required-star" aria-hidden="true">*</span>
+          </label>
+          <span id="err-products" class="modal-field-error" role="alert"></span>
+          <div id="order-product-rows">
+            <!-- Product rows rendered by JS -->
+          </div>
+          <button type="button" class="btn btn-secondary" id="btn-add-product" style="margin-top:8px;width:100%">
+            <span aria-hidden="true">＋</span> Thêm sản phẩm
+          </button>
+        </div>
+
+        <!-- Notes -->
+        <div class="modal-form-group">
+          <label for="order-notes">Ghi chú (tùy chọn)</label>
+          <textarea id="order-notes" placeholder="Ghi chú thêm cho đơn hàng…" rows="2"></textarea>
+        </div>
+
+        <!-- Total -->
+        <div class="order-total" aria-live="polite">
+          <span class="order-total-label">Tổng tiền</span>
+          <span class="order-total-value" id="order-total-value">—</span>
+        </div>
+      </div>
+
+      <!-- Success section -->
+      <div class="order-success" id="order-success-section" role="status" aria-live="polite">
+        <div class="order-success-icon" aria-hidden="true">✅</div>
+        <h3>Đơn hàng đã được tạo!</h3>
+        <p>
+          Đơn <strong id="order-success-id"></strong> đã được tạo với trạng thái
+          <strong>Chờ xác nhận</strong>.<br>
+          Bạn cần xác nhận thủ công trước khi giao hàng.
+        </p>
+        <button class="btn btn-primary" onclick="closeOrderModal()" style="margin-top:8px">
+          Đóng
+        </button>
+      </div>
+
+    </div><!-- /.modal-body -->
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="btn-cancel-order">Hủy</button>
+      <button class="btn btn-primary" id="btn-submit-order">
+        <span aria-hidden="true">📋</span> Tạo đơn hàng
+      </button>
+    </div>
+  </div><!-- /.modal -->
+</div>
+
+<!-- ================================================================
+     TOAST CONTAINER
+     ================================================================ -->
+<div
+  id="toast-container"
+  class="toast-container"
+  aria-live="polite"
+  aria-atomic="false"
+  role="status"
+></div>
+
+<!-- Scripts -->
+<script src="mock-data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
