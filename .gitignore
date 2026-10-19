@@ -39,5 +39,15 @@ out/
 *.njsproj
 *.sln
 *.sw?
+
+# Local keys, logs and verification artifacts
+keys/
+*.pem
+.logs/
+test-results/
+playwright-report/
+.pytest_cache/
+.coverage
+htmlcov/
 .DS_Store
 Thumbs.db

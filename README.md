@@ -1,64 +1,41 @@
-# SocialCart 🛒
+# SocialCart
 
-> **Hệ thống quản lý tin nhắn và chốt đơn tự động cho hộ kinh doanh đa nền tảng**
+Hệ thống quản lý tin nhắn Facebook Page/Zalo OA và hỗ trợ chốt đơn cho một hộ kinh doanh. AI tư vấn và tạo/sửa đơn chờ xác nhận; người bán xác nhận đơn.
 
-SocialCart là giải pháp toàn diện giúp một hộ kinh doanh (single-tenant) gom toàn bộ tin nhắn từ **Facebook** (Messenger) và **Zalo** về một giao diện duy nhất (**Unified Inbox**), đồng thời tích hợp trợ lý **AI thông minh** để tự động tư vấn sản phẩm, thu thập thông tin khách hàng và chốt đơn hàng một cách nhanh chóng, chính xác.
+## Hiện trạng
 
----
+Ngày 2026-10-19: có PRD, Feature Spec, thiết kế kỹ thuật, Concept B và prototype tĩnh. `backend/` và `frontend/` chưa có application code. Hợp đồng API và kế hoạch dưới đây là baseline triển khai, không phải tính năng đã chạy. Prototype chưa có nghiệm thu P4.5.
 
-## 🚀 Tính năng nổi bật
+V1: Unified Inbox, khách hàng/notes, catalog đa biến thể, đơn hàng/lifecycle, FAQ/AI/handoff, kết nối nền tảng và Dashboard. Một người bán, một Page, một OA. Không Zalo cá nhân/staff/multi-tenant/payment gateway/shipping integration. PENDING không giữ kho; xác nhận trừ kho, hủy đơn đã xác nhận hoàn kho một lần.
 
-- **📥 Hộp thư hợp nhất (Unified Inbox):**
-  - Quản lý tin nhắn Facebook Page và Zalo (OA / cá nhân) trên cùng một màn hình theo thời gian thực.
-  - Phân loại hội thoại (Chưa đọc, Đang xử lý, Chờ AI, Cần can thiệp, Đã chốt).
-  - Tự động nhận diện khách hàng quay lại qua số điện thoại hoặc ID nền tảng.
+## Bắt đầu
 
-- **🤖 Trợ lý AI chốt đơn tự động:**
-  - Nhận diện ý định mua hàng, hỏi đáp thông tin sản phẩm và chính sách bán hàng.
-  - Tư vấn biến thể (màu sắc, kích cỡ, phân loại) theo tồn kho thực tế.
-  - Tự động thu thập thông tin nhận hàng (Họ tên, SĐT, Địa chỉ) và tạo đơn hàng nháp.
-  - Tạo mã QR thanh toán (VietQR) chuyển khoản tự động kèm cú pháp đơn hàng.
-  - Cơ chế Human-in-the-loop: Chuyển giao mượt mà cho chủ shop khi gặp ca phức tạp hoặc khách yêu cầu gặp người thật.
+Xem [AGENTS.md](AGENTS.md) cho AI coding và [setup](docs/setup.md) cho local. Chạy prototype hiện tại:
 
-- **📦 Quản lý sản phẩm & Tồn kho:**
-  - Danh mục sản phẩm đa biến thể (SKU, giá bán, tồn kho riêng cho từng biến thể).
-  - Khóa giữ tồn kho (inventory hold) khi tạo đơn và trừ kho khi xác nhận đơn, tránh tình trạng bán vượt tồn.
-
-- **📑 Quản lý đơn hàng (Order Lifecycle):**
-  - Quản lý vòng đời đơn hàng khép kín: *Chờ xác nhận ➔ Đã xác nhận ➔ Đang giao ➔ Hoàn thành / Đã hủy*.
-  - Theo dõi chi tiết giá trị đơn hàng, phí vận chuyển và trạng thái thanh toán.
-
-- **📊 Báo cáo & Thống kê:**
-  - Dashboard trực quan: Doanh thu theo ngày/tuần/tháng, số lượng đơn chốt bởi AI vs. Người bán.
-
----
-
-## 📁 Cấu trúc dự án
-
-```text
-SocialCart/
-├── backend/                              # Mã nguồn backend (API, webhook, AI service)
-├── frontend/                             # Mã nguồn giao diện quản trị (Dashboard, Unified Inbox)
-├── docs/                                 # Tài liệu đặc tả & thiết kế hệ thống
-│   ├── product-requirements.md           # Product Requirements Document (PRD v1.0)
-│   └── feature-specification.md          # Đặc tả chi tiết chức năng (Feature Spec v1.0)
-├── Project Brief.md                      # Định hướng và mục tiêu sơ bộ
-├── Project Context.md                    # Bối cảnh bài toán và phạm vi dự án
-├── .gitignore                            # Cấu hình bỏ qua tệp cho Git
-└── README.md                             # Giới thiệu dự án
+```powershell
+python -m http.server 5500 --bind 127.0.0.1 --directory prototype
 ```
 
----
+Mở http://127.0.0.1:5500. Mock account ở prototype/mock-data.js, state reset sau reload. Để bắt đầu code: DOC-01 → BOOT-01/02 → AUTH-01/02 trong implementation plan. `.env.example` chỉ là mẫu, không có secret thật.
 
-## 📖 Tài liệu chi tiết
+## Bản đồ tài liệu
 
-Hệ thống được thiết kế và đặc tả chi tiết trong thư mục `docs/`:
+| Tài liệu | Mục đích |
+| --- | --- |
+| [Decisions](docs/decisions.md) | Nguồn ưu tiên, đồng bộ mâu thuẫn và đầu vào còn thiếu |
+| [PRD](docs/product-requirements.md), [Feature Spec](docs/feature-specification.md) | Phạm vi, FR/AC, flow và business rules |
+| [Technical Design](docs/technical-design.md), [Data Rules](docs/data-rules.md) | Kiến trúc, schema, transaction, idempotency và auth |
+| [Implementation Plan](docs/implementation-plan.md) | Mốc, task, dependency, FR/AC và Definition of Done |
+| [API guide](docs/api/README.md), [OpenAPI](docs/api/openapi.yaml) | Hợp đồng public với schemas/errors/examples |
+| [Service Contracts](docs/api/service-contracts.md) | Internal HTTP, outbox/AI workflow và Socket.IO |
+| [Test Plan](docs/test-plan.md) | Ma trận AC, fixtures, concurrency/failure và bằng chứng |
+| [Setup](docs/setup.md), [.env.example](.env.example) | Chạy được hiện tại và lệnh mục tiêu sau scaffold |
+| [Design Brief](docs/product-design-brief.md), [Design Decision](docs/product-design.md) | Interaction contract và Concept B |
+| [Prototype Review](docs/prototype-review.md) | Checklist P4.5, trạng thái chưa chạy và cách ghi issue |
+| [Documentation Validation](docs/documentation-validation.md) | Kết quả kiểm tra bộ tài liệu; giới hạn bằng chứng |
 
-1. [Product Requirements Document (PRD v1.0)](docs/product-requirements.md): Xác định mục tiêu, đối tượng người dùng, yêu cầu chức năng, yêu cầu phi chức năng và tiêu chí nghiệm thu.
-2. [Feature Specification v1.0](docs/feature-specification.md): Đặc tả chi tiết từng luồng nghiệp vụ (Main Flow, Edge Cases, Business Rules, UI Elements) cho 7 phân hệ chính.
+## Cấu trúc
 
----
+`docs/` tài liệu; `prototype/` demo tĩnh; `design/concepts/` các concept; `.agents/skills/` hướng dẫn theo domain. Backend mục tiêu `backend/<service>/app/`, shared model/migration `backend/shared/`, frontend React `frontend/`. Project Brief/Context giữ bối cảnh lịch sử.
 
-## 🔗 Liên kết kho lưu trữ
-
-- **GitHub Repository:** [https://github.com/Nhatgi0210/SocialCart](https://github.com/Nhatgi0210/SocialCart)
+Gemini 1.5 Pro trong lựa chọn cũ đã shutdown; model khả dụng cần EXT-01 trước khi tích hợp. Xem nguồn chính thức và phân loại quyết định trong TDD/decision log. Phần setup/auth không cần chờ credential AI/nền tảng.

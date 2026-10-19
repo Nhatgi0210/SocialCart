@@ -1,0 +1,4091 @@
+openapi: 3.0.3
+info:
+  title: SocialCart Public API
+  version: 1.0.0
+  description: 'Design baseline 2026-10-19; no implementation yet. Source: PRD, Feature Spec, decisions.md
+    and data-rules.md. UUID IDs, integer VND, UTC timestamps. Schemas cover public API; provider raw payload
+    validation remains INT-01.'
+servers:
+- url: http://localhost:8000
+  description: Local gateway after BOOT; paths include /api/v1.
+security:
+- BearerAuth: []
+tags:
+- name: System
+- name: Auth
+- name: Inbox
+- name: Customers
+- name: Products
+- name: Orders
+- name: Dashboard
+- name: Platforms
+- name: AI
+- name: Webhooks
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      tags:
+      - System
+      summary: Service readiness
+      x-task: BOOT-01
+      x-requirements: []
+      x-implementation-status: not-implemented
+      security: []
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+              example:
+                status: ok
+                service: api-gateway
+                checked_at: '2026-10-19T07:00:00Z'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+  /api/v1/auth/login:
+    post:
+      operationId: login
+      tags:
+      - Auth
+      summary: Đăng nhập người bán
+      x-task: AUTH-01
+      x-requirements:
+      - AC-29
+      x-implementation-status: not-implemented
+      description: Validate Origin allowlist. Sets HttpOnly refresh cookie; wrong email/password both
+        return 401.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+            example:
+              email: seller@example.test
+              password: example-only-not-a-real-password
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+              example:
+                success: true
+                data:
+                  access_token: example-token-not-valid-for-authentication
+                  token_type: bearer
+                  expires_in: 900
+                  user:
+                    id: 550e8400-e29b-41d4-a716-000000000001
+                    email: seller@example.test
+                    name: Chủ shop demo
+          headers:
+            Set-Cookie:
+              description: sc_refresh=<opaque>; HttpOnly; SameSite=Lax; Path=/api/v1/auth; Secure on HTTPS.
+                Never returned in JSON.
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '409':
+          $ref: '#/components/responses/409'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+  /api/v1/auth/refresh:
+    post:
+      operationId: refresh
+      tags:
+      - Auth
+      summary: Đổi refresh cookie lấy access token
+      x-task: AUTH-01
+      x-requirements:
+      - AC-30
+      - AC-32
+      x-implementation-status: not-implemented
+      description: Origin allowlist required. Atomic refresh rotation; max 7 days, idle 24h. Access token
+        may be expired.
+      security:
+      - RefreshCookie: []
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+              example:
+                success: true
+                data:
+                  access_token: example-token-not-valid-for-authentication
+                  token_type: bearer
+                  expires_in: 900
+                  user:
+                    id: 550e8400-e29b-41d4-a716-000000000001
+                    email: seller@example.test
+                    name: Chủ shop demo
+          headers:
+            Set-Cookie:
+              description: sc_refresh=<opaque>; HttpOnly; SameSite=Lax; Path=/api/v1/auth; Secure on HTTPS.
+                Never returned in JSON.
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/auth/logout:
+    post:
+      operationId: logout
+      tags:
+      - Auth
+      summary: Thu hồi phiên và đóng socket
+      x-task: AUTH-01
+      x-requirements:
+      - AC-32
+      x-implementation-status: not-implemented
+      description: Origin allowlist; revoke sid and clear cookie. Already missing cookie returns 204 without
+        revoking another session.
+      security:
+      - RefreshCookie: []
+      responses:
+        '204':
+          description: Success; no response body.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: sc_refresh cleared with Max-Age=0 and matching cookie path.
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/auth/me:
+    get:
+      operationId: getMe
+      tags:
+      - Auth
+      summary: Người bán hiện tại
+      x-task: AUTH-01
+      x-requirements:
+      - AC-30
+      - AC-31
+      x-implementation-status: not-implemented
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000001
+                  email: seller@example.test
+                  name: Chủ shop demo
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+  /api/v1/conversations:
+    get:
+      operationId: listConversations
+      tags:
+      - Inbox
+      summary: Danh sách hội thoại mới nhất trước
+      x-task: INBOX-01
+      x-requirements:
+      - AC-04
+      - AC-06
+      x-implementation-status: not-implemented
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      - name: platform
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - FACEBOOK
+          - ZALO
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - NEW
+          - IN_PROGRESS
+          - RESOLVED
+      - name: ai_status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - AI_HANDLING
+          - NEEDS_SELLER
+          - SELLER_HANDLING
+      - name: customer_id
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationListResponse'
+              example:
+                success: true
+                data:
+                - id: 550e8400-e29b-41d4-a716-000000000020
+                  platform: FACEBOOK
+                  customer:
+                    id: 550e8400-e29b-41d4-a716-000000000010
+                    platform: FACEBOOK
+                    platform_account_id: demo-page
+                    platform_user_id: demo-user
+                    name: Khách demo
+                    created_at: '2026-10-19T07:00:00Z'
+                  status: NEW
+                  ai_status: AI_HANDLING
+                  is_read: false
+                  last_message_at: '2026-10-19T07:00:00Z'
+                  last_message_preview: Shop có áo size M không?
+                  version: 1
+                  created_at: '2026-10-19T07:00:00Z'
+                meta:
+                  page: 1
+                  limit: 20
+                  total: 1
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+  /api/v1/conversations/{id}:
+    get:
+      operationId: getConversation
+      tags:
+      - Inbox
+      summary: Chi tiết hội thoại; GET không tự đánh dấu đọc
+      x-task: INBOX-01
+      x-requirements:
+      - AC-09
+      x-implementation-status: not-implemented
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000020
+                  platform: FACEBOOK
+                  customer:
+                    id: 550e8400-e29b-41d4-a716-000000000010
+                    platform: FACEBOOK
+                    platform_account_id: demo-page
+                    platform_user_id: demo-user
+                    name: Khách demo
+                    created_at: '2026-10-19T07:00:00Z'
+                  status: NEW
+                  ai_status: AI_HANDLING
+                  is_read: false
+                  last_message_at: '2026-10-19T07:00:00Z'
+                  last_message_preview: Shop có áo size M không?
+                  version: 1
+                  created_at: '2026-10-19T07:00:00Z'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+  /api/v1/conversations/{id}/read:
+    patch:
+      operationId: markConversationRead
+      tags:
+      - Inbox
+      summary: Đánh dấu đã đọc
+      x-task: INBOX-01
+      x-requirements:
+      - AC-08
+      x-implementation-status: not-implemented
+      description: Idempotent update; emits conversation:updated only after commit.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadUpdate'
+            example:
+              is_read: true
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000020
+                  platform: FACEBOOK
+                  customer:
+                    id: 550e8400-e29b-41d4-a716-000000000010
+                    platform: FACEBOOK
+                    platform_account_id: demo-page
+                    platform_user_id: demo-user
+                    name: Khách demo
+                    created_at: '2026-10-19T07:00:00Z'
+                  status: NEW
+                  ai_status: AI_HANDLING
+                  is_read: false
+                  last_message_at: '2026-10-19T07:00:00Z'
+                  last_message_preview: Shop có áo size M không?
+                  version: 1
+                  created_at: '2026-10-19T07:00:00Z'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/conversations/{id}/status:
+    patch:
+      operationId: updateConversationStatus
+      tags:
+      - Inbox
+      summary: Đổi trạng thái xử lý
+      x-task: INBOX-01
+      x-requirements:
+      - AC-06
+      x-implementation-status: not-implemented
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversationStatusUpdate'
+            example:
+              status: IN_PROGRESS
+              expected_version: 1
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000020
+                  platform: FACEBOOK
+                  customer:
+                    id: 550e8400-e29b-41d4-a716-000000000010
+                    platform: FACEBOOK
+                    platform_account_id: demo-page
+                    platform_user_id: demo-user
+                    name: Khách demo
+                    created_at: '2026-10-19T07:00:00Z'
+                  status: NEW
+                  ai_status: AI_HANDLING
+                  is_read: false
+                  last_message_at: '2026-10-19T07:00:00Z'
+                  last_message_preview: Shop có áo size M không?
+                  version: 1
+                  created_at: '2026-10-19T07:00:00Z'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/conversations/{id}/ai-status:
+    patch:
+      operationId: updateAiStatus
+      tags:
+      - Inbox
+      summary: Tắt hoặc bật lại AI; fence worker cũ
+      x-task: INBOX-01
+      x-requirements:
+      - AC-20
+      - AC-21
+      x-implementation-status: not-implemented
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiStatusUpdate'
+            example:
+              ai_status: SELLER_HANDLING
+              expected_version: 1
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000020
+                  platform: FACEBOOK
+                  customer:
+                    id: 550e8400-e29b-41d4-a716-000000000010
+                    platform: FACEBOOK
+                    platform_account_id: demo-page
+                    platform_user_id: demo-user
+                    name: Khách demo
+                    created_at: '2026-10-19T07:00:00Z'
+                  status: NEW
+                  ai_status: AI_HANDLING
+                  is_read: false
+                  last_message_at: '2026-10-19T07:00:00Z'
+                  last_message_preview: Shop có áo size M không?
+                  version: 1
+                  created_at: '2026-10-19T07:00:00Z'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/conversations/{id}/messages:
+    get:
+      operationId: listMessages
+      tags:
+      - Inbox
+      summary: Tin nhắn theo thời gian tăng dần
+      x-task: INBOX-01
+      x-requirements:
+      - AC-07
+      x-implementation-status: not-implemented
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageListResponse'
+              example:
+                success: true
+                data:
+                - id: 550e8400-e29b-41d4-a716-000000000021
+                  conversation_id: 550e8400-e29b-41d4-a716-000000000020
+                  sender: SELLER
+                  content: Shop đã nhận thông tin của bạn.
+                  status: SENDING
+                  platform_msg_id: null
+                  error_code: null
+                  delivery_unknown: false
+                  created_at: '2026-10-19T07:00:00Z'
+                meta:
+                  page: 1
+                  limit: 20
+                  total: 1
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+    post:
+      operationId: sendMessage
+      tags:
+      - Inbox
+      summary: Xếp hàng gửi tin nhắn người bán
+      x-task: SEND-01
+      x-requirements:
+      - AC-07
+      x-implementation-status: not-implemented
+      description: 'Server sets sender=SELLER, status=SENDING; only provider acceptance changes to SENT.
+        Seller reply takes over: sets SELLER_HANDLING and increments ai_generation atomically before dispatch.'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageCreate'
+            example:
+              content: Shop đã nhận thông tin của bạn.
+      responses:
+        '202':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000021
+                  conversation_id: 550e8400-e29b-41d4-a716-000000000020
+                  sender: SELLER
+                  content: Shop đã nhận thông tin của bạn.
+                  status: SENDING
+                  platform_msg_id: null
+                  error_code: null
+                  delivery_unknown: false
+                  created_at: '2026-10-19T07:00:00Z'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/conversations/{id}/messages/{message_id}/retry:
+    post:
+      operationId: retryMessage
+      tags:
+      - Inbox
+      summary: Gửi lại message FAILED với cùng ID
+      x-task: SEND-01
+      x-requirements:
+      - AC-07
+      x-implementation-status: not-implemented
+      description: 409 unless FAILED and safe to retry. delivery_unknown requires reconciliation; never
+        blindly resend.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      - name: message_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '202':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000021
+                  conversation_id: 550e8400-e29b-41d4-a716-000000000020
+                  sender: SELLER
+                  content: Shop đã nhận thông tin của bạn.
+                  status: SENDING
+                  platform_msg_id: null
+                  error_code: null
+                  delivery_unknown: false
+                  created_at: '2026-10-19T07:00:00Z'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/customers:
+    get:
+      operationId: listCustomers
+      tags:
+      - Customers
+      summary: Danh sách khách hàng
+      x-task: CUST-01
+      x-requirements:
+      - AC-11
+      x-implementation-status: not-implemented
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      - name: platform
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - FACEBOOK
+          - ZALO
+      - name: search
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 100
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerListResponse'
+              example:
+                success: true
+                data:
+                - id: 550e8400-e29b-41d4-a716-000000000010
+                  platform: FACEBOOK
+                  platform_account_id: demo-page
+                  platform_user_id: demo-user
+                  name: Khách demo
+                  created_at: '2026-10-19T07:00:00Z'
+                meta:
+                  page: 1
+                  limit: 20
+                  total: 1
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+  /api/v1/customers/{id}:
+    get:
+      operationId: getCustomer
+      tags:
+      - Customers
+      summary: Hồ sơ, ghi chú, liên kết hội thoại và đơn
+      x-task: CUST-01
+      x-requirements:
+      - AC-11
+      x-implementation-status: not-implemented
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerDetailResponse'
+              example:
+                success: true
+                data:
+                  customer:
+                    id: 550e8400-e29b-41d4-a716-000000000010
+                    platform: FACEBOOK
+                    platform_account_id: demo-page
+                    platform_user_id: demo-user
+                    name: Khách demo
+                    created_at: '2026-10-19T07:00:00Z'
+                  notes: []
+                  conversation_ids: []
+                  order_ids: []
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+  /api/v1/customers/{id}/notes:
+    post:
+      operationId: createNote
+      tags:
+      - Customers
+      summary: Thêm ghi chú
+      x-task: CUST-01
+      x-requirements:
+      - AC-12
+      x-implementation-status: not-implemented
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteCreate'
+            example:
+              content: Khách thích màu xanh
+      responses:
+        '201':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000001
+                  customer_id: 550e8400-e29b-41d4-a716-000000000001
+                  content: Minh họa
+                  created_at: '2026-10-19T07:00:00Z'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/customers/{id}/notes/{note_id}:
+    delete:
+      operationId: deleteNote
+      tags:
+      - Customers
+      summary: Xóa ghi chú của khách đã chọn
+      x-task: CUST-01
+      x-requirements:
+      - AC-12
+      x-implementation-status: not-implemented
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      - name: note_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      responses:
+        '204':
+          description: Success; no response body.
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/products:
+    get:
+      operationId: listProducts
+      tags:
+      - Products
+      summary: Tìm và lọc sản phẩm chưa xóa
+      x-task: PROD-01
+      x-requirements:
+      - AC-14
+      - AC-14b
+      - AC-14c
+      x-implementation-status: not-implemented
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      - name: search
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 200
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - ACTIVE
+          - INACTIVE
+      - name: low_stock
+        in: query
+        required: false
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+              example:
+                success: true
+                data:
+                - id: 550e8400-e29b-41d4-a716-000000000030
+                  name: Áo demo
+                  description: Sản phẩm minh họa
+                  image_url: null
+                  status: ACTIVE
+                  total_stock: 10
+                  variants:
+                  - id: 550e8400-e29b-41d4-a716-000000000031
+                    product_id: 550e8400-e29b-41d4-a716-000000000030
+                    name: Size M
+                    price: 150000
+                    stock: 10
+                    low_stock_threshold: 0
+                    version: 1
+                  created_at: '2026-10-19T07:00:00Z'
+                meta:
+                  page: 1
+                  limit: 20
+                  total: 1
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+    post:
+      operationId: createProduct
+      tags:
+      - Products
+      summary: Tạo sản phẩm có ít nhất một biến thể
+      x-task: PROD-01
+      x-requirements:
+      - AC-13
+      - AC-13b
+      x-implementation-status: not-implemented
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+            example:
+              name: Áo demo
+              variants:
+              - name: Size M
+                price: 150000
+                stock: 10
+      responses:
+        '201':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000030
+                  name: Áo demo
+                  description: Sản phẩm minh họa
+                  image_url: null
+                  status: ACTIVE
+                  total_stock: 10
+                  variants:
+                  - id: 550e8400-e29b-41d4-a716-000000000031
+                    product_id: 550e8400-e29b-41d4-a716-000000000030
+                    name: Size M
+                    price: 150000
+                    stock: 10
+                    low_stock_threshold: 0
+                    version: 1
+                  created_at: '2026-10-19T07:00:00Z'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/products/images:
+    post:
+      operationId: uploadProductImage
+      tags:
+      - Products
+      summary: Upload ảnh sản phẩm local
+      x-task: PROD-01
+      x-requirements:
+      - AC-13
+      x-implementation-status: not-implemented
+      description: JPEG/PNG/WebP only, <=5 MiB, validate actual bytes; random filename, no path traversal.
+        Return configured local static URL.
+      responses:
+        '201':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageResponse'
+              example:
+                success: true
+                data:
+                  image_url: https://example.test/demo
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '409':
+          $ref: '#/components/responses/409'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+              - file
+  /api/v1/products/{id}:
+    get:
+      operationId: getProduct
+      tags:
+      - Products
+      summary: Chi tiết sản phẩm
+      x-task: PROD-01
+      x-requirements:
+      - AC-13
+      x-implementation-status: not-implemented
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000030
+                  name: Áo demo
+                  description: Sản phẩm minh họa
+                  image_url: null
+                  status: ACTIVE
+                  total_stock: 10
+                  variants:
+                  - id: 550e8400-e29b-41d4-a716-000000000031
+                    product_id: 550e8400-e29b-41d4-a716-000000000030
+                    name: Size M
+                    price: 150000
+                    stock: 10
+                    low_stock_threshold: 0
+                    version: 1
+                  created_at: '2026-10-19T07:00:00Z'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+    put:
+      operationId: updateProduct
+      tags:
+      - Products
+      summary: Cập nhật thuộc tính sản phẩm
+      x-task: PROD-01
+      x-requirements:
+      - AC-13
+      x-implementation-status: not-implemented
+      description: Existing catalog uses PUT; supplied editable fields update, omitted fields unchanged.
+        Cannot activate without a valid nondeleted variant.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdate'
+            example:
+              status: INACTIVE
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000030
+                  name: Áo demo
+                  description: Sản phẩm minh họa
+                  image_url: null
+                  status: ACTIVE
+                  total_stock: 10
+                  variants:
+                  - id: 550e8400-e29b-41d4-a716-000000000031
+                    product_id: 550e8400-e29b-41d4-a716-000000000030
+                    name: Size M
+                    price: 150000
+                    stock: 10
+                    low_stock_threshold: 0
+                    version: 1
+                  created_at: '2026-10-19T07:00:00Z'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+    delete:
+      operationId: deleteProduct
+      tags:
+      - Products
+      summary: Xóa mềm sản phẩm, giữ lịch sử đơn
+      x-task: PROD-01
+      x-requirements:
+      - AC-13
+      x-implementation-status: not-implemented
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      responses:
+        '204':
+          description: Success; no response body.
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/products/{id}/variants:
+    post:
+      operationId: createVariant
+      tags:
+      - Products
+      summary: Thêm biến thể
+      x-task: PROD-01
+      x-requirements:
+      - AC-13b
+      x-implementation-status: not-implemented
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VariantInput'
+            example:
+              name: Size M
+              price: 150000
+              stock: 10
+              low_stock_threshold: 0
+      responses:
+        '201':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VariantResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000031
+                  product_id: 550e8400-e29b-41d4-a716-000000000030
+                  name: Size M
+                  price: 150000
+                  stock: 10
+                  low_stock_threshold: 0
+                  version: 1
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/products/{id}/variants/{variant_id}:
+    put:
+      operationId: updateVariant
+      tags:
+      - Products
+      summary: Sửa biến thể với kiểm tra version
+      x-task: PROD-01
+      x-requirements:
+      - AC-13b
+      - AC-14b
+      x-implementation-status: not-implemented
+      description: Editable supplied fields update; row lock and expected_version required for manual
+        stock writes. No order snapshot repricing.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      - name: variant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VariantUpdate'
+            example:
+              expected_version: 1
+              stock: 12
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VariantResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000031
+                  product_id: 550e8400-e29b-41d4-a716-000000000030
+                  name: Size M
+                  price: 150000
+                  stock: 10
+                  low_stock_threshold: 0
+                  version: 1
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+    delete:
+      operationId: deleteVariant
+      tags:
+      - Products
+      summary: Xóa mềm biến thể
+      x-task: PROD-01
+      x-requirements:
+      - AC-13b
+      - AC-13c
+      x-implementation-status: not-implemented
+      description: Last variant deletion makes product INACTIVE; historical order item retained.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      - name: variant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      responses:
+        '204':
+          description: Success; no response body.
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/orders:
+    get:
+      operationId: listOrders
+      tags:
+      - Orders
+      summary: Danh sách và bộ lọc đơn
+      x-task: ORDER-01
+      x-requirements:
+      - AC-23
+      x-implementation-status: not-implemented
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - PENDING
+          - CONFIRMED
+          - SHIPPING
+          - COMPLETED
+          - CANCELLED
+      - name: customer_id
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      - name: conversation_id
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+              example:
+                success: true
+                data:
+                - id: 550e8400-e29b-41d4-a716-000000000040
+                  order_code: DH-DEMO-0001
+                  conversation_id: 550e8400-e29b-41d4-a716-000000000020
+                  customer_id: 550e8400-e29b-41d4-a716-000000000010
+                  status: PENDING
+                  created_by: SELLER
+                  customer_name: Khách demo
+                  phone_number: 0900000000
+                  address: Địa chỉ minh họa
+                  note: ''
+                  total_amount: 300000
+                  items:
+                  - id: 550e8400-e29b-41d4-a716-000000000041
+                    variant_id: 550e8400-e29b-41d4-a716-000000000031
+                    product_name: Áo demo
+                    variant_name: Size M
+                    unit_price: 150000
+                    quantity: 2
+                    subtotal: 300000
+                  version: 1
+                  created_at: '2026-10-19T07:00:00Z'
+                  updated_at: '2026-10-19T07:00:00Z'
+                meta:
+                  page: 1
+                  limit: 20
+                  total: 1
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+    post:
+      operationId: createOrder
+      tags:
+      - Orders
+      summary: Tạo đơn thủ công PENDING, không giữ kho
+      x-task: ORDER-01
+      x-requirements:
+      - AC-25
+      - AC-26
+      x-implementation-status: not-implemented
+      description: Server snapshots catalog prices, calculates total, validates customer-conversation
+        relation; created_by=SELLER. Duplicate variants merge. Stock check does not reserve.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreate'
+            example:
+              conversation_id: 550e8400-e29b-41d4-a716-000000000020
+              customer_id: 550e8400-e29b-41d4-a716-000000000010
+              customer_name: Khách demo
+              phone_number: 0900000000
+              address: Địa chỉ minh họa
+              items:
+              - variant_id: 550e8400-e29b-41d4-a716-000000000031
+                quantity: 2
+      responses:
+        '201':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000040
+                  order_code: DH-DEMO-0001
+                  conversation_id: 550e8400-e29b-41d4-a716-000000000020
+                  customer_id: 550e8400-e29b-41d4-a716-000000000010
+                  status: PENDING
+                  created_by: SELLER
+                  customer_name: Khách demo
+                  phone_number: 0900000000
+                  address: Địa chỉ minh họa
+                  note: ''
+                  total_amount: 300000
+                  items:
+                  - id: 550e8400-e29b-41d4-a716-000000000041
+                    variant_id: 550e8400-e29b-41d4-a716-000000000031
+                    product_name: Áo demo
+                    variant_name: Size M
+                    unit_price: 150000
+                    quantity: 2
+                    subtotal: 300000
+                  version: 1
+                  created_at: '2026-10-19T07:00:00Z'
+                  updated_at: '2026-10-19T07:00:00Z'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/orders/{id}:
+    get:
+      operationId: getOrder
+      tags:
+      - Orders
+      summary: Chi tiết đơn với snapshot
+      x-task: ORDER-01
+      x-requirements:
+      - AC-22b
+      - AC-26
+      x-implementation-status: not-implemented
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000040
+                  order_code: DH-DEMO-0001
+                  conversation_id: 550e8400-e29b-41d4-a716-000000000020
+                  customer_id: 550e8400-e29b-41d4-a716-000000000010
+                  status: PENDING
+                  created_by: SELLER
+                  customer_name: Khách demo
+                  phone_number: 0900000000
+                  address: Địa chỉ minh họa
+                  note: ''
+                  total_amount: 300000
+                  items:
+                  - id: 550e8400-e29b-41d4-a716-000000000041
+                    variant_id: 550e8400-e29b-41d4-a716-000000000031
+                    product_name: Áo demo
+                    variant_name: Size M
+                    unit_price: 150000
+                    quantity: 2
+                    subtotal: 300000
+                  version: 1
+                  created_at: '2026-10-19T07:00:00Z'
+                  updated_at: '2026-10-19T07:00:00Z'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+    patch:
+      operationId: updatePendingOrder
+      tags:
+      - Orders
+      summary: Sửa nội dung đơn còn PENDING
+      x-task: ORDER-01
+      x-requirements:
+      - AC-21c
+      x-implementation-status: not-implemented
+      description: 403/409 cannot be used to bypass pending-only rule; retain existing item snapshots;
+        new variants get current price. AI calls internal authenticated counterpart.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderUpdate'
+            example:
+              expected_version: 1
+              address: Địa chỉ minh họa đã sửa
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000040
+                  order_code: DH-DEMO-0001
+                  conversation_id: 550e8400-e29b-41d4-a716-000000000020
+                  customer_id: 550e8400-e29b-41d4-a716-000000000010
+                  status: PENDING
+                  created_by: SELLER
+                  customer_name: Khách demo
+                  phone_number: 0900000000
+                  address: Địa chỉ minh họa
+                  note: ''
+                  total_amount: 300000
+                  items:
+                  - id: 550e8400-e29b-41d4-a716-000000000041
+                    variant_id: 550e8400-e29b-41d4-a716-000000000031
+                    product_name: Áo demo
+                    variant_name: Size M
+                    unit_price: 150000
+                    quantity: 2
+                    subtotal: 300000
+                  version: 1
+                  created_at: '2026-10-19T07:00:00Z'
+                  updated_at: '2026-10-19T07:00:00Z'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/orders/{id}/status:
+    patch:
+      operationId: updateOrderStatus
+      tags:
+      - Orders
+      summary: Chuyển trạng thái và cập nhật kho nguyên tử
+      x-task: ORDER-01
+      x-requirements:
+      - AC-24
+      - AC-24b
+      x-implementation-status: not-implemented
+      description: PENDING→CONFIRMED/CANCELLED; CONFIRMED→SHIPPING/CANCELLED; SHIPPING→COMPLETED/CANCELLED.
+        No terminal changes. Confirm locks stock; cancellation restores once.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderStatusUpdate'
+            example:
+              status: CONFIRMED
+              expected_version: 1
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000040
+                  order_code: DH-DEMO-0001
+                  conversation_id: 550e8400-e29b-41d4-a716-000000000020
+                  customer_id: 550e8400-e29b-41d4-a716-000000000010
+                  status: CONFIRMED
+                  created_by: SELLER
+                  customer_name: Khách demo
+                  phone_number: 0900000000
+                  address: Địa chỉ minh họa
+                  note: ''
+                  total_amount: 300000
+                  items:
+                  - id: 550e8400-e29b-41d4-a716-000000000041
+                    variant_id: 550e8400-e29b-41d4-a716-000000000031
+                    product_name: Áo demo
+                    variant_name: Size M
+                    unit_price: 150000
+                    quantity: 2
+                    subtotal: 300000
+                  version: 2
+                  created_at: '2026-10-19T07:00:00Z'
+                  updated_at: '2026-10-19T07:00:00Z'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags:
+      - Dashboard
+      summary: Số liệu theo ngày Việt Nam
+      x-task: DASH-01
+      x-requirements:
+      - AC-27
+      x-implementation-status: not-implemented
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStatsResponse'
+              example:
+                success: true
+                data:
+                  date: '2026-10-19'
+                  timezone: Asia/Ho_Chi_Minh
+                  new_conversations_today: 0
+                  needs_seller: 0
+                  unprocessed_conversations: 0
+                  pending_orders: 0
+                  low_stock_variants: 0
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+  /api/v1/connections:
+    get:
+      operationId: listConnections
+      tags:
+      - Platforms
+      summary: Trạng thái Facebook Page và Zalo OA
+      x-task: INT-01
+      x-requirements:
+      - AC-01
+      - AC-02
+      - AC-03
+      x-implementation-status: not-implemented
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionListResponse'
+              example:
+                success: true
+                data: []
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+  /api/v1/connections/{platform}/oauth/start:
+    post:
+      operationId: startOAuth
+      tags:
+      - Platforms
+      summary: Bắt đầu OAuth nền tảng
+      x-task: INT-01
+      x-requirements:
+      - AC-01
+      - AC-02
+      x-implementation-status: not-implemented
+      description: Creates one-time state bound to current session and allowlisted callback. URL platform
+        is facebook/zalo; JSON platform enum is FACEBOOK/ZALO. Provider adapter returns authorization
+        URL.
+      parameters:
+      - name: platform
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - facebook
+          - zalo
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthStartResponse'
+              example:
+                success: true
+                data:
+                  authorization_url: https://example.test/demo
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/connections/{platform}/oauth/callback:
+    get:
+      operationId: completeOAuth
+      tags:
+      - Platforms
+      summary: Callback OAuth, xác minh state trước đổi code
+      x-task: INT-01
+      x-requirements:
+      - AC-01
+      - AC-02
+      x-implementation-status: not-implemented
+      description: 'Public callback: state one-time/expiring and bound to authenticated initiating session;
+        code required unless provider returns error. No access bearer required. Do not return provider
+        tokens.'
+      parameters:
+      - name: platform
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - facebook
+          - zalo
+      - name: state
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 500
+      - name: code
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 2000
+      - name: error
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 500
+      security: []
+      responses:
+        '302':
+          description: Redirect to configured UI, without platform credentials.
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+              example: http://localhost:5173/settings?connected=1
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '404':
+          $ref: '#/components/responses/404'
+        '403':
+          $ref: '#/components/responses/403'
+  /api/v1/connections/{platform}:
+    delete:
+      operationId: disconnectPlatform
+      tags:
+      - Platforms
+      summary: Ngắt kết nối, giữ dữ liệu lịch sử
+      x-task: INT-01
+      x-requirements:
+      - AC-03
+      x-implementation-status: not-implemented
+      parameters:
+      - name: platform
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - facebook
+          - zalo
+      responses:
+        '204':
+          description: Success; no response body.
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/ai-config:
+    get:
+      operationId: getAiConfig
+      tags:
+      - AI
+      summary: Đọc timeout và template thanh toán
+      x-task: CFG-01
+      x-requirements:
+      - AC-19b
+      - AC-21b
+      x-implementation-status: not-implemented
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiConfigResponse'
+              example:
+                success: true
+                data:
+                  order_timeout_seconds: 86400
+                  payment_template: null
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+    put:
+      operationId: updateAiConfig
+      tags:
+      - AI
+      summary: Cập nhật timeout/template
+      x-task: CFG-01
+      x-requirements:
+      - AC-19b
+      - AC-21b
+      x-implementation-status: not-implemented
+      description: Supplied fields update; template null removes configured bank, never exposes Gemini/platform
+        credentials.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiConfigUpdate'
+            example:
+              order_timeout_seconds: 86400
+              payment_template: null
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiConfigResponse'
+              example:
+                success: true
+                data:
+                  order_timeout_seconds: 86400
+                  payment_template: null
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/ai-config/faqs:
+    get:
+      operationId: listFaqs
+      tags:
+      - AI
+      summary: Danh sách FAQ
+      x-task: CFG-01
+      x-requirements:
+      - AC-17
+      x-implementation-status: not-implemented
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FaqListResponse'
+              example:
+                success: true
+                data: []
+                meta:
+                  page: 1
+                  limit: 1
+                  total: 0
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+    post:
+      operationId: createFaq
+      tags:
+      - AI
+      summary: Tạo FAQ
+      x-task: CFG-01
+      x-requirements:
+      - AC-17
+      x-implementation-status: not-implemented
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FaqInput'
+            example:
+              question: Shop giao hàng không?
+              answer: Có, theo chính sách của shop.
+              trigger_keywords:
+              - giao hàng
+      responses:
+        '201':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FaqResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000001
+                  question: Minh họa
+                  answer: Minh họa
+                  trigger_keywords: []
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '409':
+          $ref: '#/components/responses/409'
+  /api/v1/ai-config/faqs/{id}:
+    put:
+      operationId: updateFaq
+      tags:
+      - AI
+      summary: Thay nội dung FAQ
+      x-task: CFG-01
+      x-requirements:
+      - AC-17
+      x-implementation-status: not-implemented
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FaqInput'
+            example:
+              question: Shop giao hàng không?
+              answer: Có, theo chính sách của shop.
+              trigger_keywords:
+              - giao hàng
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FaqResponse'
+              example:
+                success: true
+                data:
+                  id: 550e8400-e29b-41d4-a716-000000000001
+                  question: Minh họa
+                  answer: Minh họa
+                  trigger_keywords: []
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+    delete:
+      operationId: deleteFaq
+      tags:
+      - AI
+      summary: Xóa FAQ
+      x-task: CFG-01
+      x-requirements:
+      - AC-17
+      x-implementation-status: not-implemented
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+      responses:
+        '204':
+          description: Success; no response body.
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /webhooks/facebook:
+    get:
+      operationId: verifyFacebookWebhook
+      tags:
+      - Webhooks
+      summary: Verify challenge Facebook
+      x-task: FB-01
+      x-requirements:
+      - AC-01
+      x-implementation-status: not-implemented
+      description: Compare FB_WEBHOOK_VERIFY_TOKEN. Echo original challenge string as text/plain, not
+        integer or JSON.
+      parameters:
+      - name: hub.mode
+        in: query
+        required: true
+        schema:
+          type: string
+          enum:
+          - subscribe
+      - name: hub.verify_token
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: hub.challenge
+        in: query
+        required: true
+        schema:
+          type: string
+      security: []
+      responses:
+        '200':
+          description: Original challenge
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: '123456'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '403':
+          $ref: '#/components/responses/403'
+    post:
+      operationId: receiveFacebookWebhook
+      tags:
+      - Webhooks
+      summary: Nhận webhook và ACK sau durable commit
+      x-task: FB-01
+      x-requirements:
+      - AC-01
+      x-implementation-status: not-implemented
+      description: Raw body/signature verification required. Validate vendor payload using current provider
+        docs in INT-01. Commit unique receipt+outbox before ACK; duplicate returns 200, DB unavailable
+        503. No inline Gemini call.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayload'
+            example:
+              object: page
+              entry: []
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookAck'
+              example:
+                status: ok
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '409':
+          $ref: '#/components/responses/409'
+        '403':
+          $ref: '#/components/responses/403'
+      parameters:
+      - name: X-Hub-Signature-256
+        in: header
+        required: true
+        schema:
+          type: string
+          pattern: ^sha256=[0-9a-fA-F]{64}$
+        description: HMAC over raw request bytes with app secret.
+  /webhooks/zalo:
+    post:
+      operationId: receiveZaloWebhook
+      tags:
+      - Webhooks
+      summary: Nhận webhook và ACK sau durable commit
+      x-task: ZALO-01
+      x-requirements:
+      - AC-02
+      x-implementation-status: not-implemented
+      description: Raw body/signature verification required. Validate vendor payload using current provider
+        docs in INT-01. Commit unique receipt+outbox before ACK; duplicate returns 200, DB unavailable
+        503. No inline Gemini call.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayload'
+            example:
+              object: page
+              entry: []
+      responses:
+        '200':
+          description: Contract response; not evidence of a running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookAck'
+              example:
+                status: ok
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '503':
+          $ref: '#/components/responses/503'
+        '409':
+          $ref: '#/components/responses/409'
+        '403':
+          $ref: '#/components/responses/403'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT RS256
+    RefreshCookie:
+      type: apiKey
+      in: cookie
+      name: sc_refresh
+      description: HttpOnly opaque refresh token; Origin allowlist required.
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 2147483647
+        default: 1
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Unique per actor/operation, retained >=24h; reuse only with same canonical body.
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 100
+      example: demo-order-create-0001
+  responses:
+    '400':
+      description: BAD_REQUEST
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            error:
+              value:
+                success: false
+                error:
+                  code: BAD_REQUEST
+                  message: Yêu cầu chưa thể hoàn tất.
+                  details: []
+    '401':
+      description: UNAUTHENTICATED
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            error:
+              value:
+                success: false
+                error:
+                  code: UNAUTHENTICATED
+                  message: Yêu cầu chưa thể hoàn tất.
+                  details: []
+    '403':
+      description: FORBIDDEN
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            error:
+              value:
+                success: false
+                error:
+                  code: FORBIDDEN
+                  message: Yêu cầu chưa thể hoàn tất.
+                  details: []
+    '404':
+      description: NOT_FOUND
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            error:
+              value:
+                success: false
+                error:
+                  code: NOT_FOUND
+                  message: Yêu cầu chưa thể hoàn tất.
+                  details: []
+    '409':
+      description: VERSION_CONFLICT
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            error:
+              value:
+                success: false
+                error:
+                  code: VERSION_CONFLICT
+                  message: Yêu cầu chưa thể hoàn tất.
+                  details: []
+            INSUFFICIENT_STOCK:
+              value:
+                success: false
+                error:
+                  code: INSUFFICIENT_STOCK
+                  message: Không đủ tồn kho.
+                  details: []
+            INVALID_TRANSITION:
+              value:
+                success: false
+                error:
+                  code: INVALID_TRANSITION
+                  message: Không thể chuyển trạng thái đơn.
+                  details: []
+            IDEMPOTENCY_CONFLICT:
+              value:
+                success: false
+                error:
+                  code: IDEMPOTENCY_CONFLICT
+                  message: Key đã dùng với nội dung khác.
+                  details: []
+    '422':
+      description: VALIDATION_ERROR
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            error:
+              value:
+                success: false
+                error:
+                  code: VALIDATION_ERROR
+                  message: Yêu cầu chưa thể hoàn tất.
+                  details: []
+    '429':
+      description: RATE_LIMITED
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            error:
+              value:
+                success: false
+                error:
+                  code: RATE_LIMITED
+                  message: Yêu cầu chưa thể hoàn tất.
+                  details: []
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+          description: Seconds until a bounded retry.
+    '502':
+      description: UPSTREAM_ERROR
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            error:
+              value:
+                success: false
+                error:
+                  code: UPSTREAM_ERROR
+                  message: Yêu cầu chưa thể hoàn tất.
+                  details: []
+    '503':
+      description: DEPENDENCY_UNAVAILABLE
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            error:
+              value:
+                success: false
+                error:
+                  code: DEPENDENCY_UNAVAILABLE
+                  message: Yêu cầu chưa thể hoàn tất.
+                  details: []
+  schemas:
+    Error:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - false
+        error:
+          type: object
+          additionalProperties: false
+          properties:
+            code:
+              type: string
+              minLength: 1
+              pattern: .*\S.*
+              maxLength: 100
+            message:
+              type: string
+              minLength: 1
+              pattern: .*\S.*
+              maxLength: 500
+            details:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+              minItems: 0
+          required:
+          - code
+          - message
+          - details
+      required:
+      - success
+      - error
+    Health:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+          - ok
+          - unavailable
+        service:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 100
+        checked_at:
+          type: string
+          format: date-time
+          example: '2026-10-19T07:00:00Z'
+      required:
+      - status
+      - service
+      - checked_at
+    User:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        name:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 100
+      required:
+      - id
+      - email
+      - name
+    Login:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 1
+          format: password
+          maxLength: 1024
+      required:
+      - email
+      - password
+    Token:
+      type: object
+      additionalProperties: false
+      properties:
+        access_token:
+          type: string
+          minLength: 1
+        token_type:
+          type: string
+          enum:
+          - bearer
+        expires_in:
+          type: integer
+          enum:
+          - 900
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+      - access_token
+      - token_type
+      - expires_in
+      - user
+    Customer:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        platform:
+          type: string
+          enum:
+          - FACEBOOK
+          - ZALO
+        platform_account_id:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 255
+        platform_user_id:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 255
+        name:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 100
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-10-19T07:00:00Z'
+      required:
+      - id
+      - platform
+      - platform_account_id
+      - platform_user_id
+      - name
+      - created_at
+    Note:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        customer_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        content:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 5000
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-10-19T07:00:00Z'
+      required:
+      - id
+      - customer_id
+      - content
+      - created_at
+    NoteCreate:
+      type: object
+      additionalProperties: false
+      properties:
+        content:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 5000
+      required:
+      - content
+    CustomerDetail:
+      type: object
+      additionalProperties: false
+      properties:
+        customer:
+          $ref: '#/components/schemas/Customer'
+        notes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Note'
+          minItems: 0
+        conversation_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+            example: 550e8400-e29b-41d4-a716-000000000001
+          minItems: 0
+        order_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+            example: 550e8400-e29b-41d4-a716-000000000001
+          minItems: 0
+      required:
+      - customer
+      - notes
+      - conversation_ids
+      - order_ids
+    Conversation:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        platform:
+          type: string
+          enum:
+          - FACEBOOK
+          - ZALO
+        customer:
+          $ref: '#/components/schemas/Customer'
+        status:
+          type: string
+          enum:
+          - NEW
+          - IN_PROGRESS
+          - RESOLVED
+        ai_status:
+          type: string
+          enum:
+          - AI_HANDLING
+          - NEEDS_SELLER
+          - SELLER_HANDLING
+        is_read:
+          type: boolean
+        last_message_at:
+          type: string
+          format: date-time
+          example: '2026-10-19T07:00:00Z'
+        last_message_preview:
+          type: string
+          maxLength: 200
+        version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-10-19T07:00:00Z'
+      required:
+      - id
+      - platform
+      - customer
+      - status
+      - ai_status
+      - is_read
+      - last_message_at
+      - last_message_preview
+      - version
+      - created_at
+    ReadUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        is_read:
+          type: boolean
+          enum:
+          - true
+      required:
+      - is_read
+    ConversationStatusUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+          - NEW
+          - IN_PROGRESS
+          - RESOLVED
+        expected_version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+      required:
+      - status
+      - expected_version
+    AiStatusUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        ai_status:
+          type: string
+          enum:
+          - AI_HANDLING
+          - SELLER_HANDLING
+        expected_version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+      required:
+      - ai_status
+      - expected_version
+    Message:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        conversation_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        sender:
+          type: string
+          enum:
+          - CUSTOMER
+          - SELLER
+          - AI
+        content:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 10000
+        status:
+          type: string
+          enum:
+          - SENDING
+          - SENT
+          - FAILED
+        platform_msg_id:
+          type: string
+          nullable: true
+          maxLength: 255
+        error_code:
+          type: string
+          nullable: true
+          maxLength: 100
+        delivery_unknown:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-10-19T07:00:00Z'
+      required:
+      - id
+      - conversation_id
+      - sender
+      - content
+      - status
+      - platform_msg_id
+      - error_code
+      - delivery_unknown
+      - created_at
+    MessageCreate:
+      type: object
+      additionalProperties: false
+      properties:
+        content:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 10000
+      required:
+      - content
+    VariantInput:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 100
+        price:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        stock:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        low_stock_threshold:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+      required:
+      - name
+      - price
+      - stock
+    Variant:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        product_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        name:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 100
+        price:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        stock:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        low_stock_threshold:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+      required:
+      - id
+      - product_id
+      - name
+      - price
+      - stock
+      - low_stock_threshold
+      - version
+    VariantUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        name:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 100
+        price:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        stock:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        low_stock_threshold:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+      minProperties: 2
+      required:
+      - expected_version
+    ProductCreate:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 5000
+        image_url:
+          type: string
+          format: uri
+          maxLength: 500
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/VariantInput'
+          minItems: 1
+      required:
+      - name
+      - variants
+    ProductUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 5000
+        image_url:
+          type: string
+          format: uri
+          maxLength: 500
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - INACTIVE
+      minProperties: 1
+    Product:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        name:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 5000
+        image_url:
+          type: string
+          nullable: true
+          maxLength: 500
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - INACTIVE
+        total_stock:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Variant'
+          minItems: 0
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-10-19T07:00:00Z'
+      required:
+      - id
+      - name
+      - description
+      - image_url
+      - status
+      - total_stock
+      - variants
+      - created_at
+    Image:
+      type: object
+      additionalProperties: false
+      properties:
+        image_url:
+          type: string
+          format: uri
+          maxLength: 500
+      required:
+      - image_url
+    OrderItemInput:
+      type: object
+      additionalProperties: false
+      properties:
+        variant_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+      required:
+      - variant_id
+      - quantity
+    OrderCreate:
+      type: object
+      additionalProperties: false
+      properties:
+        conversation_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        customer_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        customer_name:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 100
+        phone_number:
+          type: string
+          pattern: ^[0-9]{10,11}$
+          maxLength: 11
+        address:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 500
+        note:
+          type: string
+          maxLength: 5000
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemInput'
+          minItems: 1
+      required:
+      - conversation_id
+      - customer_id
+      - customer_name
+      - phone_number
+      - address
+      - items
+    OrderUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        customer_name:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 100
+        phone_number:
+          type: string
+          pattern: ^[0-9]{10,11}$
+          maxLength: 11
+        address:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 500
+        note:
+          type: string
+          maxLength: 5000
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemInput'
+          minItems: 1
+      minProperties: 2
+      required:
+      - expected_version
+    OrderStatusUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+          - CONFIRMED
+          - SHIPPING
+          - COMPLETED
+          - CANCELLED
+        expected_version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+      required:
+      - status
+      - expected_version
+    OrderItem:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        variant_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        product_name:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 200
+        variant_name:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 100
+        unit_price:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+        subtotal:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+      required:
+      - id
+      - variant_id
+      - product_name
+      - variant_name
+      - unit_price
+      - quantity
+      - subtotal
+    Order:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        order_code:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 36
+        conversation_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        customer_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        status:
+          type: string
+          enum:
+          - PENDING
+          - CONFIRMED
+          - SHIPPING
+          - COMPLETED
+          - CANCELLED
+        created_by:
+          type: string
+          enum:
+          - AI
+          - SELLER
+        customer_name:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 100
+        phone_number:
+          type: string
+          pattern: ^[0-9]{10,11}$
+          maxLength: 11
+        address:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 500
+        note:
+          type: string
+          maxLength: 5000
+        total_amount:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+          minItems: 1
+        version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-10-19T07:00:00Z'
+        updated_at:
+          type: string
+          format: date-time
+          example: '2026-10-19T07:00:00Z'
+      required:
+      - id
+      - order_code
+      - conversation_id
+      - customer_id
+      - status
+      - created_by
+      - customer_name
+      - phone_number
+      - address
+      - note
+      - total_amount
+      - items
+      - version
+      - created_at
+      - updated_at
+    FaqInput:
+      type: object
+      additionalProperties: false
+      properties:
+        question:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 1000
+        answer:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 5000
+        trigger_keywords:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            pattern: .*\S.*
+            maxLength: 100
+          minItems: 0
+      required:
+      - question
+      - answer
+    Faq:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        question:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 1000
+        answer:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 5000
+        trigger_keywords:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            pattern: .*\S.*
+            maxLength: 100
+          minItems: 0
+      required:
+      - id
+      - question
+      - answer
+      - trigger_keywords
+    BankTemplate:
+      type: object
+      additionalProperties: false
+      properties:
+        bank_name:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 100
+        account_number:
+          type: string
+          pattern: ^[0-9]+$
+          maxLength: 50
+        account_holder:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+          maxLength: 100
+      nullable: true
+      required:
+      - bank_name
+      - account_number
+      - account_holder
+    AiConfig:
+      type: object
+      additionalProperties: false
+      properties:
+        order_timeout_seconds:
+          type: integer
+          minimum: 3600
+          maximum: 259200
+        payment_template:
+          $ref: '#/components/schemas/BankTemplate'
+      required:
+      - order_timeout_seconds
+      - payment_template
+    AiConfigUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        order_timeout_seconds:
+          type: integer
+          minimum: 3600
+          maximum: 259200
+        payment_template:
+          $ref: '#/components/schemas/BankTemplate'
+      minProperties: 1
+    Connection:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-000000000001
+        platform:
+          type: string
+          enum:
+          - FACEBOOK
+          - ZALO
+        account_id:
+          type: string
+          nullable: true
+          maxLength: 255
+        account_name:
+          type: string
+          nullable: true
+          maxLength: 255
+        account_type:
+          type: string
+          enum:
+          - PAGE
+          - OA
+        status:
+          type: string
+          enum:
+          - CONNECTED
+          - DISCONNECTED
+          - ERROR
+        last_error_code:
+          type: string
+          nullable: true
+          maxLength: 100
+      required:
+      - id
+      - platform
+      - account_id
+      - account_name
+      - account_type
+      - status
+      - last_error_code
+    OAuthStart:
+      type: object
+      additionalProperties: false
+      properties:
+        authorization_url:
+          type: string
+          format: uri
+      required:
+      - authorization_url
+    DashboardStats:
+      type: object
+      additionalProperties: false
+      properties:
+        date:
+          type: string
+          format: date
+        timezone:
+          type: string
+          enum:
+          - Asia/Ho_Chi_Minh
+        new_conversations_today:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        needs_seller:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        unprocessed_conversations:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        pending_orders:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        low_stock_variants:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+      required:
+      - date
+      - timezone
+      - new_conversations_today
+      - needs_seller
+      - unprocessed_conversations
+      - pending_orders
+      - low_stock_variants
+    WebhookPayload:
+      type: object
+      additionalProperties: true
+      description: Vendor raw JSON. Signature over original bytes; validate provider schema in INT-01.
+        Not an internal normalized message.
+    WebhookAck:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+          - ok
+      required:
+      - status
+    PageMeta:
+      type: object
+      additionalProperties: false
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+      required:
+      - page
+      - limit
+      - total
+    TokenResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          $ref: '#/components/schemas/Token'
+      required:
+      - success
+      - data
+    UserResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          $ref: '#/components/schemas/User'
+      required:
+      - success
+      - data
+    CustomerResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          $ref: '#/components/schemas/Customer'
+      required:
+      - success
+      - data
+    NoteResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          $ref: '#/components/schemas/Note'
+      required:
+      - success
+      - data
+    CustomerDetailResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          $ref: '#/components/schemas/CustomerDetail'
+      required:
+      - success
+      - data
+    ConversationResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          $ref: '#/components/schemas/Conversation'
+      required:
+      - success
+      - data
+    MessageResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          $ref: '#/components/schemas/Message'
+      required:
+      - success
+      - data
+    VariantResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          $ref: '#/components/schemas/Variant'
+      required:
+      - success
+      - data
+    ProductResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          $ref: '#/components/schemas/Product'
+      required:
+      - success
+      - data
+    ImageResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          $ref: '#/components/schemas/Image'
+      required:
+      - success
+      - data
+    OrderResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          $ref: '#/components/schemas/Order'
+      required:
+      - success
+      - data
+    FaqResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          $ref: '#/components/schemas/Faq'
+      required:
+      - success
+      - data
+    AiConfigResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          $ref: '#/components/schemas/AiConfig'
+      required:
+      - success
+      - data
+    OAuthStartResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          $ref: '#/components/schemas/OAuthStart'
+      required:
+      - success
+      - data
+    DashboardStatsResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          $ref: '#/components/schemas/DashboardStats'
+      required:
+      - success
+      - data
+    CustomerListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+          minItems: 0
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+      required:
+      - success
+      - data
+      - meta
+    ConversationListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Conversation'
+          minItems: 0
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+      required:
+      - success
+      - data
+      - meta
+    MessageListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+          minItems: 0
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+      required:
+      - success
+      - data
+      - meta
+    ProductListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+          minItems: 0
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+      required:
+      - success
+      - data
+      - meta
+    OrderListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+          minItems: 0
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+      required:
+      - success
+      - data
+      - meta
+    FaqListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Faq'
+          minItems: 0
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+      required:
+      - success
+      - data
+      - meta
+    ConnectionListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          enum:
+          - true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Connection'
+          minItems: 0
+      required:
+      - success
+      - data

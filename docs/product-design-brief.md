@@ -1,7 +1,7 @@
 # SocialCart product design brief
 
 > **Provenance**
-> - **Source prompt:** [P4.1 — Create product design brief](../../chapter-04-ai-for-product-design/prompts/create-product-design-brief.prompt.md)
+> - **Source prompt:** [P4.1 — Create product design brief](promt/create-product-design-brief.prompt.md)
 > - **Artifact status:** `Draft — pending human approval`
 > - **Human action:** Review interaction contracts and approve behavior before visual exploration.
 > - **Reproduction note:** Visual references and human choices from HUMAN CHECK will influence concept exploration in P4.2.
@@ -44,7 +44,7 @@ Người bán nhỏ kinh doanh qua Facebook và Zalo phải chuyển đổi qua 
 
 | From → To | Trigger |
 | --- | --- |
-| AI đang xử lý → Cần người bán | AI encounters unknown intent, AI service error, or customer timeout |
+| AI đang xử lý → Cần người bán | AI encounters unknown intent, AI service error, or 30-second processing deadline |
 | AI đang xử lý → Người bán đang xử lý | Seller presses "Tắt AI" |
 | Cần người bán → Người bán đang xử lý | Seller opens conversation and begins replying |
 | Người bán đang xử lý → AI đang xử lý | Seller presses "Bật lại AI" |
@@ -207,3 +207,7 @@ No backend persistence, password reset, email verification, SSO, social login, m
 ## Review gate
 
 Later work must preserve the accepted conversation list contract, chat view contract (AI/human/customer message distinction), AI status state machine, handoff signal behavior, order creation modal pattern, empty/error/recovery states, and responsive accessibility behavior. Any product change requires an explicit decision record.
+
+## Implementation alignment — 2026-10-19
+
+Collection timeout (1–72 giờ, mặc định 24) khác lỗi xử lý AI: reset context, processing status NEW, không tạo đơn và AI sẵn sàng nhận tin tiếp theo, theo FR-20b. Status source là data-rules.md. Concept B đã được chọn; brief giữ trạng thái Draft vì chưa có bằng chứng nghiệm thu P4.5. Prototype vào Inbox, sản phẩm cuối login về Dashboard theo AC-29.

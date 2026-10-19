@@ -3,7 +3,7 @@
 ## Tổng quan
 
 Chapter 4 cung cấp 5 file prompt có sẵn trong thư mục
-[`chapter-04-ai-for-product-design/prompts/`](../../chapter-04-ai-for-product-design/prompts/).
+[`chapter-04-ai-for-product-design/prompts/`](promt/).
 Bạn **dùng lại nguyên các file đó**, chỉ thay **Inputs** và **đường dẫn output** cho SocialCart.
 
 > [!IMPORTANT]
@@ -22,7 +22,7 @@ P4.1 → HUMAN CHECK → P4.2 → P4.3 (Review Gate) → P4.4 → P4.5 (Review G
 
 ## Bước 1 — P4.1: Tạo Product Design Brief
 
-**Prompt gốc:** [`create-product-design-brief.prompt.md`](../../chapter-04-ai-for-product-design/prompts/create-product-design-brief.prompt.md)
+**Prompt gốc:** [`create-product-design-brief.prompt.md`](promt/create-product-design-brief.prompt.md)
 
 **Cách dùng cho SocialCart — chỉ thay phần Inputs:**
 
@@ -71,7 +71,7 @@ Việc bạn phải làm:
 
 ## Bước 2 — P4.2: Explore Interface Directions
 
-**Prompt gốc:** [`explore-interface-directions.prompt.md`](../../chapter-04-ai-for-product-design/prompts/explore-interface-directions.prompt.md)
+**Prompt gốc:** [`explore-interface-directions.prompt.md`](promt/explore-interface-directions.prompt.md)
 
 **Cách dùng cho SocialCart — thay phần Inputs:**
 
@@ -103,7 +103,7 @@ SocialCart/design/concepts/concept-c.html
 
 ## Bước 3 — P4.3: Critique and Select (Review Gate)
 
-**Prompt gốc:** [`critique-and-select-interface.prompt.md`](../../chapter-04-ai-for-product-design/prompts/critique-and-select-interface.prompt.md)
+**Prompt gốc:** [`critique-and-select-interface.prompt.md`](promt/critique-and-select-interface.prompt.md)
 
 **Cách dùng cho SocialCart — thay phần Inputs:**
 
@@ -132,7 +132,7 @@ Sau khi approve, lưu decision vào: SocialCart/docs/product-design.md
 
 ## Bước 4 — P4.4: Build Interactive Prototype
 
-**Prompt gốc:** [`build-interactive-prototype.prompt.md`](../../chapter-04-ai-for-product-design/prompts/build-interactive-prototype.prompt.md)
+**Prompt gốc:** [`build-interactive-prototype.prompt.md`](promt/build-interactive-prototype.prompt.md)
 
 **Cách dùng cho SocialCart — thay phần Inputs:**
 
@@ -167,7 +167,7 @@ SocialCart/prototype/app.js
 
 ## Bước 5 — P4.5: Review Interactive Prototype (Review Gate)
 
-**Prompt gốc:** [`review-interactive-prototype.prompt.md`](../../chapter-04-ai-for-product-design/prompts/review-interactive-prototype.prompt.md)
+**Prompt gốc:** [`review-interactive-prototype.prompt.md`](promt/review-interactive-prototype.prompt.md)
 
 **Cách dùng cho SocialCart — thay phần Inputs:**
 

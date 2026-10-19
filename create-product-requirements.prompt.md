@@ -6,7 +6,7 @@
 > - **Output mode:** interactive draft → approved artifact
 > - **Approval gate:** approve the PRD before saving
 > - **Canonical output:** `chapter-03-ai-for-requirements-product-analysis/docs/product-requirements.md`
-> - **Sample correspondence:** [product-requirements.md](../docs/product-requirements.md)
+> - **Sample correspondence:** [product-requirements.md](docs/product-requirements.md)
 > - **Run context:** fresh session; attach or provide every input below.
 
 ## Use this when
@@ -15,8 +15,8 @@ The project brief and portable context are approved, and you need a small, testa
 
 ## Inputs
 
-- Project brief: [project-brief.md](../../chapter-01-ai-in-software-engineering/docs/project-brief.md)
-- Project context: [project-context.md](../../chapter-02-prompt-engineering/docs/project-context.md)
+- Project brief: [project-brief.md](Project%20Brief.md)
+- Project context: [project-context.md](Project%20Context.md)
 - Any newer human-approved product decision.
 
 If a linked artifact is unavailable, ask for it. Do not infer product scope from the filename.

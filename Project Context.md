@@ -1,5 +1,7 @@
 # Project Context
 
+> Bối cảnh lịch sử ở giai đoạn khởi tạo. Hiện đã có PRD/Feature Spec/TDD và prototype; xem [README](README.md), [decision log](docs/decisions.md) và [implementation plan](docs/implementation-plan.md) để biết trạng thái hiện tại. Các mục “chưa xác định” bên dưới không thay thế quyết định đã ghi sau đó.
+
 ## 1. Bối cảnh dự án
 
 Dự án hướng đến việc xây dựng một hệ thống hỗ trợ **một hộ kinh doanh** quản lý tin nhắn và chốt đơn từ **Facebook và Zalo**.

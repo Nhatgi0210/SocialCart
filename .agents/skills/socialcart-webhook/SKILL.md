@@ -1,113 +1,14 @@
 ---
 name: socialcart-webhook
-description: >-
-  Huong dan xu ly webhook tu Facebook Messenger va Zalo OA cho SocialCart.
-  Su dung khi implement hoac debug webhook handlers, verify signatures,
-  parse message payloads, hoac khi can them loai su kien webhook moi.
+description: Implement/debug webhook Facebook Messenger và Zalo OA, xác minh raw payload và chống xử lý trùng bền vững.
 ---
 
-# SocialCart Webhook Integration
+# SocialCart Webhooks
 
-## Facebook Messenger Webhook
+Đọc [OpenAPI](../../../docs/api/openapi.yaml), [data rules §5](../../../docs/data-rules.md), [service contracts](../../../docs/api/service-contracts.md). Gateway :8000 route /webhooks/facebook và /webhooks/zalo tới webhook-service :8007; raw bytes/signature header không bị đổi.
 
-### Verify Challenge (GET)
+Facebook GET verify dùng FB_WEBHOOK_VERIFY_TOKEN và trả original challenge dạng text/plain, không ép int. POST verify X-Hub-Signature-256 trên raw body. Với Zalo OA, INT-01 phải xác minh signature/header/payload/token hiện hành từ official docs; không copy shape giả định trong ví dụ cũ.
 
-```python
-@router.get("/webhooks/facebook")
-def verify_facebook(
-    hub_mode: str = Query(alias="hub.mode"),
-    hub_challenge: str = Query(alias="hub.challenge"),
-    hub_verify_token: str = Query(alias="hub.verify_token")
-):
-    if hub_mode == "subscribe" and hub_verify_token == settings.FB_VERIFY_TOKEN:
-        return int(hub_challenge)
-    raise HTTPException(status_code=403)
-```
+Verify→durable receipt+outbox transaction→ACK. DB down trước commit trả503; signature sai403. Unique platform/account/event_id, Redis chỉ cache; không dùng SET NX trước xử lý làm nguồn exactly-once vì crash có thể mất tin. Replay/redelivery không tạo message/task/đơn mới.
 
-### Nhan tin nhan (POST)
-
-```python
-@router.post("/webhooks/facebook")
-async def facebook_webhook(request: Request):
-    # 1. Verify X-Hub-Signature-256
-    payload = await request.body()
-    signature = request.headers.get("X-Hub-Signature-256", "")
-    if not verify_facebook_signature(payload, signature, settings.FB_APP_SECRET):
-        raise HTTPException(status_code=403, detail="Invalid signature")
-
-    data = await request.json()
-    for entry in data.get("entry", []):
-        for messaging in entry.get("messaging", []):
-            if "message" in messaging:
-                await handle_fb_message(messaging)
-    return {"status": "ok"}
-```
-
-### Cau truc Facebook Message Event
-
-```json
-{
-  "sender": {"id": "PSID_cua_khach"},
-  "recipient": {"id": "PAGE_ID"},
-  "timestamp": 1696000000000,
-  "message": {
-    "mid": "m_xxx",
-    "text": "Noi dung tin nhan"
-  }
-}
-```
-
-## Zalo OA Webhook
-
-### Cau truc Zalo Message Event
-
-```json
-{
-  "event_name": "user_send_text",
-  "user_id_by_app": "zalo_uid",
-  "oa_id": "OA_ID",
-  "timestamp": 1696000000000,
-  "message": {
-    "msg_id": "m_xxx",
-    "text": "Noi dung tin nhan"
-  }
-}
-```
-
-## Xu ly chung sau khi parse
-
-```python
-async def handle_incoming_message(
-    platform: str,
-    platform_user_id: str,
-    platform_conv_id: str,
-    text: str,
-    attachments: list
-):
-    # 1. Upsert customer
-    customer = await customer_service.upsert(platform, platform_user_id)
-    # 2. Upsert conversation
-    conv = await conversation_service.upsert(customer.id, platform, platform_conv_id)
-    # 3. Save message
-    msg = await conversation_service.save_message(conv.id, "customer", text)
-    # 4. Emit realtime
-    await realtime_service.emit("message:new", conv.id)
-    # 5. Queue AI task (neu AI mode = auto)
-    if conv.ai_mode == "auto":
-        process_ai_message.delay(conv.id, msg.id)
-```
-
-## Idempotency
-
-- Moi webhook event phai duoc xu ly dung 1 lan
-- Luu message_id (mid/msg_id) de detect duplicate
-- Su dung Redis SET de track processed event IDs (TTL 24h)
-
-```python
-import redis
-r = redis.Redis.from_url(settings.REDIS_URL)
-
-def is_duplicate_event(event_id: str) -> bool:
-    key = f"webhook:processed:{event_id}"
-    return not r.set(key, 1, nx=True, ex=86400)
-```
+Consumer upsert customer theo platform/account/user, conversation theo platform/account/chat, message theo platform/account/message ID. Publish sau commit, queue AI chỉ khi AI_HANDLING. Không gọi Gemini inline hoặc gửi token qua event. Bằng chứng local/simulated/live riêng; replay tài khoản test, không gửi khách thật khi không có chỉ thị.

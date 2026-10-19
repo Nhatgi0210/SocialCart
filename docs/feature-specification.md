@@ -1,11 +1,13 @@
 # Feature Specification: SocialCart
 
-> **Trạng thái:** Approved  
-> **Phiên bản:** 1.0  
-> **Ngày tạo:** 2026-09-08  
-> **Cập nhật lần cuối:** 2026-09-08  
-> **Nguồn:** PRD v1.0 (Approved) + Project Context  
-> **PRD tham chiếu:** [product-requirements.md](file:///g:/ChuyenDe4/SocialCart/docs/product-requirements.md)
+> Đồng bộ 2026-10-19: OA-only theo TD-12; hợp đồng API và transaction chi tiết ở [OpenAPI](api/openapi.yaml), [data rules](data-rules.md), [decision log](decisions.md).
+
+> **Trạng thái:** Approved
+> **Phiên bản:** 1.1
+> **Ngày tạo:** 2026-09-08
+> **Cập nhật lần cuối:** 2026-10-19
+> **Nguồn:** PRD v1.1 (Approved) + Project Context
+> **PRD tham chiếu:** [product-requirements.md](product-requirements.md)
 
 ---
 
@@ -84,7 +86,7 @@ Nếu request không có session hoặc session đã hết hạn → chuyển h�
 
 ### 2.1. Business Rules
 
-- BR-CONN-01: Hệ thống hỗ trợ kết nối **1 Facebook Page** và **1 tài khoản Zalo** (OA hoặc cá nhân).
+- BR-CONN-01: Hệ thống hỗ trợ kết nối **1 Facebook Page** và **1 Zalo OA**; Zalo cá nhân ngoài V1 theo TD-12.
 - BR-CONN-02: Mỗi nền tảng có 3 trạng thái: `Chưa kết nối` / `Đã kết nối` / `Lỗi kết nối`.
 - BR-CONN-03: Token kết nối lưu phía server, không lộ ra client.
 - BR-CONN-04: Khi token hết hạn hoặc bị thu hồi → trạng thái chuyển sang `Lỗi kết nối`.
@@ -108,7 +110,7 @@ Nếu request không có session hoặc session đã hết hạn → chuyển h�
 
 ### 2.3. Kết nối Zalo
 
-**Main Flow:** Tương tự Facebook nhưng sử dụng luồng xác thực Zalo. Hỗ trợ cả Zalo OA và Zalo cá nhân. Trang Cài đặt hiển thị thêm loại tài khoản (OA / cá nhân).
+**Main Flow:** Tương tự Facebook nhưng sử dụng luồng xác thực Zalo OA. V1 chỉ hỗ trợ OA theo TD-12. Trang Cài đặt hiển thị loại tài khoản OA.
 
 **Error Flow:** Tương tự Facebook.
 
@@ -447,7 +449,7 @@ Tin nhắn đến từ khách
    • [Sản phẩm] - [Biến thể] x[SL] — [Giá]
    • Tổng tiền: [Tổng]
    • Giao đến: [Tên], [SĐT], [Địa chỉ]
-   
+
    Bạn xác nhận đặt hàng không?
    ```
 8. Khách xác nhận → hệ thống tạo đơn hàng trạng thái "Chờ xác nhận".
@@ -673,4 +675,4 @@ Các tính năng sau **không thuộc phiên bản 1** và không được tri�
 
 ---
 
-*Feature Specification v1.0 — Approved. Đã phê duyệt bởi người bán.*
+*Feature Specification v1.1 — giữ nghiệp vụ đã phê duyệt; đồng bộ quyết định OA-only và baseline triển khai.*

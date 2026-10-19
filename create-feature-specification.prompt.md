@@ -6,7 +6,7 @@
 > - **Output mode:** interactive draft → approved artifact
 > - **Approval gate:** approve behavior before saving
 > - **Canonical output:** `chapter-03-ai-for-requirements-product-analysis/docs/feature-specification.md`
-> - **Sample correspondence:** [feature-specification.md](../docs/feature-specification.md)
+> - **Sample correspondence:** [feature-specification.md](docs/feature-specification.md)
 > - **Run context:** fresh session; attach or provide every input below.
 
 ## Use this when
@@ -15,8 +15,8 @@ The PRD has passed review and designers or developers need detailed behavior wit
 
 ## Inputs
 
-- Accepted product requirements: [product-requirements.md](../docs/product-requirements.md)
-- Project context: [project-context.md](../../chapter-02-prompt-engineering/docs/project-context.md)
+- Accepted product requirements: [product-requirements.md](docs/product-requirements.md)
+- Project context: [project-context.md](Project%20Context.md)
 - Any newer human-approved decision.
 
 ## Task

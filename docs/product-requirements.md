@@ -1,9 +1,9 @@
 # Product Requirements Document: Hệ Thống Quản Lý Tin Nhắn và Chốt Đơn Tự Động Cho Hộ Kinh Doanh Đa Nền Tảng
 
-> **Trạng thái:** Approved  
-> **Phiên bản:** 1.0  
-> **Ngày tạo:** 2026-09-08  
-> **Cập nhật lần cuối:** 2026-09-08  
+> **Trạng thái:** Approved
+> **Phiên bản:** 1.1
+> **Ngày tạo:** 2026-09-08
+> **Cập nhật lần cuối:** 2026-10-19 — đồng bộ TD-12 và hợp đồng triển khai; xem [decisions.md](decisions.md)
 > **Nguồn:** Project Brief + Project Context + Quyết định phê duyệt OQ-01 → OQ-10 + Review Gate P3.2
 
 ---
@@ -41,7 +41,7 @@ Dự án SocialCart xây dựng một hệ thống hợp nhất: tập trung t�
 ### 1.3. User Personas
 
 **Primary — Chủ hộ kinh doanh (Người bán):**
-- Cá nhân hoặc hộ gia đình kinh doanh hàng hóa qua Facebook Page và Zalo OA / Zalo cá nhân.
+- Cá nhân hoặc hộ gia đình kinh doanh hàng hóa qua Facebook Page và Zalo OA.
 - Không nhất thiết có kỹ năng kỹ thuật cao.
 - Mong muốn: tiết kiệm thời gian, không bỏ sót đơn, kiểm soát được AI.
 
@@ -84,7 +84,7 @@ Trở thành trợ lý bán hàng AI đáng tin cậy cho hộ kinh doanh: giúp
 
 ### 3.1. In-Scope (Phiên bản 1)
 
-- **Module 1 — Kết nối nền tảng:** Kết nối Facebook Page và Zalo (OA và cá nhân); nhận tin nhắn vào hệ thống.
+- **Module 1 — Kết nối nền tảng:** Kết nối Facebook Page và Zalo OA; nhận tin nhắn vào hệ thống.
 - **Module 2 — Unified Inbox:** Hộp thư hợp nhất hiển thị tất cả hội thoại, lọc theo nền tảng/trạng thái.
 - **Module 3 — Quản lý khách hàng:** Hồ sơ khách hàng được tự động tạo từ hội thoại; ghi chú thủ công.
 - **Module 4 — Quản lý sản phẩm:** Danh mục sản phẩm (tên, mô tả, ảnh, biến thể với giá và tồn kho); AI dùng để tư vấn.
@@ -97,6 +97,7 @@ Trở thành trợ lý bán hàng AI đáng tin cậy cho hộ kinh doanh: giúp
 
 - Tích hợp nền tảng khác (TikTok Shop, Instagram, Shopee...).
 - Hỗ trợ nhiều hộ kinh doanh / multi-tenant.
+- Kết nối Zalo cá nhân trong V1.
 - Tích hợp đơn vị vận chuyển (GHN, GHTK...).
 - Thanh toán online / cổng thanh toán.
 - Tính năng marketing automation (broadcast, remarketing).
@@ -115,7 +116,7 @@ Trở thành trợ lý bán hàng AI đáng tin cậy cho hộ kinh doanh: giúp
 
 **FR-01:** Hệ thống cho phép người bán kết nối Facebook Page thông qua luồng OAuth của Facebook.
 
-**FR-02:** Hệ thống cho phép người bán kết nối Zalo OA thông qua luồng xác thực của Zalo. Hệ thống cũng hỗ trợ kết nối Zalo cá nhân (trong phạm vi API cho phép).
+**FR-02:** Hệ thống cho phép người bán kết nối Zalo OA thông qua luồng xác thực của Zalo. Zalo cá nhân ngoài phạm vi V1 theo TD-12.
 
 **FR-03:** Hệ thống hiển thị trạng thái kết nối (đã kết nối / ngắt kết nối / lỗi) cho từng tài khoản nền tảng.
 
@@ -231,7 +232,7 @@ Trở thành trợ lý bán hàng AI đáng tin cậy cho hộ kinh doanh: giúp
 
 ### Module 6 — Quản lý đơn hàng
 
-**FR-23:** Khi AI thu thập đủ thông tin đặt hàng, hệ thống tự động tạo đơn hàng với trạng thái "Chờ xác nhận".
+**FR-23:** Khi AI thu thập đủ thông tin đặt hàng và khách xác nhận tóm tắt, hệ thống tự động tạo đơn hàng với trạng thái "Chờ xác nhận".
 
 **FR-24:** Người bán có thể xem danh sách đơn hàng với các trạng thái: Chờ xác nhận / Đã xác nhận / Đang giao / Hoàn thành / Đã hủy.
 
@@ -286,7 +287,7 @@ Trở thành trợ lý bán hàng AI đáng tin cậy cho hộ kinh doanh: giúp
 
 **AC-01 (FR-01):** Khi người bán hoàn tất luồng OAuth Facebook, trang Cài đặt hiển thị tên Facebook Page và trạng thái "Đã kết nối". Tin nhắn mới gửi đến Page xuất hiện trong Inbox trong vòng 60 giây.
 
-**AC-02 (FR-02):** Khi người bán hoàn tất xác thực Zalo (OA hoặc cá nhân), trang Cài đặt hiển thị tên tài khoản Zalo, loại tài khoản (OA / cá nhân), và trạng thái "Đã kết nối". Tin nhắn mới từ Zalo xuất hiện trong Inbox trong vòng 60 giây.
+**AC-02 (FR-02):** Khi người bán hoàn tất xác thực Zalo OA, trang Cài đặt hiển thị tên tài khoản Zalo, loại tài khoản OA, và trạng thái "Đã kết nối". Tin nhắn mới từ Zalo xuất hiện trong Inbox trong vòng 60 giây.
 
 **AC-03 (FR-03):** Khi token kết nối hết hạn hoặc bị thu hồi, hệ thống hiển thị trạng thái "Lỗi kết nối" và hướng dẫn kết nối lại. Không có tin nhắn giả mạo được tạo ra.
 
@@ -364,7 +365,7 @@ Trở thành trợ lý bán hàng AI đáng tin cậy cho hộ kinh doanh: giúp
 
 ### Module 6 — Quản lý đơn hàng
 
-**AC-22 (FR-23):** Khi AI thu thập đủ thông tin đặt hàng bắt buộc, một đơn hàng mới xuất hiện trong danh sách đơn hàng với trạng thái "Chờ xác nhận". Đơn hàng liên kết đúng với hội thoại và khách hàng.
+**AC-22 (FR-23):** Khi AI thu thập đủ thông tin đặt hàng bắt buộc và khách xác nhận tóm tắt, một đơn hàng mới xuất hiện trong danh sách đơn hàng với trạng thái "Chờ xác nhận". Đơn hàng liên kết đúng với hội thoại và khách hàng.
 
 **AC-22b (FR-27):** Mở hội thoại đã có đơn hàng → danh sách đơn hàng liên quan hiển thị trong panel bên. Nhấn vào tên đơn → chuyển đến trang chi tiết đơn hàng. Mở chi tiết đơn hàng → có link về hội thoại gốc.
 
@@ -443,7 +444,7 @@ Trở thành trợ lý bán hàng AI đáng tin cậy cho hộ kinh doanh: giúp
 | A-05 | Thông tin bắt buộc của đơn hàng: tên khách, số điện thoại, địa chỉ, ít nhất 1 sản phẩm với biến thể cụ thể. |
 | A-06 | Hệ thống là web app — không có app di động trong phiên bản 1. |
 | A-07 | Chỉ có 1 người dùng (người bán) — không có phân quyền nhân viên. |
-| A-08 | Zalo hỗ trợ cả OA (Official Account) và cá nhân — đã phê duyệt (OQ-06 ✅). |
+| A-08 | V1 chỉ hỗ trợ Zalo OA theo TD-12; quyết định này thay phạm vi cũ ở OQ-06. |
 
 ---
 
@@ -456,7 +457,7 @@ Trở thành trợ lý bán hàng AI đáng tin cậy cho hộ kinh doanh: giúp
 | OQ-03 | AI có tự xác nhận đơn hàng không? | ✅ Không — cần người bán xác nhận | 2026-09-08 |
 | OQ-04 | AI có gửi thông tin thanh toán không? | ✅ Có — theo template cấu hình | 2026-09-08 |
 | OQ-05 | Thông tin đơn hàng bắt buộc? | ✅ Tên, SĐT, địa chỉ, sản phẩm + biến thể | 2026-09-08 |
-| OQ-06 | Zalo OA hay cá nhân? | ✅ Cả hai | 2026-09-08 |
+| OQ-06 | Zalo OA hay cá nhân? | Lịch sử: cả hai; được thay bằng TD-12: V1 chỉ OA (TDD 2026-09-15) | 2026-09-08 |
 | OQ-07 | Khách thay đổi đơn sau khi tạo? | ✅ AI tự cập nhật và xác nhận lại | 2026-09-08 |
 | OQ-08 | Khách không phản hồi? | ✅ Timeout → chuyển về chưa xử lý | 2026-09-08 |
 
@@ -476,4 +477,4 @@ Trở thành trợ lý bán hàng AI đáng tin cậy cho hộ kinh doanh: giúp
 
 ---
 
-*PRD v1.0 — Approved. Đã phê duyệt bởi người bán.*
+*PRD v1.1 — giữ yêu cầu đã phê duyệt; đồng bộ quyết định OA-only mới hơn. Tài liệu không chứng nhận implementation.*

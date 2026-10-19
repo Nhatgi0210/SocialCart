@@ -233,7 +233,4 @@ Các concept được kiểm tra theo audit checklist đặc thù của SocialCa
 
 ---
 
-> [!IMPORTANT]
-> **Human approval required.** Xem lại scorecard và recommendation ở trên. Nếu đồng ý với **Concept B — Soft Daylight**, confirm để tiến hành **Bước 4 — P4.4: Build Interactive Prototype**.
->
-> Nếu muốn thay đổi lựa chọn (sang A hoặc C), hãy nêu lý do để ghi nhận vào decision record trước khi build.
+> Concept B đã có decision record ngày 2026-09-24; không yêu cầu chọn lại concept. P4.5 runtime review chưa thực hiện trong lượt đồng bộ tài liệu. Xem [prototype-review.md](prototype-review.md) để theo dõi checklist và correction; không coi việc chọn concept là đã nghiệm thu prototype.

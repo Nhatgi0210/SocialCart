@@ -14,8 +14,8 @@ You have a PRD draft and need to decide whether it is ready to drive a feature s
 
 ## Inputs
 
-- PRD draft: [product-requirements.md](../docs/product-requirements.md)
-- Project context: [project-context.md](../../chapter-02-prompt-engineering/docs/project-context.md)
+- PRD draft: [product-requirements.md](docs/product-requirements.md)
+- Project context: [project-context.md](Project%20Context.md)
 - Any newer human-approved product decision.
 
 ## Task

@@ -1,52 +1,8 @@
-# P4.5 — Review the interactive prototype
+# P4.5 — Review interactive prototype SocialCart
 
-> - **Role:** REVIEW GATE
-> - **Skills:** `$product-design:audit` (required), `$frontend-expert` (supporting: assess implementation-state gaps)
-> - **Interaction mode:** inspect-and-report
-> - **Output mode:** review findings
-> - **Approval gate:** human accepts corrections before the design record changes
-> - **Updates:** `chapter-04-ai-for-product-design/docs/product-design.md` after human review
-> - **Run context:** fresh session; attach or provide every input below.
+Chạy [prototype](../../prototype/) theo [setup](../setup.md). Kiểm checklist ở [prototype-review](../prototype-review.md): login → inbox/filter → conversation → AI/handoff → seller reply/retry → quick order → empty/error. Kiểm viewport 320/375/768/1440, keyboard-only, focus trap/return, Escape, labels/live region, contrast và reduced motion.
 
-## Use this when
+Với mỗi issue ghi evidence/screenshot, bước tái hiện, expected/actual, ảnh hưởng và correction nhỏ nhất. Ghi PASS/FAIL/NOT RUN/BLOCKED; không suy kết quả runtime từ source. Không redesign scope hoặc giả lập backend persistence. Người dùng chấp nhận correction/rủi ro trước khi cập nhật docs/product-design.md thành accepted prototype.
 
-The static prototype runs and you need observable UX, responsive, and accessibility findings before accepting it.
 
-## Inputs
-
-- Accepted design brief: [product-design-brief.md](../docs/product-design-brief.md)
-- Selected design: [product-design.md](../docs/product-design.md)
-- Running static prototype in [prototype](../prototype/).
-
-## Task
-
-Use `$product-design:audit` to capture and inspect the flow: login/register, validation, loading, keyboard submission, ticket creation from each entry point, editing, tags, status selection, drag, empty lanes, failure recovery, deletion, narrow view, focus order, and reduced motion.
-
-For each confirmed issue, report evidence, impact, affected interaction, and the smallest correction. Use `$frontend-expert` to distinguish a visible defect from a state-handling or responsive implementation gap. Do not change the design record until findings are reviewed.
-
-## Constraints and source precedence
-
-1. Accepted design artifacts and human decisions.
-2. Evidence captured in this review run.
-3. AI suggestions.
-
-- Do not report a preference as a defect.
-- Do not redesign product scope or introduce backend behavior.
-
-## Expected output
-
-A prioritized review with accepted corrections, deferred risks, evidence limits, and explicit `Not run`/`Blocked` checks.
-
-## Save or update
-
-After human review, update `chapter-04-ai-for-product-design/docs/product-design.md` with accepted corrections and deferred risks only.
-
-## Human review required
-
-The human approves corrections and accepts any remaining risk before the prototype is treated as an accepted reference.
-
-## Validation checklist
-
-- Tickets remain scannable and controls remain understandable.
-- Keyboard, narrow-view, and reduced-motion paths are usable.
-- Failure states preserve user work and state the next action.
+Đọc [AGENTS](../../AGENTS.md), [decision log](../decisions.md), [design brief](../product-design-brief.md), [product design](../product-design.md). Các skill thiết kế ngoài repository chỉ dùng nếu thực sự có sẵn, không coi tên skill trong template cũ là dependency bắt buộc. Giữ phạm vi SocialCart; không thêm register, ticket board, Kanban hoặc backend vào prototype.

@@ -1,88 +1,16 @@
 ---
 name: socialcart-order-flow
-description: >-
-  Mo ta vong doi don hang (Order Lifecycle) cua SocialCart: cac trang thai,
-  business rules chuyen doi trang thai, inventory hold/release mechanism,
-  VietQR payment generation va cach xu ly edge cases. Su dung khi implement
-  order-related features hoac xu ly loi lien quan den don hang.
+description: Implement/debug đơn hàng SocialCart, snapshot giá và transaction tồn kho theo lifecycle V1.
 ---
 
 # SocialCart Order Lifecycle
 
-## Cac Trang Thai Don Hang
+Nguồn chuẩn: [Feature Spec §7](../../../docs/feature-specification.md), [data rules §4](../../../docs/data-rules.md), [OpenAPI](../../../docs/api/openapi.yaml).
 
-```
-pending_confirm -> confirmed -> shipping -> completed
-                             -> cancelled
-pending_confirm              -> cancelled
-```
+PENDING→CONFIRMED→SHIPPING→COMPLETED; PENDING/CONFIRMED/SHIPPING có thể CANCELLED; terminal không đổi. AI chỉ tạo/sửa PENDING, seller confirm. Tạo pending không giữ/trừ stock; confirm trừ kho, cancel confirmed/shipping hoàn đúng một lần. Không có hold_quantity V1.
 
-| Trang thai | Mo ta | Nguoi thuc hien |
-|------------|-------|-----------------|
-| pending_confirm | Don nhap tu AI, cho xac nhan | AI tao, nguoi ban xac nhan |
-| confirmed | Da xac nhan, chuan bi hang | Nguoi ban |
-| shipping | Dang giao hang | Nguoi ban |
-| completed | Giao thanh cong | Nguoi ban |
-| cancelled | Da huy | Nguoi ban (bat ky giai doan) |
+UUID chuỗi, order_code riêng, tiền nguyên VNĐ; không thêm shipping_fee/payment_status/VietQR endpoint từ ví dụ cũ. Snapshot item name/price từ DB; input UI/LLM không quyết định giá. Chỉ sửa nội dung PENDING; giữ snapshot variant cũ, variant mới dùng giá hiện tại.
 
-## Business Rules
+Lock order và variants theo thứ tự ID, expected_version và Idempotency-Key theo spec; stock/order/movement ledger commit cùng transaction. Không HTTP trừ kho rồi ghi order. Thiếu kho rollback hết. Kiểm hai đơn tranh stock cuối, confirm/cancel lặp, version cũ, snapshot sau đổi giá/xóa mềm.
 
-1. Inventory Hold: Khi order chuyen sang pending_confirm, lock so luong (variant.hold_quantity += quantity)
-2. Inventory Release: Khi order bi cancelled, giai phong so luong da hold
-3. Inventory Deduct: Khi order chuyen sang confirmed, tru thuc su tu kho
-4. Khong allow confirmed neu het hang: Kiem tra stock truoc khi confirm
-5. AI chi tao pending_confirm: AI KHONG DUOC tu chuyen sang confirmed
-
-## Order Model
-
-```python
-class Order(Base):
-    __tablename__ = "orders"
-    id = Column(Integer, primary_key=True)
-    conversation_id = Column(Integer, ForeignKey("conversations.id"))
-    customer_id = Column(Integer, ForeignKey("customers.id"))
-    status = Column(Enum("pending_confirm","confirmed","shipping","completed","cancelled"))
-    total_amount = Column(Numeric(12, 2))
-    shipping_fee = Column(Numeric(10, 2), default=0)
-    payment_status = Column(Enum("unpaid","paid","refunded"), default="unpaid")
-    shipping_name = Column(String(200))
-    shipping_phone = Column(String(20))
-    shipping_address = Column(Text)
-    note = Column(Text, nullable=True)
-    created_by = Column(Enum("ai", "seller"))
-    created_at = Column(DateTime, default=datetime.utcnow)
-```
-
-## VietQR Payment URL
-
-```python
-def generate_vietqr_url(order, bank_config: dict) -> str:
-    amount = int(order.total_amount + order.shipping_fee)
-    order_ref = f"DH{order.id:06d}"
-    bank_code = bank_config["bank_code"]
-    account = bank_config["account_number"]
-    account_name = bank_config["account_name"]
-    return (
-        f"https://img.vietqr.io/image/{bank_code}-{account}-compact2.png"
-        f"?amount={amount}&addInfo={order_ref}&accountName={account_name}"
-    )
-```
-
-## API Endpoints (order-service :8005)
-
-```
-GET    /orders                  List orders, filter by status/customer
-GET    /orders/{id}             Order detail
-POST   /orders                  Tao order moi (tu AI hoac nguoi ban)
-PATCH  /orders/{id}/status      Chuyen trang thai
-DELETE /orders/{id}             Huy don (set status = cancelled)
-GET    /orders/{id}/payment-qr  Lay VietQR URL
-```
-
-## Edge Cases Can Xu Ly
-
-- Khach huy sau khi da confirmed: Giai phong inventory, hoi lai ly do
-- San pham het hang khi confirm: Block confirm, thong bao nguoi ban
-- Thay doi dia chi sau confirmed: Cho phep update neu chua shipping
-- Don trung lap: Neu cung customer cung san pham trong 5 phut, canh bao nguoi ban
-- Don gia tri 0: Khong cho phep tao don co total_amount = 0
+Hủy qua PATCH status, không DELETE order. Payment chỉ gửi thông tin bank đã cấu hình; bổ sung QR/giữ hàng cần quyết định phạm vi riêng, không suy từ README cũ.
