@@ -44,6 +44,7 @@ out/
 keys/
 *.pem
 .logs/
+logs/
 test-results/
 playwright-report/
 .pytest_cache/

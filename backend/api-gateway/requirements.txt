@@ -1,0 +1,10 @@
+# Requirements cho api-gateway
+# Pin patch versions sau khi verify tương thích (BOOT-01)
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+httpx==0.27.2
+pydantic==2.10.3
+pydantic-settings==2.6.1
+sqlalchemy[asyncio]==2.0.36
+aiomysql==0.2.0
+redis[hiredis]==5.2.0

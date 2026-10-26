@@ -1,0 +1,32 @@
+# Dev dependencies tổng hợp cho tất cả service backend
+# Dùng để: py -3.11 -m pip install -r backend/requirements-dev.txt
+# Bao gồm tất cả service deps + dev tools
+
+# ── Core shared ───────────────────────────────────────────────────────────────
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+pydantic-settings==2.6.1
+sqlalchemy[asyncio]==2.0.36
+aiomysql==0.2.0
+redis[hiredis]==5.2.0
+httpx==0.27.2
+alembic==1.14.0
+
+# ── Auth (AUTH-01 sẽ dùng) ───────────────────────────────────────────────────
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# ── Celery / AI (AI-01+) ─────────────────────────────────────────────────────
+celery==5.4.0
+# google-generativeai  # thêm sau INT-01 xác nhận model
+
+# ── Socket.IO (RT-01) ────────────────────────────────────────────────────────
+python-socketio==5.11.4
+
+# ── Dev / test tools ─────────────────────────────────────────────────────────
+pytest==8.3.3
+pytest-asyncio==0.24.0
+httpx==0.27.2           # test client AsyncClient
+factory-boy==3.3.1
+aiosqlite==0.20.0       # chỉ cho unit test không cần MySQL; integration test dùng MySQL thật
