@@ -1,7 +1,7 @@
 # Technical Design Document: SocialCart
 
 > **Phiên bản:** 1.2 — đồng bộ triển khai 2026-10-19.
-> **Trạng thái:** giữ các quyết định kiến trúc đã phê duyệt ở v1.1; bổ sung baseline kỹ thuật, chưa có implementation.
+> **Trạng thái:** giữ các quyết định kiến trúc đã phê duyệt ở v1.1; baseline kỹ thuật. Đã có scaffold BOOT-01/02; bằng chứng runtime được theo dõi riêng ở [trạng thái dự án](project-status.md).
 > **Nguồn:** [PRD](product-requirements.md), [Feature Spec](feature-specification.md), [Product Design](product-design.md).
 
 [Decision log](decisions.md) phân biệt quyết định đã có, quy ước bổ sung và đầu vào còn thiếu. [Data rules](data-rules.md), [OpenAPI](api/openapi.yaml), [service contracts](api/service-contracts.md) là phần chi tiết của thiết kế này, không phải ba bản schema cạnh tranh. Các snippet v1.1 đã được thay bằng hợp đồng để tránh copy code minh họa sai vào ứng dụng.
@@ -73,7 +73,7 @@ scripts/
 docs/api/
 ```
 
-Hiện các thư mục application trên là mục tiêu scaffold, chưa tồn tại. `backend/shared` là Python package chung; PYTHONPATH root backend theo setup. Service giữ business logic trong app/services và không định nghĩa model ORM trùng shared/db. Một migration tree, một lệnh upgrade trước khi start các service.
+Đã có Gateway/auth shell, `backend/shared` và khung `frontend/src`; các service nghiệp vụ, hooks/socket và module chức năng còn được bổ sung theo task. `backend/shared` là Python package chung; PYTHONPATH root backend theo setup. Service giữ business logic trong app/services và không định nghĩa model ORM trùng shared/db. Một migration tree, một lệnh upgrade trước khi start các service.
 
 ## 4. Database design
 

@@ -1,6 +1,6 @@
 # Chạy SocialCart tại local
 
-Cập nhật 2026-10-19. **Hiện có:** prototype HTML/CSS/JS. **Chưa có:** ứng dụng backend/frontend, Compose, migrations, seed hay startup scripts. Các mục “sau BOOT” là giao diện vận hành cần được hiện thực ở task tương ứng; chưa được kiểm chứng là chạy được.
+Cập nhật 2026-10-30. **Hiện có:** prototype HTML/CSS/JS; backend Gateway/auth shell, Compose, Alembic và seed/start/stop scripts; frontend React/TypeScript/MUI và auth shell. **Chưa có:** auth backend và nghiệp vụ; chưa kiểm chứng migration/seed trên MySQL thật. Xem [báo cáo trạng thái](project-status.md). Các lệnh backend dưới đây cần Python 3.11 và MySQL/Redis sẵn sàng; file tồn tại chưa có nghĩa runtime đã pass.
 
 ## 1. Chạy được ngay: prototype
 
@@ -17,10 +17,10 @@ Mở `http://127.0.0.1:5500`. Tài khoản minh họa nằm trong `prototype/moc
 | Thành phần | Baseline / cách khóa |
 | --- | --- |
 | Python | 3.11 theo TDD; ghi patch thực chạy trong báo cáo BOOT-01 |
-| Node.js | Bản LTS còn hỗ trợ và tương thích Vite đã chọn; ghi exact version vào `.node-version` ở BOOT-02 |
+| Node.js | 24.14.0 trong `.node-version`; npm 11.9.0, Vite 7.3.7; dependency khóa exact và `frontend/package-lock.json` |
 | Backend | FastAPI 0.115.x, SQLAlchemy 2.x, Pydantic 2.x, Alembic; pin patch trong requirements đã kiểm thử |
-| Frontend | React 18, TypeScript, MUI 5, TanStack Query 5, Zustand, Router 6; khóa bằng package-lock.json sau compatibility check |
-| Hạ tầng | MySQL 8.0, Redis 7, Docker Compose v2; pin image digest/patch ở BOOT-01 |
+| Frontend | React 18.3.1, TypeScript 5.9.3, MUI 5.18.0, TanStack Query 5, Zustand 5, Router 6; xem package.json/lockfile |
+| Hạ tầng | MySQL 8.0, Redis 7, Docker Compose v2; Compose hiện mới pin major tag, còn phải khóa patch/digest ở BOOT-01 |
 | Worker | Celery 5.x; worker chuẩn chạy Linux/WSL2, không mặc định khẳng định Windows native được hỗ trợ |
 | Tích hợp | ngrok và tài khoản test Facebook/Zalo OA; Gemini model xác minh trong INT-01 |
 
@@ -53,6 +53,19 @@ npm.cmd --prefix frontend ci
 ```
 
 `backend/requirements-dev.txt` là dependency dev tổng hợp các service, phải được tạo ở BOOT-01. Alembic config dùng đường dẫn tương đối với chính config; không phụ thuộc terminal đang ở thư mục shared. Seed seller-only là bắt buộc cho auth, seed catalog/conversation demo là tùy chọn và chỉ local/test.
+
+### Chạy riêng frontend BOOT-02
+
+Không cần credential nền tảng/Gemini để cài và build frontend. Từ root với Node 24.14.0:
+
+```powershell
+npm.cmd --prefix frontend ci
+npm.cmd --prefix frontend run dev
+```
+
+Mở `http://localhost:5173`. Vite lắng nghe loopback `127.0.0.1:5173`; `VITE_API_URL` mặc định `http://localhost:8000/api/v1` khi chưa có `.env`. Chỉ biến `VITE_*` được đưa vào bundle. Không dùng tài khoản mock của prototype để đăng nhập ứng dụng. Khi khởi động, UI gọi refresh cookie thật qua Gateway; backend auth hiện chưa có nên UI có thể hiển thị lỗi kiểm tra phiên và nút thử lại. Không có cơ chế đăng nhập giả hoặc bỏ qua route protection. Test frontend dùng HTTP mô phỏng có nhãn riêng.
+
+Theme Outfit tải từ Google Fonts và có fallback Segoe UI/system khi offline. Các route nghiệp vụ có trang chờ; `/dashboard` chỉ là shell, chưa đáp ứng đầy đủ AC-29/DASH-01. Chưa nối Socket.IO hay logout nhiều tab; đây là phần AUTH-02/RT-01 tiếp theo.
 
 ## 5. Khởi động sau BOOT
 

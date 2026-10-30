@@ -1,6 +1,6 @@
 # Kế hoạch triển khai MVP
 
-Cập nhật **2026-10-19**. DOC-01 hoàn tất phần tài liệu trong lượt này; các task code/runtime dưới đây **chưa triển khai**; tài liệu này không chứng nhận runtime. Thứ tự là phụ thuộc kỹ thuật, không phải cam kết thời gian. FR/AC tham chiếu [PRD](product-requirements.md); quy tắc chung ở [AGENTS](../AGENTS.md).
+Cập nhật **2026-10-30**. DOC-01 có baseline; BOOT-01 đã scaffold nhưng còn kiểm chứng runtime; BOOT-02 có frontend và các kiểm tra local. Chi tiết lệnh/kết quả/giới hạn ở [trạng thái dự án](project-status.md). AUTH-01 chưa triển khai; auth shell frontend chưa chứng minh AUTH-02 end-to-end. M0 chưa hoàn tất. Thứ tự là phụ thuộc kỹ thuật, không phải cam kết thời gian. FR/AC tham chiếu [PRD](product-requirements.md); quy tắc chung ở [AGENTS](../AGENTS.md).
 
 ## Các mốc bàn giao
 

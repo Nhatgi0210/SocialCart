@@ -5,7 +5,7 @@ description: Chạy và debug môi trường local SocialCart, phân biệt prot
 
 # SocialCart Local Setup
 
-Nguồn lệnh chính thức: [docs/setup.md](../../../docs/setup.md); biến mẫu: [.env.example](../../../.env.example). Đọc trạng thái task trước khi chạy lệnh: hiện repository chỉ có prototype, application/Compose/migration chưa tồn tại.
+Nguồn lệnh chính thức: [docs/setup.md](../../../docs/setup.md); biến mẫu: [.env.example](../../../.env.example). Đọc [trạng thái dự án](../../../docs/project-status.md) trước khi chạy lệnh: đã có scaffold BOOT-01/02, nhưng file tồn tại không chứng minh auth/migration/Compose đã chạy thành công.
 
 Prototype từ root: `python -m http.server 5500 --bind 127.0.0.1 --directory prototype`.
 

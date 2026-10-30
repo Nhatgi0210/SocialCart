@@ -1,6 +1,6 @@
 # Kế hoạch kiểm thử và nghiệm thu
 
-Baseline 2026-10-19. **Chưa chạy kiểm thử ứng dụng** vì chưa có implementation. Tài liệu này định nghĩa bằng chứng cần thu; kiểm tra OpenAPI/Markdown không thay cho các test bên dưới.
+Baseline 2026-10-19. Đến 2026-10-30 đã chạy smoke tests backend và các kiểm tra frontend BOOT-02; xem [báo cáo bằng chứng](project-status.md). Chưa chạy integration MySQL/Redis, auth end-to-end hoặc provider live. Tài liệu này định nghĩa bằng chứng cần thu; kiểm tra OpenAPI/Markdown không thay cho các test bên dưới.
 
 ## 1. Môi trường và dữ liệu
 

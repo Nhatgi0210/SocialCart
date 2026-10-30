@@ -4,7 +4,7 @@ Hệ thống quản lý tin nhắn Facebook Page/Zalo OA và hỗ trợ chốt �
 
 ## Hiện trạng
 
-Ngày 2026-10-19: có PRD, Feature Spec, thiết kế kỹ thuật, Concept B và prototype tĩnh. `backend/` và `frontend/` chưa có application code. Hợp đồng API và kế hoạch dưới đây là baseline triển khai, không phải tính năng đã chạy. Prototype chưa có nghiệm thu P4.5.
+Ngày 2026-10-30: có tài liệu, Concept B, prototype tĩnh và scaffold backend BOOT-01 (Gateway/auth shell, model/migration chung, Compose, scripts). Frontend BOOT-02 có React 18/TypeScript/MUI 5, router bảo vệ phiên, API client và auth shell. Các trang nghiệp vụ đang là placeholder; backend chưa có login/refresh/logout/me. M0 chưa hoàn tất. Xem [trạng thái và bằng chứng](docs/project-status.md); prototype chưa có nghiệm thu P4.5.
 
 V1: Unified Inbox, khách hàng/notes, catalog đa biến thể, đơn hàng/lifecycle, FAQ/AI/handoff, kết nối nền tảng và Dashboard. Một người bán, một Page, một OA. Không Zalo cá nhân/staff/multi-tenant/payment gateway/shipping integration. PENDING không giữ kho; xác nhận trừ kho, hủy đơn đã xác nhận hoàn kho một lần.
 
@@ -16,7 +16,7 @@ Xem [AGENTS.md](AGENTS.md) cho AI coding và [setup](docs/setup.md) cho local. C
 python -m http.server 5500 --bind 127.0.0.1 --directory prototype
 ```
 
-Mở http://127.0.0.1:5500. Mock account ở prototype/mock-data.js, state reset sau reload. Để bắt đầu code: DOC-01 → BOOT-01/02 → AUTH-01/02 trong implementation plan. `.env.example` chỉ là mẫu, không có secret thật.
+Mở http://127.0.0.1:5500. Mock account ở prototype/mock-data.js, state reset sau reload. Frontend ứng dụng chạy bằng `npm.cmd --prefix frontend ci` rồi `npm.cmd --prefix frontend run dev`; hướng dẫn và giới hạn ở [setup](docs/setup.md). Bước tiếp theo: hoàn tất kiểm chứng BOOT-01 trên Python 3.11/MySQL/Redis và triển khai AUTH-01. `.env.example` chỉ là mẫu, không có secret thật.
 
 ## Bản đồ tài liệu
 
