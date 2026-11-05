@@ -2,6 +2,14 @@
 
 Cập nhật 2026-10-30. **Hiện có:** prototype HTML/CSS/JS; backend Gateway/auth shell, Compose, Alembic và seed/start/stop scripts; frontend React/TypeScript/MUI và auth shell. **Chưa có:** auth backend và nghiệp vụ; chưa kiểm chứng migration/seed trên MySQL thật. Xem [báo cáo trạng thái](project-status.md). Các lệnh backend dưới đây cần Python 3.11 và MySQL/Redis sẵn sàng; file tồn tại chưa có nghĩa runtime đã pass.
 
+## React Native — mới có kế hoạch
+
+Theo D-15 ngày 2026-11-05, sẽ bổ sung client riêng `mobile/`; hiện chưa scaffold,
+chưa có manifest/lockfile hoặc lệnh npm mobile. Xem [mobile-plan](mobile-plan.md).
+MOB-01 chốt Expo/CLI, Node/SDK tương thích và thiết bị trước khi ghi lệnh chạy.
+App gọi Gateway, không kết nối MySQL trực tiếp. Điện thoại không dùng localhost của PC;
+cần cấu hình địa chỉ Gateway truy cập được khi bắt đầu tích hợp. Không mở các port DB/service nội bộ.
+
 ## 1. Chạy được ngay: prototype
 
 Từ root repository, trong PowerShell:

@@ -4,6 +4,11 @@ Hệ thống quản lý tin nhắn Facebook Page/Zalo OA và hỗ trợ chốt �
 
 ## Hiện trạng
 
+Bổ sung 2026-11-05: dự án có kế hoạch **web React + app React Native**, dùng chung
+FastAPI Gateway và MySQL. Người dùng chọn cập nhật tài liệu trước; chưa scaffold mobile.
+Expo/Android là phương án đề xuất, auth native cần chốt contract.
+Xem [kế hoạch React Native](docs/mobile-plan.md) và task MOB-00–05 trong implementation-plan.
+
 Ngày 2026-10-30: có tài liệu, Concept B, prototype tĩnh và scaffold backend BOOT-01 (Gateway/auth shell, model/migration chung, Compose, scripts). Frontend BOOT-02 có React 18/TypeScript/MUI 5, router bảo vệ phiên, API client và auth shell. Các trang nghiệp vụ đang là placeholder; backend chưa có login/refresh/logout/me. M0 chưa hoàn tất. Xem [trạng thái và bằng chứng](docs/project-status.md); prototype chưa có nghiệm thu P4.5.
 
 V1: Unified Inbox, khách hàng/notes, catalog đa biến thể, đơn hàng/lifecycle, FAQ/AI/handoff, kết nối nền tảng và Dashboard. Một người bán, một Page, một OA. Không Zalo cá nhân/staff/multi-tenant/payment gateway/shipping integration. PENDING không giữ kho; xác nhận trừ kho, hủy đơn đã xác nhận hoàn kho một lần.

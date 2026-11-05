@@ -5,6 +5,10 @@ description: Kiến trúc và ranh giới service SocialCart; dùng khi cần hi
 
 # SocialCart Architecture
 
+D-15 bổ sung client React Native dự kiến tại `mobile/`, dùng chung Gateway/MySQL;
+chỉ có kế hoạch trong `docs/mobile-plan.md`, chưa có app. Expo/CLI và nền tảng còn mở.
+React/MUI dưới đây là web; auth native phải chốt MOB-02, không bỏ cookie/Origin policy web.
+
 Đọc [AGENTS](../../../AGENTS.md), [TDD](../../../docs/technical-design.md), [decision log](../../../docs/decisions.md). Chi tiết dữ liệu/transaction ở data-rules; HTTP ở docs/api/openapi.yaml, internal/realtime ở service-contracts.
 
 Microservices Lite, FastAPI/Python 3.11, MySQL 8.0 dùng chung, SQLAlchemy/Alembic, Redis 7/Celery, React 18 + TypeScript + MUI. Không tự đổi kiến trúc. Gateway :8000; auth :8001, conversation :8002, customer :8003, product :8004, order :8005, ai :8006, webhook :8007, dashboard :8008, realtime :8009, platform :8010.

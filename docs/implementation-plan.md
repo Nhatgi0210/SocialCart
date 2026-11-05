@@ -41,7 +41,23 @@ Sprint 1 đề xuất = DOC-01, BOOT-01, BOOT-02, AUTH-01, AUTH-02. Có thể ch
 | QA-01 | E2E và failure scenarios trong test-plan | Các task liên quan | Toàn bộ AC | Có báo cáo PASS/FAIL/NOT RUN/BLOCKED, chỉ rõ local/simulation/live; lỗi chặn đã sửa; không ghi simulated là live |
 | DEMO-01 | Hoàn thiện setup, script, runbook demo và snapshot bằng chứng | QA-01 | NFR 60s/30s/3s | Máy sạch chạy theo setup được; backup/restore DB thử trên local; demo bằng tài khoản test; không public service nội bộ |
 
-## Hợp đồng giao task
+## Nhánh React Native — bổ sung 2026-11-05
+
+D-15 yêu cầu mobile dùng chung backend; lượt hiện tại chỉ làm tài liệu.
+Xem [mobile-plan](mobile-plan.md). Expo/nền tảng/thiết bị còn cần chốt;
+MOB-01 shell có thể độc lập, nhưng không đánh dấu auth/nghiệp vụ pass bằng mock.
+M0–M4 hiện có giữ nguyên tiêu chí, mobile có bằng chứng riêng dưới đây.
+
+| Task | Phạm vi | Phụ thuộc | FR/AC tái sử dụng | Tiêu chí hoàn thành |
+| --- | --- | --- | --- | --- |
+| MOB-00 | Phạm vi/kiến trúc/backlog native | D-15 | Các FR/AC của chức năng mobile | Đồng bộ PRD/Feature Spec/TDD và phân biệt đề xuất với code thực thi |
+| MOB-01 | Chốt Expo/CLI, thiết bị; scaffold mobile TypeScript, theme/navigation | MOB-00, MOB-EXT-01 | AC-30 và UX native | Manifest/lockfile riêng, dependency tương thích; typecheck và mở shell trên nền tảng đã chọn; loading/error/Back/keyboard |
+| MOB-02 | Auth native contract, backend và UI | MOB-01, AUTH-01 | FR-31–34, AC-29–32 | OpenAPI/examples/tests cập nhật; login/refresh/rotation/revoke thật, secure storage; không phá auth web; chốt logout theo phiên/thiết bị |
+| MOB-03 | Inbox, chat, notes, tiếp quản AI, reconnect | MOB-02, CUST-01, INBOX-01, RT-01; SEND-01 cho gửi provider | AC-04–12b, AC-20–21, AC-28 | DB persist, retry cùng message ID, foreground refetch, trạng thái lỗi/empty; simulated và live ghi riêng |
+| MOB-04 | Catalog đọc/chọn variant, đơn hàng và Dashboard | MOB-03, PROD-01, ORDER-01; DASH-01 cho thống kê | AC-13–14c, AC-22–29 trong phạm vi màn hình | Giá từ DB, pending không trừ kho, version/idempotency, tranh chấp web/app trả 409, thống kê thật |
+| MOB-05 | Kiểm thử và demo web–native | MOB-02–04, QA-01 phần liên quan | Các AC trên được nghiệm thu riêng trên mobile | Thiết bị/emulator, OS/build ghi rõ; cùng dữ liệu web/app, auth và reconnect pass; không coi bundle pass là native QA |
+
+## Hợp đồng giao task (áp dụng cả web và mobile)
 
 Một task ghi: **ID, mục tiêu, FR/AC, tài liệu cần đọc, dependency đã có, phạm vi file/service, đầu ra, cách kiểm tra**. Kết quả bàn giao gồm diff, lệnh/kết quả thực chạy, migration/contract đổi gì, hạn chế và bước tiếp theo. Task chỉ cập nhật DONE khi có bằng chứng tương ứng; task cần live có thể ghi `LOCAL PASS / LIVE BLOCKED`, không gộp thành DONE.
 

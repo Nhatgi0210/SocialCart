@@ -84,6 +84,11 @@ Trở thành trợ lý bán hàng AI đáng tin cậy cho hộ kinh doanh: giúp
 
 ### 3.1. In-Scope (Phiên bản 1)
 
+Bổ sung theo yêu cầu người dùng 2026-11-05 (D-15): client React Native cho người bán,
+dùng chung backend và dữ liệu với web. Lượt này chỉ bổ sung tài liệu/kế hoạch;
+phạm vi màn hình đề xuất, lựa chọn Expo/nền tảng và nghiệm thu riêng ở [mobile-plan](mobile-plan.md).
+Các FR/AC nghiệp vụ hiện có tiếp tục áp dụng cho tính năng được đưa lên mobile.
+
 - **Module 1 — Kết nối nền tảng:** Kết nối Facebook Page và Zalo OA; nhận tin nhắn vào hệ thống.
 - **Module 2 — Unified Inbox:** Hộp thư hợp nhất hiển thị tất cả hội thoại, lọc theo nền tảng/trạng thái.
 - **Module 3 — Quản lý khách hàng:** Hồ sơ khách hàng được tự động tạo từ hội thoại; ghi chú thủ công.
@@ -101,7 +106,7 @@ Trở thành trợ lý bán hàng AI đáng tin cậy cho hộ kinh doanh: giúp
 - Tích hợp đơn vị vận chuyển (GHN, GHTK...).
 - Thanh toán online / cổng thanh toán.
 - Tính năng marketing automation (broadcast, remarketing).
-- App di động native (iOS/Android) — chỉ web.
+- Push notification, offline mutation và phát hành mobile lên store chưa thuộc đợt React Native đầu.
 - Password reset, SSO, chia sẻ tài khoản.
 - MCP hoặc tính năng chưa được phê duyệt.
 

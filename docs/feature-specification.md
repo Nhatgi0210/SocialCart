@@ -645,6 +645,12 @@ Dashboard là trang mặc định sau đăng nhập, hiển thị:
 
 ## 9. Exclusions
 
+Bổ sung D-15 ngày 2026-11-05: React Native đã được đưa vào kế hoạch theo yêu cầu
+người dùng, dùng chung nghiệp vụ với web; xem [mobile-plan](mobile-plan.md).
+Luồng native dự kiến: đăng nhập → shell/Dashboard → Inbox → chat → thông tin khách/tạo đơn;
+Back native và bàn phím phải được kiểm riêng. Bản mobile đầu ưu tiên Inbox/đơn hàng,
+chưa cam kết đầy đủ màn hình quản trị web. Chưa triển khai app hoặc auth native.
+
 Các tính năng sau **không thuộc phiên bản 1** và không được triển khai:
 
 | Tính năng loại trừ | Lý do |
@@ -657,7 +663,7 @@ Các tính năng sau **không thuộc phiên bản 1** và không được tri�
 | Tích hợp vận chuyển | Out-of-scope PRD |
 | Thanh toán online / Cổng thanh toán | Out-of-scope PRD |
 | Marketing automation | Out-of-scope PRD |
-| App di động | Chỉ web v1 |
+| Push notification / offline mutation / phát hành store | Chưa thuộc đợt mobile đầu |
 | Ghép khách hàng từ 2 nền tảng | Out-of-scope v1 |
 | Dashboard thống kê theo ngày/tuần/tháng | Chỉ real-time count v1 |
 

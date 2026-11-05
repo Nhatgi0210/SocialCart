@@ -88,6 +88,12 @@ Với retry kỹ thuật, tổng thời gian vẫn trong deadline 30 giây, khô
 
 ## 7. Phiên đăng nhập và cấu hình
 
+D-15 (2026-11-05): các quy tắc cookie/Origin dưới đây là contract **browser** hiện có.
+Client React Native dùng cùng bất biến dữ liệu/transaction; auth native chưa được định nghĩa
+trong OpenAPI. MOB-02 phải chốt secure storage, refresh rotation, phiên theo thiết bị và phạm vi
+logout/revoke trước code; không tự bỏ Origin check web hoặc trả refresh token ở endpoint web.
+Phương án đề xuất và các quyết định còn mở ở [mobile-plan](mobile-plan.md).
+
 RS256; private key chỉ auth-service đọc, public key dùng verify. Claims `sub`, `sid`, `jti`, `iat`, `exp`, issuer/audience được kiểm tra. Access 900 giây, refresh tối đa 604800 giây, idle 86400 giây. Redis lưu hash refresh và session TTL; refresh rotation nguyên tử. Logout revoke sid và blacklist jti hiện tại, đóng socket; token cũ không còn truy cập dữ liệu dù chưa hết exp. Auth/blacklist storage lỗi thì fail closed 503, không bypass.
 
 Refresh cookie `sc_refresh`, HttpOnly, SameSite=Lax, Path `/api/v1/auth`; Secure=true trên HTTPS, dev localhost HTTP được cấu hình false. Access chỉ trong memory, không localStorage. UI khởi động gọi refresh; request credentials được cấu hình cùng allowlist CORS cụ thể. Auth endpoints dùng cookie kiểm tra Origin allowlist; GET không thay đổi phiên nghiệp vụ. Refresh/logout không cần access còn hạn. Không trả refresh token trong JSON. Không log password, token, private key hoặc toàn bộ payload chứa thông tin khách.

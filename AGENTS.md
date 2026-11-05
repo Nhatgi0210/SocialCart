@@ -2,6 +2,12 @@
 
 ## Hiện trạng và phạm vi
 
+D-15 (2026-11-05): bổ sung React Native cho môn đa nền tảng; hiện chỉ tài liệu/kế hoạch,
+chưa scaffold `mobile/`. Web React/MUI giữ nguyên; app dự kiến dùng chung Gateway và MySQL.
+Đọc `docs/mobile-plan.md` khi làm mobile. Expo/CLI, Android/iOS và version chưa chốt.
+Không dùng MUI/DOM trong native, không nâng major web theo mobile; auth cookie/Origin hiện tại
+là browser contract, MOB-02 phải chốt auth native trước implementation. Không đặt secret trong EXPO_PUBLIC_*.
+
 Repository có tài liệu, prototype tĩnh, scaffold backend BOOT-01 và frontend BOOT-02. Auth backend và các tính năng nghiệp vụ chưa triển khai; xem `docs/project-status.md` để biết bằng chứng và giới hạn. Không mô tả endpoint, migration, script hay kiểm thử là đã chạy nếu chưa có bằng chứng thực thi.
 
 V1 phục vụ một người bán, một Facebook Page và một Zalo OA. Không thêm staff, multi-tenant, Zalo cá nhân, cổng thanh toán hay tích hợp vận chuyển. AI chỉ tạo/sửa đơn `PENDING`; người bán xác nhận đơn.

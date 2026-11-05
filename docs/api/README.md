@@ -4,6 +4,11 @@ Phiên bản 1.0.0, baseline thiết kế **2026-10-19**, chưa có server imple
 
 ## Quy ước client
 
+D-15 bổ sung kế hoạch React Native dùng chung business API. Auth login/refresh/logout
+trong spec hiện tại là contract browser, chưa phải contract native. MOB-02 phải bổ sung
+schema/ví dụ/test trước khi tích hợp app; không bỏ Origin/cookie policy của web.
+Xem [mobile-plan](../mobile-plan.md). Lượt tài liệu này không thay đổi endpoint hoặc schema OpenAPI.
+
 - Spec dùng server `http://localhost:8000`, mọi path nghiệp vụ đã gồm `/api/v1`. UI dùng `VITE_API_URL=http://localhost:8000/api/v1` và path tương đối `/auth/login`, `/orders`, không ghép `/api/v1` hai lần.
 - UUID/string ID, enum UPPER_CASE, UTC RFC 3339, tiền nguyên VNĐ. Pagination `{success,data,meta:{page,limit,total}}`; danh sách rỗng là `data:[]`, không 404. Messages trả thứ tự `created_at,id` tăng dần, conversation giảm dần `last_message_at,id`.
 - Error `{success:false,error:{code,message,details}}`. Phân biệt 400 malformed, 401 unauthenticated, 403 origin/signature/quyền, 404 missing, 409 conflict, 422 validation, 429 rate limited, 502 provider rejected, 503 dependency unavailable. Không expose stack/secret. `details` là danh sách object tùy mã lỗi, không để client parse chuỗi message.

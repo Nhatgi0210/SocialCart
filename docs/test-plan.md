@@ -4,6 +4,28 @@ Baseline 2026-10-19. Đến 2026-10-30 đã chạy smoke tests backend và các 
 
 ## 1. Môi trường và dữ liệu
 
+### Bổ sung native theo D-15 (2026-11-05) — NOT RUN
+
+React Native có bộ kiểm riêng theo [mobile-plan](mobile-plan.md), không dùng kết quả
+Playwright responsive web làm bằng chứng app native. Các ca sau thuộc MOB-01–05:
+
+- Thiết bị/emulator và OS/build được ghi rõ; Back, safe area, bàn phím che input,
+  text scaling, touch target, loading/empty/error/retry.
+- Auth thật qua Gateway: sai mật khẩu, refresh đồng thời, app restart, phiên hết hạn,
+  revoke, lỗi secure storage, refresh đến muộn sau logout; regression cookie/Origin web.
+- Web và mobile cùng sửa đơn: expected_version/409, idempotency, giá snapshot,
+  xác nhận hàng cuối và hủy hoàn kho đúng một lần; dùng MySQL để kiểm transaction.
+- App background → foreground, mất mạng → reconnect: refetch dữ liệu, dedupe sự kiện;
+  không suy từ Socket.IO rằng có push khi app bị đóng.
+- Tin gửi lỗi giữ bản nháp/trạng thái, retry cùng message ID; kết quả gửi chưa rõ không tự gửi trùng.
+- Reload web và mở lại app thấy dữ liệu đã commit giống nhau; logout/cache theo chính sách
+  phiên thiết bị được chốt trong MOB-02. Fixture/simulated và live provider báo riêng.
+- Chỉ nền tảng thực sự chạy mới được ghi PASS; Android pass không chứng minh iOS pass.
+
+Chưa có test native hoặc lệnh mobile để chạy ở thời điểm cập nhật tài liệu.
+
+### Baseline backend và web
+
 - Unit cho tính tiền, validation, transition và deadline với clock kiểm soát; integration dùng **MySQL 8.0 + Redis 7** test riêng, không SQLite để chứng minh row lock.
 - Frontend component bằng Vitest/Testing Library; e2e bằng Playwright sau BOOT-02, đi qua Gateway. Khi service upstream chưa có/không thể gọi thật: simulation HTTP có nhãn, inject timeout/5xx/409/429; kết quả local không được đổi tên thành live.
 - Test secret/DB tách local demo, credential thật không vào fixtures. Fixture UUID cố định: 1 seller; 2 platform accounts; cùng chuỗi user ID ở FB/Zalo nhưng 2 customer; 3 conversation NEW/IN_PROGRESS/RESOLVED, 3 ai_status độc lập; message CUSTOMER/SELLER/AI và FAILED.

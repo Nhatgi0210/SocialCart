@@ -25,6 +25,22 @@ Chỉ thị trực tiếp hiện tại → quyết định sản phẩm/kỹ thu
 
 ## Những điểm còn phụ thuộc đầu vào/thực thi
 
+### Bổ sung 2026-11-05 — D-15: client React Native
+
+Theo yêu cầu trực tiếp của người dùng, bổ sung React Native phục vụ môn đa nền tảng;
+người dùng chọn **chỉ cập nhật kiến trúc/tài liệu/kế hoạch** ở lượt này.
+Thay thế loại trừ “chỉ web/không app native” trong PRD và Feature Spec.
+Web React/MUI tiếp tục tồn tại; mobile dùng chung Gateway, service và MySQL,
+không thêm tenant/staff hoặc backend riêng. Xem [mobile-plan](mobile-plan.md).
+
+Expo/Android ưu tiên là đề xuất, chưa phải lựa chọn của người dùng.
+D-10 tiếp tục áp dụng cho browser; auth native cần MOB-02 chốt contract trước code,
+không nới cookie/Origin của web. Phạm vi ảnh hưởng: PRD/Feature Spec/TDD,
+data-rules, setup, implementation/test plan và hướng dẫn repository.
+
+MOB-EXT-01 còn cần xác nhận yêu cầu React Native CLI/Expo, nền tảng bắt buộc,
+thiết bị demo và deadline môn học trước MOB-01. Chưa scaffold hoặc build native.
+
 | ID | Cần xác nhận bằng gì | Chặn task nào |
 | --- | --- | --- |
 | EXT-01 | Model Gemini Pro khả dụng với tài khoản, structured output, chi phí/độ trễ; không mặc định model 1.5 từ tài liệu cũ | INT-01, AI-01; không chặn setup/auth/inbox |

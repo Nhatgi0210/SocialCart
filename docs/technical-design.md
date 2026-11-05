@@ -28,6 +28,21 @@ Luồng incoming: provider → Gateway `/webhooks/*` → verify + receipt/outbox
 
 ## 2. Tech stack và version
 
+### Mở rộng client React Native — D-15, 2026-11-05
+
+Thêm client `mobile/` dự kiến bằng React Native/TypeScript, giữ `frontend/` React/MUI.
+Web/mobile cùng gọi HTTP Gateway `/api/v1`, Socket.IO riêng :8009 và dùng cùng dữ liệu
+MySQL thông qua backend. Không nối DB từ app. Expo/Android là đề xuất cần chốt theo môn học;
+version React Native/React/Expo phải kiểm compatibility và có lockfile riêng khi scaffold.
+Không dùng MUI/DOM trong native hoặc nâng major web theo dependency mobile.
+
+Chỉ chia sẻ types từ OpenAPI và logic thuần thích hợp; UI, navigation, transport/session
+tách theo nền tảng. Auth cookie/Origin hiện tại dành cho web, contract native cần MOB-02
+trước implementation. Foreground/reconnect phải refetch; socket không bảo đảm chạy khi app đóng.
+Chi tiết kiến trúc và phạm vi ở [mobile-plan](mobile-plan.md). Chưa có thư mục app thực thi.
+
+### Baseline backend và web
+
 Python 3.11, FastAPI 0.115.x, SQLAlchemy 2.x async với aiomysql, Alembic, Pydantic 2.x; Celery 5.x; python-socketio 5.x. Frontend React 18 + TypeScript + Vite + MUI 5, TanStack Query 5, Zustand, Router 6, Axios, Socket.IO client 4.x. Auth RS256; local file storage V1, Cloudinary là hướng mở rộng.
 
 Đây là baseline major/minor từ thiết kế; BOOT-01/02 chốt patch tương thích, pin/lock và kiểm chứng theo [setup](setup.md). Không tự nâng major hoặc tuyên bố các package đã cài.

@@ -1,5 +1,13 @@
 # Trạng thái dự án SocialCart
 
+## Bổ sung React Native 2026-11-05 — DOCUMENTATION ONLY
+
+Người dùng yêu cầu React Native cho môn đa nền tảng và chọn chỉ cập nhật tài liệu.
+D-15 đưa mobile vào phạm vi, dùng chung backend/MySQL với web. Có [mobile-plan](mobile-plan.md)
+và backlog MOB-00–05; đồng bộ PRD/Feature Spec/TDD/data-rules/setup/test plan.
+Expo/Android là đề xuất chưa chốt; auth native cần contract riêng trước code.
+Chưa có `mobile/`, dependency, build, test native hoặc API native. M0 chưa hoàn tất.
+
 ## Cập nhật kiểm chứng local 2026-11-05
 
 - Sửa start/stop PowerShell: truyền PYTHONPATH thực, quote đường dẫn có khoảng trắng,
