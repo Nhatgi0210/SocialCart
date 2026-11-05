@@ -18,6 +18,7 @@ from __future__ import annotations
 from typing import Sequence, Union
 
 import sqlalchemy as sa
+from sqlalchemy.dialects.mysql import DATETIME
 from alembic import op
 
 revision: str = "0001_initial_schema"
@@ -34,9 +35,10 @@ def upgrade() -> None:
         sa.Column("email", sa.String(255), nullable=False),
         sa.Column("hashed_password", sa.String(255), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="1"),
-        sa.Column("created_at", sa.DateTime(6), nullable=False),
-        sa.Column("updated_at", sa.DateTime(6), nullable=False),
+        sa.Column("created_at", DATETIME(fsp=6), nullable=False),
+        sa.Column("updated_at", DATETIME(fsp=6), nullable=False),
         sa.UniqueConstraint("email", name="uq_users_email"),
+        mysql_engine="InnoDB",
     )
     op.create_index("ix_users_email", "users", ["email"])
 
@@ -49,16 +51,17 @@ def upgrade() -> None:
         sa.Column("display_name", sa.String(255)),
         sa.Column("encrypted_access_token", sa.Text()),
         sa.Column("encrypted_refresh_token", sa.Text()),
-        sa.Column("token_expires_at", sa.DateTime(6)),
+        sa.Column("token_expires_at", DATETIME(fsp=6)),
         sa.Column(
             "status",
             sa.Enum("CONNECTED", "DISCONNECTED", "ERROR", name="connection_status_enum"),
             nullable=False,
             server_default="DISCONNECTED",
         ),
-        sa.Column("created_at", sa.DateTime(6), nullable=False),
-        sa.Column("updated_at", sa.DateTime(6), nullable=False),
+        sa.Column("created_at", DATETIME(fsp=6), nullable=False),
+        sa.Column("updated_at", DATETIME(fsp=6), nullable=False),
         sa.UniqueConstraint("platform", "account_id", name="uq_platform_connection_account"),
+        mysql_engine="InnoDB",
     )
 
     # ── customers ─────────────────────────────────────────────────────────────
@@ -71,12 +74,13 @@ def upgrade() -> None:
         sa.Column("display_name", sa.String(100)),
         sa.Column("avatar_url", sa.String(1000)),
         sa.Column("phone", sa.String(20)),
-        sa.Column("created_at", sa.DateTime(6), nullable=False),
-        sa.Column("updated_at", sa.DateTime(6), nullable=False),
+        sa.Column("created_at", DATETIME(fsp=6), nullable=False),
+        sa.Column("updated_at", DATETIME(fsp=6), nullable=False),
         sa.UniqueConstraint(
             "platform", "platform_account_id", "platform_user_id",
             name="uq_customer_platform",
         ),
+        mysql_engine="InnoDB",
     )
     op.create_index(
         "ix_customer_platform_user", "customers",
@@ -89,8 +93,9 @@ def upgrade() -> None:
         sa.Column("id", sa.String(36), primary_key=True),
         sa.Column("customer_id", sa.String(36), sa.ForeignKey("customers.id", ondelete="CASCADE"), nullable=False),
         sa.Column("content", sa.Text(), nullable=False),
-        sa.Column("created_at", sa.DateTime(6), nullable=False),
-        sa.Column("updated_at", sa.DateTime(6), nullable=False),
+        sa.Column("created_at", DATETIME(fsp=6), nullable=False),
+        sa.Column("updated_at", DATETIME(fsp=6), nullable=False),
+        mysql_engine="InnoDB",
     )
     op.create_index("ix_customer_notes_customer_id", "customer_notes", ["customer_id"])
 
@@ -117,15 +122,16 @@ def upgrade() -> None:
         sa.Column("is_read", sa.Boolean(), nullable=False, server_default="0"),
         sa.Column("version", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("ai_generation", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("last_message_at", sa.DateTime(6)),
-        sa.Column("created_at", sa.DateTime(6), nullable=False),
-        sa.Column("updated_at", sa.DateTime(6), nullable=False),
+        sa.Column("last_message_at", DATETIME(fsp=6)),
+        sa.Column("created_at", DATETIME(fsp=6), nullable=False),
+        sa.Column("updated_at", DATETIME(fsp=6), nullable=False),
         sa.UniqueConstraint(
             "platform", "platform_account_id", "platform_chat_id",
             name="uq_conversation_platform",
         ),
         sa.CheckConstraint("version >= 1", name="ck_conversation_version_min"),
         sa.CheckConstraint("ai_generation >= 0", name="ck_conversation_ai_generation_min"),
+        mysql_engine="InnoDB",
     )
     op.create_index("ix_conversation_customer_id", "conversations", ["customer_id"])
     op.create_index("ix_conversation_last_message_at", "conversations", ["last_message_at"])
@@ -151,13 +157,14 @@ def upgrade() -> None:
             nullable=False,
             server_default="SENT",
         ),
-        sa.Column("created_at", sa.DateTime(6), nullable=False),
-        sa.Column("updated_at", sa.DateTime(6), nullable=False),
+        sa.Column("created_at", DATETIME(fsp=6), nullable=False),
+        sa.Column("updated_at", DATETIME(fsp=6), nullable=False),
         sa.UniqueConstraint(
             "platform", "platform_account_id", "platform_msg_id",
             name="uq_message_platform_msg_id",
         ),
         sa.CheckConstraint("length(content) >= 1", name="ck_message_content_nonempty"),
+        mysql_engine="InnoDB",
     )
     op.create_index("ix_message_conversation_id", "messages", ["conversation_id"])
     op.create_index("ix_message_created_at", "messages", ["created_at"])
@@ -175,9 +182,10 @@ def upgrade() -> None:
             server_default="PENDING",
         ),
         sa.Column("attempt_count", sa.SmallInteger(), nullable=False, server_default="0"),
-        sa.Column("next_attempt_at", sa.DateTime(6)),
-        sa.Column("created_at", sa.DateTime(6), nullable=False),
-        sa.Column("updated_at", sa.DateTime(6), nullable=False),
+        sa.Column("next_attempt_at", DATETIME(fsp=6)),
+        sa.Column("created_at", DATETIME(fsp=6), nullable=False),
+        sa.Column("updated_at", DATETIME(fsp=6), nullable=False),
+        mysql_engine="InnoDB",
     )
     op.create_index("ix_outbox_status_next_attempt", "conversation_outbox", ["status", "next_attempt_at"])
 
@@ -194,9 +202,10 @@ def upgrade() -> None:
             nullable=False,
             server_default="ACTIVE",
         ),
-        sa.Column("deleted_at", sa.DateTime(6)),
-        sa.Column("created_at", sa.DateTime(6), nullable=False),
-        sa.Column("updated_at", sa.DateTime(6), nullable=False),
+        sa.Column("deleted_at", DATETIME(fsp=6)),
+        sa.Column("created_at", DATETIME(fsp=6), nullable=False),
+        sa.Column("updated_at", DATETIME(fsp=6), nullable=False),
+        mysql_engine="InnoDB",
     )
     op.create_index("ix_product_status_deleted", "products", ["status", "deleted_at"])
 
@@ -209,12 +218,13 @@ def upgrade() -> None:
         sa.Column("price", sa.Integer(), nullable=False),
         sa.Column("stock", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("version", sa.Integer(), nullable=False, server_default="1"),
-        sa.Column("deleted_at", sa.DateTime(6)),
-        sa.Column("created_at", sa.DateTime(6), nullable=False),
-        sa.Column("updated_at", sa.DateTime(6), nullable=False),
+        sa.Column("deleted_at", DATETIME(fsp=6)),
+        sa.Column("created_at", DATETIME(fsp=6), nullable=False),
+        sa.Column("updated_at", DATETIME(fsp=6), nullable=False),
         sa.CheckConstraint("price >= 1 AND price <= 2147483647", name="ck_variant_price_range"),
         sa.CheckConstraint("stock >= 0", name="ck_variant_stock_nonneg"),
         sa.CheckConstraint("version >= 1", name="ck_variant_version_min"),
+        mysql_engine="InnoDB",
     )
     op.create_index("ix_variant_product_id", "variants", ["product_id"])
 
@@ -238,10 +248,11 @@ def upgrade() -> None:
         sa.Column("note", sa.Text()),
         sa.Column("created_by", sa.Enum("AI", "SELLER", name="order_creator_enum"), nullable=False),
         sa.Column("version", sa.Integer(), nullable=False, server_default="1"),
-        sa.Column("created_at", sa.DateTime(6), nullable=False),
-        sa.Column("updated_at", sa.DateTime(6), nullable=False),
+        sa.Column("created_at", DATETIME(fsp=6), nullable=False),
+        sa.Column("updated_at", DATETIME(fsp=6), nullable=False),
         sa.CheckConstraint("total_amount >= 0", name="ck_order_total_nonneg"),
         sa.CheckConstraint("version >= 1", name="ck_order_version_min"),
+        mysql_engine="InnoDB",
     )
     op.create_index("ix_order_customer_id", "orders", ["customer_id"])
     op.create_index("ix_order_status", "orders", ["status"])
@@ -259,6 +270,7 @@ def upgrade() -> None:
         sa.Column("quantity", sa.Integer(), nullable=False),
         sa.CheckConstraint("unit_price >= 1", name="ck_order_item_price_pos"),
         sa.CheckConstraint("quantity >= 1 AND quantity <= 1000000", name="ck_order_item_qty_range"),
+        mysql_engine="InnoDB",
     )
     op.create_index("ix_order_item_order_id", "order_items", ["order_id"])
 
@@ -270,9 +282,10 @@ def upgrade() -> None:
         sa.Column("variant_id", sa.String(36), sa.ForeignKey("variants.id"), nullable=False),
         sa.Column("movement_type", sa.Enum("DEDUCT", "RESTORE", name="movement_type_enum"), nullable=False),
         sa.Column("quantity", sa.Integer(), nullable=False),
-        sa.Column("created_at", sa.DateTime(6), nullable=False),
+        sa.Column("created_at", DATETIME(fsp=6), nullable=False),
         sa.UniqueConstraint("order_id", "variant_id", "movement_type", name="uq_inventory_movement"),
         sa.CheckConstraint("quantity >= 1", name="ck_inventory_qty_pos"),
+        mysql_engine="InnoDB",
     )
     op.create_index("ix_inventory_order_id", "inventory_movements", ["order_id"])
 
@@ -286,9 +299,10 @@ def upgrade() -> None:
         sa.Column("request_hash", sa.String(64), nullable=False),
         sa.Column("resource_id", sa.String(36)),
         sa.Column("response_body", sa.Text()),
-        sa.Column("expires_at", sa.DateTime(6), nullable=False),
-        sa.Column("created_at", sa.DateTime(6), nullable=False),
+        sa.Column("expires_at", DATETIME(fsp=6), nullable=False),
+        sa.Column("created_at", DATETIME(fsp=6), nullable=False),
         sa.UniqueConstraint("actor_id", "operation", "key", name="uq_idempotency_actor_op_key"),
+        mysql_engine="InnoDB",
     )
     op.create_index("ix_idempotency_expires_at", "request_idempotency", ["expires_at"])
 
@@ -299,8 +313,9 @@ def upgrade() -> None:
         sa.Column("question", sa.String(500), nullable=False),
         sa.Column("answer", sa.Text(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="1"),
-        sa.Column("created_at", sa.DateTime(6), nullable=False),
-        sa.Column("updated_at", sa.DateTime(6), nullable=False),
+        sa.Column("created_at", DATETIME(fsp=6), nullable=False),
+        sa.Column("updated_at", DATETIME(fsp=6), nullable=False),
+        mysql_engine="InnoDB",
     )
 
     # ── ai_config ─────────────────────────────────────────────────────────────
@@ -309,7 +324,8 @@ def upgrade() -> None:
         sa.Column("id", sa.String(36), primary_key=True),
         sa.Column("key", sa.String(100), nullable=False, unique=True),
         sa.Column("value", sa.Text(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(6), nullable=False),
+        sa.Column("updated_at", DATETIME(fsp=6), nullable=False),
+        mysql_engine="InnoDB",
     )
     op.create_index("ix_ai_config_key", "ai_config", ["key"])
 
@@ -322,8 +338,9 @@ def upgrade() -> None:
         sa.Column("event_id", sa.String(255), nullable=False),
         sa.Column("raw_payload", sa.Text(), nullable=False),
         sa.Column("processed", sa.Boolean(), nullable=False, server_default="0"),
-        sa.Column("created_at", sa.DateTime(6), nullable=False),
+        sa.Column("created_at", DATETIME(fsp=6), nullable=False),
         sa.UniqueConstraint("platform", "account_id", "event_id", name="uq_webhook_receipt"),
+        mysql_engine="InnoDB",
     )
     op.create_index("ix_webhook_receipt_processed", "webhook_receipts", ["processed", "created_at"])
 
@@ -340,9 +357,10 @@ def upgrade() -> None:
             server_default="PENDING",
         ),
         sa.Column("attempt_count", sa.SmallInteger(), nullable=False, server_default="0"),
-        sa.Column("next_attempt_at", sa.DateTime(6)),
-        sa.Column("created_at", sa.DateTime(6), nullable=False),
-        sa.Column("updated_at", sa.DateTime(6), nullable=False),
+        sa.Column("next_attempt_at", DATETIME(fsp=6)),
+        sa.Column("created_at", DATETIME(fsp=6), nullable=False),
+        sa.Column("updated_at", DATETIME(fsp=6), nullable=False),
+        mysql_engine="InnoDB",
     )
     op.create_index("ix_webhook_outbox_status_next", "webhook_outbox", ["status", "next_attempt_at"])
 
@@ -366,13 +384,4 @@ def downgrade() -> None:
     op.drop_table("platform_connections")
     op.drop_table("users")
 
-    # Drop enums (MySQL sẽ dọn cùng với table, nhưng explicit cho clarity)
-    for enum_name in [
-        "platform_enum", "platform_enum2", "platform_enum3", "platform_enum4",
-        "platform_enum5", "platform_enum6",
-        "connection_status_enum", "conv_status_enum", "conv_ai_status_enum",
-        "msg_sender_enum", "msg_status_enum", "outbox_status_enum",
-        "product_status_enum", "order_status_enum", "order_creator_enum",
-        "movement_type_enum", "webhook_outbox_status_enum",
-    ]:
-        op.execute(f"DROP TYPE IF EXISTS {enum_name}")
+    # MySQL ENUM is removed with its table.

@@ -24,7 +24,7 @@ from shared.db.models import Base           # noqa: E402  – import để Alemb
 config = context.config
 
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    fileConfig(config.config_file_name, encoding="utf-8")
 
 target_metadata = Base.metadata
 
@@ -77,5 +77,7 @@ async def run_migrations_online() -> None:
 
 if context.is_offline_mode():
     run_migrations_offline()
+elif config.attributes.get("connection") is not None:
+    do_run_migrations(config.attributes["connection"])
 else:
     asyncio.run(run_migrations_online())

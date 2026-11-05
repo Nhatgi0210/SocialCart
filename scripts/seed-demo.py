@@ -37,6 +37,9 @@ async def seed_seller(session) -> None:
     from shared.db.models import User
 
     email = os.environ.get("SEED_SELLER_EMAIL", "").strip()
+    name = os.environ.get("SEED_SELLER_NAME", "Seller").strip()
+    if not 1 <= len(name) <= 100:
+        raise ValueError("SEED_SELLER_NAME must contain 1-100 characters")
     password = os.environ.get("SEED_SELLER_PASSWORD", "").strip()
 
     if not email:
@@ -65,6 +68,7 @@ async def seed_seller(session) -> None:
     user = User(
         id=str(uuid.uuid4()),
         email=email,
+        name=name,
         hashed_password=hashed,
         is_active=True,
         created_at=datetime.now(timezone.utc).replace(tzinfo=None),

@@ -28,6 +28,15 @@ Không coi version đang có trên máy là version đã chốt cho dự án. Kh
 
 ## 3. Cấu hình
 
+### MySQL local có sẵn (Wamp / Workbench)
+
+Không cần khởi động thêm MySQL Docker nếu MySQL local đang dùng port 3306.
+Chạy [data/init.sql](../data/init.sql) trong Workbench để tạo schema, cấu hình
+`DATABASE_URL` trong `.env`, rồi chạy Alembic như mục 4. Chỉ tạo schema bằng
+SQL; toàn bộ bảng do migration quản lý. Xem [hướng dẫn database](../data/README.md).
+Máy local đã kiểm chứng ngày 2026-11-05 chạy MySQL 9.1.0/Python 3.12.5;
+đây không thay thế baseline MySQL 8.0/Python 3.11.
+
 Hiện có thể tạo cấu hình local từ mẫu:
 
 ```powershell
@@ -70,6 +79,11 @@ Theme Outfit tải từ Google Fonts và có fallback Segoe UI/system khi offlin
 ## 5. Khởi động sau BOOT
 
 Script mục tiêu `scripts/start-services.ps1` chạy service nền với log và PID theo từng service; trên Windows dùng tiến trình ẩn, không mở hàng loạt cửa sổ. Script hỗ trợ chọn service cho mốc đang làm và dừng đúng tiến trình do nó tạo.
+
+Script nền không dùng `--reload` để PID theo dõi đúng tiến trình server;
+khi cần reload dùng lệnh foreground bên dưới. Stdout lưu `logs/<service>.log`,
+stderr lưu `logs/<service>.error.log`. Đường dẫn có dấu/khoảng trắng được quote;
+PYTHONPATH của tiến trình gọi được khôi phục sau khi khởi động.
 
 Lệnh chạy một service từ root để debug:
 

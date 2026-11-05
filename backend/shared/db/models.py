@@ -18,7 +18,6 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     CheckConstraint,
-    DateTime,
     Enum,
     ForeignKey,
     Index,
@@ -28,6 +27,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.mysql import DATETIME
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -51,13 +51,15 @@ class User(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, onupdate=_now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, onupdate=_now, nullable=False)
 
     __table_args__ = (
         Index("ix_users_email", "email"),
+        {"mysql_engine": "InnoDB"},
     )
 
 
@@ -73,17 +75,18 @@ class PlatformConnection(Base):
     # Token mã hóa AES-256-GCM, không trả về UI
     encrypted_access_token: Mapped[str | None] = mapped_column(Text)
     encrypted_refresh_token: Mapped[str | None] = mapped_column(Text)
-    token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(6))
+    token_expires_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=6))
     status: Mapped[str] = mapped_column(
         Enum("CONNECTED", "DISCONNECTED", "ERROR", name="connection_status_enum"),
         default="DISCONNECTED",
         nullable=False,
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, onupdate=_now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, onupdate=_now, nullable=False)
 
     __table_args__ = (
         UniqueConstraint("platform", "account_id", name="uq_platform_connection_account"),
+        {"mysql_engine": "InnoDB"},
     )
 
 
@@ -99,14 +102,15 @@ class Customer(Base):
     display_name: Mapped[str | None] = mapped_column(String(100))
     avatar_url: Mapped[str | None] = mapped_column(String(1000))
     phone: Mapped[str | None] = mapped_column(String(20))
-    created_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, onupdate=_now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, onupdate=_now, nullable=False)
 
     notes: Mapped[list[CustomerNote]] = relationship("CustomerNote", back_populates="customer", lazy="select")
 
     __table_args__ = (
         UniqueConstraint("platform", "platform_account_id", "platform_user_id", name="uq_customer_platform"),
         Index("ix_customer_platform_user", "platform", "platform_account_id", "platform_user_id"),
+        {"mysql_engine": "InnoDB"},
     )
 
 
@@ -116,13 +120,14 @@ class CustomerNote(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     customer_id: Mapped[str] = mapped_column(String(36), ForeignKey("customers.id", ondelete="CASCADE"), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, onupdate=_now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, onupdate=_now, nullable=False)
 
     customer: Mapped[Customer] = relationship("Customer", back_populates="notes")
 
     __table_args__ = (
         Index("ix_customer_notes_customer_id", "customer_id"),
+        {"mysql_engine": "InnoDB"},
     )
 
 
@@ -147,9 +152,9 @@ class Conversation(Base):
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     ai_generation: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    last_message_at: Mapped[datetime | None] = mapped_column(DateTime(6))
-    created_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, onupdate=_now, nullable=False)
+    last_message_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=6))
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, onupdate=_now, nullable=False)
 
     messages: Mapped[list[Message]] = relationship("Message", back_populates="conversation", lazy="select")
 
@@ -159,6 +164,7 @@ class Conversation(Base):
         CheckConstraint("ai_generation >= 0", name="ck_conversation_ai_generation_min"),
         Index("ix_conversation_customer_id", "customer_id"),
         Index("ix_conversation_last_message_at", "last_message_at"),
+        {"mysql_engine": "InnoDB"},
     )
 
 
@@ -181,8 +187,8 @@ class Message(Base):
         Enum("SENDING", "SENT", "FAILED", name="msg_status_enum"),
         default="SENT", nullable=False,
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, onupdate=_now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, onupdate=_now, nullable=False)
 
     conversation: Mapped[Conversation] = relationship("Conversation", back_populates="messages")
 
@@ -195,6 +201,7 @@ class Message(Base):
         CheckConstraint("length(content) >= 1", name="ck_message_content_nonempty"),
         Index("ix_message_conversation_id", "conversation_id"),
         Index("ix_message_created_at", "created_at"),
+        {"mysql_engine": "InnoDB"},
     )
 
 
@@ -210,12 +217,13 @@ class ConversationOutbox(Base):
         default="PENDING", nullable=False,
     )
     attempt_count: Mapped[int] = mapped_column(SmallInteger, default=0, nullable=False)
-    next_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(6))
-    created_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, onupdate=_now, nullable=False)
+    next_attempt_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=6))
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, onupdate=_now, nullable=False)
 
     __table_args__ = (
         Index("ix_outbox_status_next_attempt", "status", "next_attempt_at"),
+        {"mysql_engine": "InnoDB"},
     )
 
 
@@ -232,14 +240,15 @@ class Product(Base):
         Enum("ACTIVE", "INACTIVE", name="product_status_enum"),
         default="ACTIVE", nullable=False,
     )
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(6))
-    created_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, onupdate=_now, nullable=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=6))
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, onupdate=_now, nullable=False)
 
     variants: Mapped[list[Variant]] = relationship("Variant", back_populates="product", lazy="select")
 
     __table_args__ = (
         Index("ix_product_status_deleted", "status", "deleted_at"),
+        {"mysql_engine": "InnoDB"},
     )
 
 
@@ -252,9 +261,9 @@ class Variant(Base):
     price: Mapped[int] = mapped_column(Integer, nullable=False)       # VNĐ nguyên
     stock: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(6))
-    created_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, onupdate=_now, nullable=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=6))
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, onupdate=_now, nullable=False)
 
     product: Mapped[Product] = relationship("Product", back_populates="variants")
 
@@ -263,6 +272,7 @@ class Variant(Base):
         CheckConstraint("stock >= 0", name="ck_variant_stock_nonneg"),
         CheckConstraint("version >= 1", name="ck_variant_version_min"),
         Index("ix_variant_product_id", "product_id"),
+        {"mysql_engine": "InnoDB"},
     )
 
 
@@ -286,8 +296,8 @@ class Order(Base):
     note: Mapped[str | None] = mapped_column(Text)
     created_by: Mapped[str] = mapped_column(Enum("AI", "SELLER", name="order_creator_enum"), nullable=False)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, onupdate=_now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, onupdate=_now, nullable=False)
 
     items: Mapped[list[OrderItem]] = relationship("OrderItem", back_populates="order", lazy="select")
 
@@ -297,6 +307,7 @@ class Order(Base):
         Index("ix_order_customer_id", "customer_id"),
         Index("ix_order_status", "status"),
         Index("ix_order_created_at", "created_at"),
+        {"mysql_engine": "InnoDB"},
     )
 
 
@@ -318,6 +329,7 @@ class OrderItem(Base):
         CheckConstraint("unit_price >= 1", name="ck_order_item_price_pos"),
         CheckConstraint("quantity >= 1 AND quantity <= 1000000", name="ck_order_item_qty_range"),
         Index("ix_order_item_order_id", "order_id"),
+        {"mysql_engine": "InnoDB"},
     )
 
 
@@ -332,12 +344,13 @@ class InventoryMovement(Base):
         Enum("DEDUCT", "RESTORE", name="movement_type_enum"), nullable=False
     )
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
 
     __table_args__ = (
         UniqueConstraint("order_id", "variant_id", "movement_type", name="uq_inventory_movement"),
         CheckConstraint("quantity >= 1", name="ck_inventory_qty_pos"),
         Index("ix_inventory_order_id", "order_id"),
+        {"mysql_engine": "InnoDB"},
     )
 
 
@@ -352,12 +365,13 @@ class RequestIdempotency(Base):
     request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     resource_id: Mapped[str | None] = mapped_column(String(36))
     response_body: Mapped[str | None] = mapped_column(Text)              # JSON của response
-    expires_at: Mapped[datetime] = mapped_column(DateTime(6), nullable=False)  # TTL >= 24h
-    created_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), nullable=False)  # TTL >= 24h
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
 
     __table_args__ = (
         UniqueConstraint("actor_id", "operation", "key", name="uq_idempotency_actor_op_key"),
         Index("ix_idempotency_expires_at", "expires_at"),
+        {"mysql_engine": "InnoDB"},
     )
 
 
@@ -370,8 +384,8 @@ class AIFaq(Base):
     question: Mapped[str] = mapped_column(String(500), nullable=False)
     answer: Mapped[str] = mapped_column(Text, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, onupdate=_now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, onupdate=_now, nullable=False)
 
 
 class AIConfig(Base):
@@ -381,10 +395,11 @@ class AIConfig(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     key: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     value: Mapped[str] = mapped_column(Text, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, onupdate=_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, onupdate=_now, nullable=False)
 
     __table_args__ = (
         Index("ix_ai_config_key", "key"),
+        {"mysql_engine": "InnoDB"},
     )
 
 
@@ -400,11 +415,12 @@ class WebhookReceipt(Base):
     event_id: Mapped[str] = mapped_column(String(255), nullable=False)
     raw_payload: Mapped[str] = mapped_column(Text, nullable=False)
     processed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
 
     __table_args__ = (
         UniqueConstraint("platform", "account_id", "event_id", name="uq_webhook_receipt"),
         Index("ix_webhook_receipt_processed", "processed", "created_at"),
+        {"mysql_engine": "InnoDB"},
     )
 
 
@@ -420,10 +436,11 @@ class WebhookOutbox(Base):
         default="PENDING", nullable=False,
     )
     attempt_count: Mapped[int] = mapped_column(SmallInteger, default=0, nullable=False)
-    next_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(6))
-    created_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(6), default=_now, onupdate=_now, nullable=False)
+    next_attempt_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=6))
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, onupdate=_now, nullable=False)
 
     __table_args__ = (
         Index("ix_webhook_outbox_status_next", "status", "next_attempt_at"),
+        {"mysql_engine": "InnoDB"},
     )

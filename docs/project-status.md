@@ -1,5 +1,29 @@
 # Trạng thái dự án SocialCart
 
+## Cập nhật kiểm chứng local 2026-11-05
+
+- Sửa start/stop PowerShell: truyền PYTHONPATH thực, quote đường dẫn có khoảng trắng,
+  tách stderr/stdout, đặt working directory, bỏ reload khỏi tiến trình nền và tránh biến `$PID` chỉ đọc.
+- Smoke tests nạp từng service bằng module riêng và gọi HTTP health với bốn tổ hợp DB/Redis.
+- Migration `0001` bỏ DROP TYPE không hợp lệ trên MySQL; chỉ định InnoDB và DATETIME(6).
+  Cấu hình Alembic đọc được trên Windows locale. Migration `0002_user_name` bổ sung
+  users.name, backfill dữ liệu cũ; model/seed đọc SEED_SELLER_NAME. HTTP contract không đổi.
+- Tạo `socialcart_db` trên Wamp MySQL 9.1.0 tại 127.0.0.1:3306 và tài khoản ứng dụng
+  chỉ có quyền trên schema này; credential nằm trong `.env` bị Git ignore.
+  Có 17 bảng ứng dụng InnoDB + alembic_version, revision `0002_user_name`. Chưa seed người bán/catalog.
+- Tạo `.venv` bằng Python 3.12.5, cài backend/requirements-dev.txt và scripts/requirements-docs.txt.
+  Chưa xác minh Python 3.11/MySQL 8, Redis hay auth thật; M0 vẫn chưa hoàn tất.
+- `pytest backend/tests -q -p no:cacheprovider`: **17 PASS** khi đặt
+  SOCIALCART_MIGRATION_TEST_URL trỏ database thử mới, rỗng, hậu tố `_migration_test`.
+  Có upgrade 0001 → insert user fixture → upgrade head/backfill → downgrade base → upgrade head.
+  Test không dùng DATABASE_URL ứng dụng; mặc định bỏ qua integration nếu thiếu URL test.
+- `scripts/validate-docs.py`: PASS (45 operations, 61 schemas, 129 examples, 43 ACs).
+- Start M0 thật thành công; HTTP health cả hai port trả **503 với db=ok, redis=error**.
+  Stop script dừng cả hai; không còn listener 8000/8001. Chưa có bằng chứng Redis khỏe thật.
+- `git diff --check`: PASS. Frontend/browser/provider không chạy trong lượt này.
+
+Phần dưới là báo cáo lịch sử 2026-10-30, không mô tả môi trường hiện tại.
+
 Ngày kiểm tra: **2026-10-30, Asia/Saigon**. Nền trước thay đổi: commit `2b84d6a` (`feat(boot): scaffold BOOT-01…`), working tree sạch. Báo cáo này phân biệt code đã có với hành vi đã được kiểm chứng; không thay cho nghiệm thu của người dùng.
 
 ## Hiện trạng theo task

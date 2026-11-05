@@ -6,10 +6,10 @@ Không yêu cầu MySQL/Redis kết nối thật (dùng mock).
 """
 from __future__ import annotations
 
-import importlib
+import importlib.util
 import sys
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -63,7 +63,7 @@ def test_models_import():
 def test_user_model_fields():
     from shared.db.models import User
     cols = {c.name for c in User.__table__.columns}
-    assert {"id", "email", "hashed_password", "is_active", "created_at", "updated_at"} <= cols
+    assert {"id", "email", "name", "hashed_password", "is_active", "created_at", "updated_at"} <= cols
 
 
 def test_order_has_version_and_created_by():
@@ -94,26 +94,37 @@ def test_inventory_movement_unique():
     assert "uq_inventory_movement" in constraint_names
 
 
-# ── API Gateway health endpoint ───────────────────────────────────────────────
+
+@pytest.fixture(params=["api-gateway", "auth-service"])
+def service_module(request):
+    path = Path(__file__).parents[1] / request.param / "app" / "main.py"
+    spec = importlib.util.spec_from_file_location(request.param.replace("-", "_") + "_main", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert Path(module.__file__) == path
+    return module
+
 
 @pytest.mark.asyncio
-async def test_gateway_health_both_ok():
-    """Health endpoint của gateway phải tồn tại và trả JSON với 'success' key."""
-    gw_dir = str(Path(__file__).parent.parent / "api-gateway")
-    if gw_dir not in sys.path:
-        sys.path.insert(0, gw_dir)
-
-    import app.main as gw_main  # noqa: F401
-
-    assert hasattr(gw_main, "app"), "gateway app phải có FastAPI app"
-    assert hasattr(gw_main, "health_check"), "gateway phải có health_check endpoint"
-
-
-# ── Auth service shell ────────────────────────────────────────────────────────
-
-def test_auth_service_imports():
-    """auth-service/app/main.py phải import được."""
-    sys.path.insert(0, str(Path(__file__).parent.parent / "auth-service"))
-    import app.main as auth_main
-    assert hasattr(auth_main, "app")
-    assert hasattr(auth_main, "health_check")
+@pytest.mark.parametrize("db_ok,redis_ok", [(True, True), (False, True), (True, False), (False, False)])
+async def test_health_dependencies(service_module, monkeypatch, db_ok, redis_ok):
+    from httpx import ASGITransport, AsyncClient
+    connection = AsyncMock()
+    if not db_ok:
+        connection.execute.side_effect = RuntimeError("private database details")
+    engine = MagicMock()
+    engine.connect.return_value.__aenter__ = AsyncMock(return_value=connection)
+    engine.connect.return_value.__aexit__ = AsyncMock(return_value=False)
+    redis = AsyncMock()
+    if not redis_ok:
+        redis.ping.side_effect = RuntimeError("private redis details")
+    monkeypatch.setattr(service_module, "get_engine", lambda: engine)
+    monkeypatch.setattr(service_module, "get_redis", lambda: redis)
+    async with AsyncClient(transport=ASGITransport(app=service_module.app), base_url="http://test") as client:
+        response = await client.get("/health")
+    assert response.status_code == (200 if db_ok and redis_ok else 503)
+    assert response.json() == {
+        "success": db_ok and redis_ok,
+        "checks": {"db": "ok" if db_ok else "error", "redis": "ok" if redis_ok else "error"},
+    }
+    assert "private" not in response.text

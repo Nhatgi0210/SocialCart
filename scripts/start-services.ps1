@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Khởi động các service SocialCart backend ở background với log và PID tracking.
 
@@ -70,6 +70,7 @@ $MilestoneServices = @{
 $ToStart = if ($Service) { @($Service) } else { $MilestoneServices[$Milestone] }
 
 foreach ($svc in $ToStart) {
+    if (-not $ServiceMap.Contains($svc)) { throw "Unknown service: $svc" }
     $SvcDir = Join-Path $RepoRoot "backend\$svc"
     if (-not (Test-Path (Join-Path $SvcDir "app\main.py"))) {
         Write-Warning "[$svc] app/main.py chưa tồn tại — bỏ qua (task BOOT chưa scaffold)"
@@ -78,6 +79,7 @@ foreach ($svc in $ToStart) {
 
     $port    = $ServiceMap[$svc]
     $logFile = Join-Path $LogDir "$svc.log"
+    $errorLog = Join-Path $LogDir "$svc.error.log"
     $pidFile = Join-Path $PidDir "$svc.pid"
 
     # Kiểm tra đã chạy chưa
@@ -98,22 +100,27 @@ foreach ($svc in $ToStart) {
         FilePath         = $VenvPy
         ArgumentList     = @(
             "-m", "uvicorn", "app.main:app",
-            "--app-dir", $SvcDir,
+            "--app-dir", ('"{0}"' -f $SvcDir),
             "--host", "127.0.0.1",
-            "--port", "$port",
-            "--reload"
+            "--port", "$port"
         )
         WindowStyle      = "Hidden"
         PassThru         = $true
         RedirectStandardOutput = $logFile
-        RedirectStandardError  = $logFile
+        RedirectStandardError  = $errorLog
+        WorkingDirectory = $RepoRoot
     }
 
     # Set PYTHONPATH cho process
-    $envBlock = [System.Environment]::GetEnvironmentVariables()
-    $envBlock["PYTHONPATH"] = $env_PYTHONPATH
-
-    $proc = Start-Process @startArgs
+    $previousPythonPath = $env:PYTHONPATH
+    try {
+        $env:PYTHONPATH = $env_PYTHONPATH
+        $proc = Start-Process @startArgs
+    } finally {
+        $env:PYTHONPATH = $previousPythonPath
+    }
+    Start-Sleep -Milliseconds 800
+    if ($proc.HasExited) { throw "[$svc] Startup failed; inspect $errorLog" }
     $proc.Id | Out-File -FilePath $pidFile -Encoding ascii -Force
     Write-Host "[$svc] Khởi động PID $($proc.Id) port $port — log: logs\$svc.log"
 }
