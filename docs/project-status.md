@@ -1,5 +1,7 @@
 # Trạng thái dự án SocialCart
 
+Ngày kiểm tra: **2026-11-09, Asia/Saigon**. AUTH-01 bắt đầu trên `8b8ce99`, sau đó đồng bộ hai commit GitHub tới `eeff99a` trước bàn giao. Giữ migration/name và kế hoạch React Native đã có trên remote; không thêm migration trùng. Báo cáo phân biệt code với hành vi đã được kiểm chứng; không thay nghiệm thu của người dùng. Bằng chứng 2026-11-05/2026-10-30 được giữ bên dưới.
+
 ## Bổ sung React Native 2026-11-05 — DOCUMENTATION ONLY
 
 Người dùng yêu cầu React Native cho môn đa nền tảng và chọn chỉ cập nhật tài liệu.
@@ -30,26 +32,39 @@ Chưa có `mobile/`, dependency, build, test native hoặc API native. M0 chưa 
   Stop script dừng cả hai; không còn listener 8000/8001. Chưa có bằng chứng Redis khỏe thật.
 - `git diff --check`: PASS. Frontend/browser/provider không chạy trong lượt này.
 
-Phần dưới là báo cáo lịch sử 2026-10-30, không mô tả môi trường hiện tại.
-
-Ngày kiểm tra: **2026-10-30, Asia/Saigon**. Nền trước thay đổi: commit `2b84d6a` (`feat(boot): scaffold BOOT-01…`), working tree sạch. Báo cáo này phân biệt code đã có với hành vi đã được kiểm chứng; không thay cho nghiệm thu của người dùng.
-
 ## Hiện trạng theo task
 
 | Task | Trạng thái | Bằng chứng / phần còn thiếu |
 | --- | --- | --- |
 | DOC-01 | Có baseline | PRD, Feature Spec, data rules, contracts, kế hoạch và validator đã có |
-| BOOT-01 | PARTIAL | Gateway/auth shell, 17 shared ORM models, migration `0001`, Compose, requirements và scripts đã có. 10 smoke tests pass trên Python 3.13.3; chưa đạt tiêu chí runtime Python 3.11/MySQL/Redis |
+| BOOT-01 | PARTIAL | 17 models, migration tới `0002_user_name`, Compose/scripts. Đã có bằng chứng migration MySQL 9.1 ngày 2026-11-05; health contract/SQL offline kiểm lại 2026-11-09. Chưa đạt Python 3.11/MySQL 8/Redis 7 |
 | BOOT-02 | LOCAL CHECKS PASS / VISUAL NOT RUN | React 18/TypeScript/Vite/MUI 5; theme Concept B; router, Axios/Query/Zustand, memory token, refresh single-flight và loading/error/retry. Cài từ lockfile, lint/typecheck/16 tests/build pass; chưa nghiệm thu visual |
-| AUTH-01 | NOT IMPLEMENTED | Auth backend chỉ có `/health`, chưa có login/me/refresh/logout. Gateway routing hiện là scaffold, chưa thực thi JWT/session protection |
-| AUTH-02 | PARTIAL, SIMULATED ONLY | Form/login/logout/bootstrap và bảo vệ route được kiểm bằng HTTP mô phỏng; chưa có backend để kiểm end-to-end, chưa đồng bộ logout nhiều tab/socket |
-| DATA-01 | Chưa nghiệm thu | Model/migration được scaffold sớm trong BOOT-01; chưa xác minh constraints và upgrade trên MySQL rỗng/có seed |
+| AUTH-01 | SIMULATED CHECKS PASS / INTEGRATION NOT RUN | login/me/refresh/logout, RS256, Redis Lua rotation/idle/revoke, Origin và Gateway protection đã có; HTTP ASGI + fakeredis/Lua, DB mock. Test MySQL/Redis opt-in chưa chạy |
+| AUTH-02 | PARTIAL, SIMULATED ONLY | Frontend 16 tests pass; backend đã có nhưng chưa kiểm UI→Gateway→auth→MySQL/Redis bằng browser; chưa đồng bộ logout nhiều tab/socket |
+| DATA-01 | Chưa nghiệm thu | Có bằng chứng upgrade/backfill/downgrade MySQL 9.1 ngày 2026-11-05; chưa đủ constraints/seed/transaction theo MySQL 8 baseline |
 | Các task nghiệp vụ, RT/AI/provider | NOT IMPLEMENTED | Frontend chỉ có placeholder, không có dữ liệu hay số liệu giả |
 | UX-01 | NOT RUN | Chưa nghiệm thu P4.5; việc chọn Concept B không thay thế review runtime |
 
-**M0 chưa hoàn tất.** Không có bằng chứng auth thật, migration thật hay provider live.
+**M0 chưa hoàn tất.** Chưa có bằng chứng auth với MySQL/Redis thật hoặc provider live; bằng chứng migration MySQL 9.1 trước đó không thay kiểm baseline MySQL 8.
 
-## Phạm vi thay đổi BOOT-02
+## AUTH-01 — bằng chứng ngày 2026-11-09
+
+- `backend/auth-service/app/main.py`: bốn endpoint auth; access 900s; refresh cookie HttpOnly/Lax, Path `/api/v1/auth`, Secure theo cấu hình; kiểm Origin bắt buộc; lỗi sai email/password/inactive giống nhau; không trả refresh trong JSON; response không cache.
+- `backend/shared/auth.py`: verify RS256 với đầy đủ claims; Redis lưu SHA-256 refresh, rotation nguyên tử bằng Lua, session tối đa 7 ngày và idle 24h; hoạt động đã xác thực cập nhật idle. Logout xóa sid, blacklist jti hiện tại khi có access hợp lệ; mọi access của sid bị chặn. Socket disconnect còn phụ thuộc RT-01.
+- Gateway kiểm phiên trước khi proxy API được bảo vệ, Redis lỗi trả 503; chặn route ngoài map và prefix giả; bỏ header identity giả; giữ raw webhook bytes/signature và nhiều Set-Cookie. Chưa triển khai provider webhook.
+- Dùng nguyên migration `0002_user_name` và model/name từ commit remote; không thay schema/migration trong AUTH-01. Seed giữ `SEED_SELLER_NAME` mặc định `Seller`, dùng Argon2id, không trim password và không thay password đã tồn tại. Login tương thích hash bcrypt cũ.
+- Dependency auth khóa PyJWT 2.14.0, cryptography 50.0.2, argon2-cffi 25.1.0, bcrypt 5.0.0, email-validator 2.3.0; test fakeredis[lua] 2.32.1. Tham khảo [PyJWT RS256/claims](https://pyjwt.readthedocs.io/en/latest/usage.html), [Argon2 API](https://argon2-cffi.readthedocs.io/en/stable/howto.html), [Redis Lua atomicity](https://redis.io/docs/latest/develop/programmability/eval-intro/). Chưa audit toàn bộ dependency backend.
+
+| Lệnh | Kết quả / giới hạn |
+| --- | --- |
+| `.\.venv\Scripts\python.exe -m pytest backend/tests -q -p no:cacheprovider` | 47 PASS, 2 SKIP (thiếu URLs cho integration auth/migration); Python 3.13.3, RSA thật, Lua trong fakeredis, DB mock. Có health hai service độc lập, login/me/refresh/logout qua Gateway, concurrent refresh, replay, idle/max age, revoke/blacklist, Origin/CORS, DB/Redis lỗi, seed idempotency và SQL offline |
+| `.\.venv\Scripts\python.exe -X utf8 -m alembic -c backend/shared/db/alembic.ini upgrade head --sql` | PASS — sinh SQL tới `0002`; **không thực thi lên MySQL**. INI comments đổi ASCII để đọc được trên Windows; `-X utf8` cần cho SQL Unicode khi redirect |
+| `npm.cmd --prefix frontend run lint`, `run typecheck`, `run test -- --run`, `run build` | PASS — 16 tests; build còn warning bundle 503.66 kB. Không đổi frontend, không chạy npm ci lại |
+| `docker version`, `py -0p` | BLOCKED — daemon không có pipe docker_engine; launcher không phát hiện Python 3.11; venv hiện tại Python 3.13.3 |
+
+Test integration mới ở `backend/tests/test_auth_integration.py`, chỉ chạy khi có MySQL database `socialcart_test_*` và Redis DB 15 được dành riêng. Tự upgrade Alembic, tạo seller riêng, kiểm auth/rotation/revoke qua Gateway ASGI; không phải browser E2E. Không DROP/FLUSHDB; chỉ xóa seller/session của test. Hướng dẫn ở [setup](setup.md). Lượt này không chạy integration/migration online; Docker image patch/digest và visual QA còn thiếu.
+
+## Phạm vi thay đổi BOOT-02 (lịch sử 2026-10-30)
 
 - `frontend/`: manifest/lockfile, cấu hình Vite/TypeScript/ESLint/Vitest; `src/components`, `pages`, `services`, `stores`, `theme`, `types` và tests.
 - `.node-version`: Node 24.14.0; `.gitignore`: bỏ qua npm cache local.
@@ -57,13 +72,13 @@ Ngày kiểm tra: **2026-10-30, Asia/Saigon**. Nền trước thay đổi: commi
 - Không đổi HTTP contract, schema hay migration. API client dùng đúng OpenAPI đã có; tất cả HTTP qua Gateway `/api/v1`, cookie credentials, access token chỉ trong memory.
 - Login về `/dashboard` nhưng chỉ hiển thị shell/người bán và trang chờ. Không coi đây là Dashboard nghiệm thu AC-29. Lỗi logout giữ phiên hiện tại và cho thử lại vì server chưa xác nhận revoke.
 
-## Môi trường và giới hạn
+## Môi trường và giới hạn BOOT-02 (lịch sử 2026-10-30)
 
 Windows/PowerShell; Python global và `.venv` đều **3.13.3**, chưa có Python 3.11 được launcher phát hiện. Node **24.14.0**, npm **11.9.0**. Docker CLI có mặt nhưng daemon không kết nối được qua `docker_engine`; chưa chạy Compose, migration hoặc seed. Không đọc hay sử dụng credential nền tảng.
 
 Frontend giữ React 18/MUI 5 theo baseline. Vite 7 và Node 24 được khóa; yêu cầu Node được đối chiếu với [Vite guide](https://vite.dev/guide/), peer dependency React/Emotion theo [MUI 5 installation](https://v5.mui.com/material-ui/getting-started/installation/). Phiên bản dependency exact ở `frontend/package.json`, dependency gián tiếp ở lockfile.
 
-## Lệnh và kết quả
+## Lệnh và kết quả BOOT-02 (lịch sử 2026-10-30)
 
 Các test HTTP mô phỏng không chứng minh auth backend hoạt động. Lệnh chạy từ root, dùng virtualenv hiện có; không chạy cleanup vào DB người dùng.
 
@@ -90,5 +105,5 @@ Hai advisory của upstream là [redirect từ untrusted path](https://github.co
 ## Bước tiếp theo
 
 1. Hoàn tất BOOT-01: Python 3.11, Docker/MySQL 8/Redis 7; khóa image patch/digest; kiểm upgrade DB rỗng/có seed, seed seller idempotent và health 200/503 đúng OpenAPI. Bộ smoke test hiện tại còn import `app.main` bằng cùng tên giữa hai service nên chưa chứng minh hai health endpoint độc lập.
-2. AUTH-01: triển khai backend auth/Gateway với RS256, Redis session/refresh rotation, cookie Origin, revoke/idle và integration thật; không mở dữ liệu nghiệp vụ trước khi có auth.
+2. AUTH-01: chạy integration MySQL/Redis trên Python 3.11; kiểm migration rỗng/có seed và seed CLI trên DB thật; audit dependency backend. Không mở dữ liệu nghiệp vụ trước khi có auth được kiểm chứng.
 3. AUTH-02: kiểm UI→Gateway→auth→DB và hoàn thiện logout nhiều tab/socket khi RT-01 tồn tại; giữ Dashboard là shell cho đến DASH-01.

@@ -27,20 +27,14 @@ async def seed_seller(session) -> None:
     """Tạo user người bán từ env SEED_SELLER_EMAIL / SEED_SELLER_PASSWORD.
     Idempotent: nếu email đã tồn tại, bỏ qua.
     """
-    try:
-        from passlib.context import CryptContext
-    except ImportError:
-        print("ERROR: Cần cài passlib[bcrypt]. Chạy: pip install passlib[bcrypt]")
-        sys.exit(1)
+    from shared.passwords import hash_password
 
     from sqlalchemy import select
     from shared.db.models import User
 
     email = os.environ.get("SEED_SELLER_EMAIL", "").strip()
+    password = os.environ.get("SEED_SELLER_PASSWORD", "")
     name = os.environ.get("SEED_SELLER_NAME", "Seller").strip()
-    if not 1 <= len(name) <= 100:
-        raise ValueError("SEED_SELLER_NAME must contain 1-100 characters")
-    password = os.environ.get("SEED_SELLER_PASSWORD", "").strip()
 
     if not email:
         print("ERROR: SEED_SELLER_EMAIL chưa được đặt trong .env")
@@ -48,8 +42,11 @@ async def seed_seller(session) -> None:
     if not password:
         print("ERROR: SEED_SELLER_PASSWORD chưa được đặt trong .env")
         sys.exit(1)
-    if len(password) < 8:
-        print("ERROR: SEED_SELLER_PASSWORD phải có ít nhất 8 ký tự")
+    if not 8 <= len(password) <= 1024:
+        print("ERROR: SEED_SELLER_PASSWORD phải có 8–1024 ký tự")
+        sys.exit(1)
+    if not 1 <= len(name) <= 100:
+        print("ERROR: SEED_SELLER_NAME phải có 1–100 ký tự")
         sys.exit(1)
 
     # Kiểm tra tồn tại
@@ -59,8 +56,7 @@ async def seed_seller(session) -> None:
         print(f"INFO: Người bán '{email}' đã tồn tại — bỏ qua.")
         return
 
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    hashed = pwd_context.hash(password)
+    hashed = hash_password(password)
 
     import uuid
     from datetime import datetime, timezone

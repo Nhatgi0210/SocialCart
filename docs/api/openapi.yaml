@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: SocialCart Public API
   version: 1.0.0
-  description: 'Design baseline 2026-10-19; no implementation yet. Source: PRD, Feature Spec, decisions.md
+  description: 'Design baseline 2026-10-19; health/auth implemented with simulated tests 2026-11-09; MySQL/Redis integration pending. Source: PRD, Feature Spec, decisions.md
     and data-rules.md. UUID IDs, integer VND, UTC timestamps. Schemas cover public API; provider raw payload
     validation remains INT-01.'
 servers:
@@ -30,7 +30,7 @@ paths:
       summary: Service readiness
       x-task: BOOT-01
       x-requirements: []
-      x-implementation-status: not-implemented
+      x-implementation-status: simulated-tests-pass
       security: []
       responses:
         '200':
@@ -60,7 +60,7 @@ paths:
       x-task: AUTH-01
       x-requirements:
       - AC-29
-      x-implementation-status: not-implemented
+      x-implementation-status: simulated-tests-pass
       description: Validate Origin allowlist. Sets HttpOnly refresh cookie; wrong email/password both
         return 401.
       security: []
@@ -120,7 +120,7 @@ paths:
       x-requirements:
       - AC-30
       - AC-32
-      x-implementation-status: not-implemented
+      x-implementation-status: simulated-tests-pass
       description: Origin allowlist required. Atomic refresh rotation; max 7 days, idle 24h. Access token
         may be expired.
       security:
@@ -171,7 +171,7 @@ paths:
       x-task: AUTH-01
       x-requirements:
       - AC-32
-      x-implementation-status: not-implemented
+      x-implementation-status: simulated-tests-pass
       description: Origin allowlist; revoke sid and clear cookie. Already missing cookie returns 204 without
         revoking another session.
       security:
@@ -208,7 +208,7 @@ paths:
       x-requirements:
       - AC-30
       - AC-31
-      x-implementation-status: not-implemented
+      x-implementation-status: simulated-tests-pass
       responses:
         '200':
           description: Contract response; not evidence of a running service.

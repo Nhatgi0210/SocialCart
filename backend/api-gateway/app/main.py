@@ -1,15 +1,4 @@
-"""API Gateway — port 8000.
-
-Phạm vi BOOT-01:
-  - /health         kiểm tra DB và Redis, trả 503 nếu thiếu
-  - /api/v1/*       proxy đến service tương ứng (stub, hoàn thiện ở AUTH-01+)
-  - /webhooks/*     proxy đến webhook-service (stub)
-
-Chú ý: Gateway không expose /internal/*; CORS chỉ cho origins trong allowlist;
-webhook bỏ JWT nhưng giữ signature header; không expose DSN trong error.
-"""
-from __future__ import annotations
-
+"""Gateway: public auth/webhooks, authenticated business API, no internal routes."""
 from contextlib import asynccontextmanager
 
 import httpx
@@ -17,96 +6,57 @@ import redis.asyncio as aioredis
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from sqlalchemy import text
 
+from shared.auth import AuthError, Sessions, error_body
 from shared.config import settings
-from shared.db.session import db_lifespan, get_engine
+from shared.db.session import db_lifespan
+from shared.health import readiness
 
-# ── Redis client (module-level; closed on shutdown) ───────────────────────────
-_redis: aioredis.Redis | None = None
+_redis = None
 
 
-def get_redis() -> aioredis.Redis:
+def get_redis():
     global _redis
     if _redis is None:
-        _redis = aioredis.from_url(settings.redis_url, decode_responses=True)
+        _redis = aioredis.from_url(settings.redis_url, decode_responses=True,
+                                  socket_connect_timeout=3, socket_timeout=3)
     return _redis
 
 
-# ── Lifespan ──────────────────────────────────────────────────────────────────
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global _redis
     async with db_lifespan():
-        redis_client = get_redis()
         try:
             yield
         finally:
-            await redis_client.aclose()
+            if _redis is not None:
+                await _redis.aclose()
+                _redis = None
 
 
-# ── App ───────────────────────────────────────────────────────────────────────
-
-app = FastAPI(
-    title="SocialCart API Gateway",
-    version="0.1.0",
-    docs_url=None,         # Không expose docs ở Gateway; mỗi service có swagger riêng
-    redoc_url=None,
-    openapi_url=None,
-    lifespan=lifespan,
-)
-
+app = FastAPI(title="SocialCart API Gateway", version="0.2.0",
+              docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_allowed_origins,
-    allow_credentials=True,
+    CORSMiddleware, allow_origins=settings.cors_allowed_origins, allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=["Authorization", "Content-Type", "Idempotency-Key", "X-Request-Id"],
     expose_headers=["X-Request-Id"],
 )
 
 
-# ── Health ────────────────────────────────────────────────────────────────────
+@app.exception_handler(AuthError)
+async def auth_error(request: Request, exc: AuthError):
+    return JSONResponse(status_code=exc.status, content=error_body(exc.code, exc.message),
+                        headers={"Cache-Control": "no-store"})
 
-@app.get("/health", tags=["ops"])
+
+@app.get("/health")
 async def health_check():
-    """
-    Kiểm tra DB và Redis.
-    200 khi cả hai sẵn sàng; 503 khi ít nhất một dependency lỗi.
-    Không lộ connection string hay chi tiết lỗi nội bộ.
-    """
-    checks: dict[str, str] = {}
-    ok = True
-
-    # Kiểm DB
-    try:
-        engine = get_engine()
-        async with engine.connect() as conn:
-            await conn.execute(text("SELECT 1"))
-        checks["db"] = "ok"
-    except Exception:
-        checks["db"] = "error"
-        ok = False
-
-    # Kiểm Redis
-    try:
-        redis_client = get_redis()
-        await redis_client.ping()
-        checks["redis"] = "ok"
-    except Exception:
-        checks["redis"] = "error"
-        ok = False
-
-    status_code = 200 if ok else 503
-    return JSONResponse(
-        status_code=status_code,
-        content={"success": ok, "checks": checks},
-    )
+    return await readiness("api-gateway", get_redis())
 
 
-# ── Proxy helpers ─────────────────────────────────────────────────────────────
-
-_ROUTE_MAP: dict[str, str] = {
+_ROUTE_MAP = {
     "/api/v1/auth": settings.auth_service_url,
     "/api/v1/conversations": settings.conversation_service_url,
     "/api/v1/customers": settings.customer_service_url,
@@ -115,91 +65,58 @@ _ROUTE_MAP: dict[str, str] = {
     "/api/v1/ai": settings.ai_service_url,
     "/api/v1/connections": settings.platform_service_url,
     "/api/v1/dashboard": settings.dashboard_service_url,
-    "/api/v1/settings": settings.ai_service_url,   # FAQ/config qua ai-service
+    "/api/v1/settings": settings.ai_service_url,
     "/webhooks": settings.webhook_service_url,
 }
+_PUBLIC = {("POST", f"/api/v1/auth/{action}") for action in ("login", "refresh", "logout")}
+_HOP = {"connection", "keep-alive", "transfer-encoding", "te", "upgrade", "trailer",
+        "proxy-authorization", "proxy-authenticate"}
 
 
 def _resolve_upstream(path: str) -> str | None:
-    """Tìm upstream URL cho path; trả None nếu không khớp."""
     for prefix, url in _ROUTE_MAP.items():
-        if path.startswith(prefix):
+        if path == prefix or path.startswith(prefix + "/"):
             return url
     return None
 
 
+def filtered_headers(headers, *, request=False):
+    excluded = _HOP | {part.strip().lower() for part in headers.get("connection", "").split(",")}
+    excluded |= {"host", "content-length"} if request else {"content-length", "content-encoding"}
+    # Identity headers from the browser must never become trusted internal identity.
+    if request:
+        excluded |= {"x-user-id", "x-session-id", "x-internal-token"}
+    items = headers.items() if request else headers.multi_items()
+    return [(key, value) for key, value in items if key.lower() not in excluded]
+
+
 async def _proxy(request: Request, upstream_url: str) -> Response:
-    """Chuyển tiếp request đến upstream, giữ headers và body."""
-    path = request.url.path
-    query = request.url.query
-    target = f"{upstream_url}{path}"
-    if query:
-        target = f"{target}?{query}"
-
-    # Lọc bỏ hop-by-hop headers
-    _HOP_BY_HOP = {"connection", "keep-alive", "transfer-encoding", "te", "upgrade", "proxy-authorization"}
-    headers = {
-        k: v for k, v in request.headers.items()
-        if k.lower() not in _HOP_BY_HOP
-    }
-
-    body = await request.body()
-
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        upstream_resp = await client.request(
-            method=request.method,
-            url=target,
-            headers=headers,
-            content=body,
-        )
-
-    # Lọc response headers
-    resp_headers = {
-        k: v for k, v in upstream_resp.headers.items()
-        if k.lower() not in {"transfer-encoding", "content-encoding"}
-    }
-
-    return Response(
-        content=upstream_resp.content,
-        status_code=upstream_resp.status_code,
-        headers=resp_headers,
-    )
+    target = f"{upstream_url}{request.url.path}"
+    if request.url.query:
+        target += f"?{request.url.query}"
+    async with httpx.AsyncClient(timeout=30, follow_redirects=False) as client:
+        upstream = await client.request(request.method, target,
+                                        headers=filtered_headers(request.headers, request=True),
+                                        content=await request.body())
+    response = Response(content=upstream.content, status_code=upstream.status_code)
+    # Preserve repeated Set-Cookie headers and recalculate length after decompression.
+    for key, value in filtered_headers(upstream.headers):
+        response.headers.append(key, value)
+    return response
 
 
-# ── Catch-all proxy ────────────────────────────────────────────────────────────
-
-@app.api_route(
-    "/{full_path:path}",
-    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    include_in_schema=False,
-)
+@app.api_route("/{full_path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+               include_in_schema=False)
 async def gateway_proxy(request: Request, full_path: str):
-    """Forward đến upstream service theo route map."""
     path = request.url.path
-
-    # Chặn /internal/*
-    if path.startswith("/internal/"):
-        return JSONResponse(
-            status_code=404,
-            content={"success": False, "error": {"code": "NOT_FOUND", "message": "Not found"}},
-        )
-
     upstream = _resolve_upstream(path)
     if upstream is None:
-        return JSONResponse(
-            status_code=404,
-            content={"success": False, "error": {"code": "NOT_FOUND", "message": "Route not found"}},
-        )
-
+        return JSONResponse(status_code=404, content=error_body("NOT_FOUND", "Route not found"))
+    if (request.method, path) not in _PUBLIC and not path.startswith("/webhooks/"):
+        await Sessions(get_redis()).authorize(request.headers.get("authorization"))
     try:
         return await _proxy(request, upstream)
-    except httpx.ConnectError:
-        return JSONResponse(
-            status_code=503,
-            content={"success": False, "error": {"code": "SERVICE_UNAVAILABLE", "message": "Upstream unavailable"}},
-        )
     except httpx.TimeoutException:
-        return JSONResponse(
-            status_code=504,
-            content={"success": False, "error": {"code": "GATEWAY_TIMEOUT", "message": "Upstream timeout"}},
-        )
+        return JSONResponse(status_code=504, content=error_body("GATEWAY_TIMEOUT", "Upstream timeout"))
+    except httpx.RequestError:
+        return JSONResponse(status_code=503, content=error_body("SERVICE_UNAVAILABLE", "Upstream unavailable"))

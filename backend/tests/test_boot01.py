@@ -6,10 +6,9 @@ Không yêu cầu MySQL/Redis kết nối thật (dùng mock).
 """
 from __future__ import annotations
 
-import importlib.util
 import sys
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -95,36 +94,52 @@ def test_inventory_movement_unique():
 
 
 
-@pytest.fixture(params=["api-gateway", "auth-service"])
-def service_module(request):
-    path = Path(__file__).parents[1] / request.param / "app" / "main.py"
-    spec = importlib.util.spec_from_file_location(request.param.replace("-", "_") + "_main", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    assert Path(module.__file__) == path
-    return module
+def test_service_modules_are_distinct():
+    from tests.conftest import load_service
+    gateway = load_service("api-gateway")
+    auth = load_service("auth-service")
+    assert gateway is not auth
+    assert gateway.app is not auth.app
+    assert gateway.app.title == "SocialCart API Gateway"
+    assert auth.app.title == "SocialCart Auth Service"
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("db_ok,redis_ok", [(True, True), (False, True), (True, False), (False, False)])
-async def test_health_dependencies(service_module, monkeypatch, db_ok, redis_ok):
-    from httpx import ASGITransport, AsyncClient
-    connection = AsyncMock()
-    if not db_ok:
-        connection.execute.side_effect = RuntimeError("private database details")
+@pytest.mark.parametrize("service", ["api-gateway", "auth-service"])
+@pytest.mark.parametrize("db_ok,redis_ok,status", [(True, True, 200), (False, True, 503), (True, False, 503), (False, False, 503)])
+async def test_health_contract(service, db_ok, redis_ok, status, monkeypatch):
+    from tests.conftest import load_service
+    from shared import health
+    from unittest.mock import MagicMock
+    import json
+    module = load_service(service)
+    conn = AsyncMock()
     engine = MagicMock()
-    engine.connect.return_value.__aenter__ = AsyncMock(return_value=connection)
-    engine.connect.return_value.__aexit__ = AsyncMock(return_value=False)
+    engine.connect.return_value.__aenter__.return_value = conn
+    if not db_ok:
+        conn.execute.side_effect = RuntimeError("secret DSN")
     redis = AsyncMock()
     if not redis_ok:
-        redis.ping.side_effect = RuntimeError("private redis details")
-    monkeypatch.setattr(service_module, "get_engine", lambda: engine)
-    monkeypatch.setattr(service_module, "get_redis", lambda: redis)
-    async with AsyncClient(transport=ASGITransport(app=service_module.app), base_url="http://test") as client:
-        response = await client.get("/health")
-    assert response.status_code == (200 if db_ok and redis_ok else 503)
-    assert response.json() == {
-        "success": db_ok and redis_ok,
-        "checks": {"db": "ok" if db_ok else "error", "redis": "ok" if redis_ok else "error"},
-    }
-    assert "private" not in response.text
+        redis.ping.side_effect = RuntimeError("secret Redis")
+    monkeypatch.setattr(health, "get_engine", lambda: engine)
+    monkeypatch.setattr(module, "get_redis", lambda: redis)
+    response = await module.health_check()
+    assert response.status_code == status
+    body = json.loads(response.body)
+    if status == 200:
+        assert body["status"] == "ok" and body["service"] == service
+        assert body["checked_at"].endswith("Z")
+    else:
+        assert body["error"]["code"] == "SERVICE_UNAVAILABLE"
+    assert "secret" not in response.body.decode()
+
+
+def test_migration_sql_compiles_from_root():
+    """Offline compilation catches Windows encoding/import failures, not DB compatibility."""
+    import subprocess
+    result = subprocess.run([sys.executable, "-X", "utf8", "-m", "alembic", "-c",
+                             "backend/shared/db/alembic.ini", "upgrade", "head", "--sql"],
+                            cwd=Path(__file__).resolve().parents[2], capture_output=True, encoding="utf-8")
+    assert result.returncode == 0, result.stderr
+    assert "ALTER TABLE users ADD COLUMN name" in result.stdout
+    assert "0002_user_name" in result.stdout

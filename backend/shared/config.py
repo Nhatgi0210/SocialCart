@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -35,14 +36,14 @@ class Settings(BaseSettings):
     redis_url: str = Field(default="redis://127.0.0.1:6379/0", alias="REDIS_URL")
 
     # ── JWT / Auth ───────────────────────────────────────────────────────────
-    jwt_algorithm: str = Field(default="RS256", alias="JWT_ALGORITHM")
+    jwt_algorithm: Literal["RS256"] = Field(default="RS256", alias="JWT_ALGORITHM")
     jwt_private_key_path: str = Field(default="./keys/private.pem", alias="JWT_PRIVATE_KEY_PATH")
     jwt_public_key_path: str = Field(default="./keys/public.pem", alias="JWT_PUBLIC_KEY_PATH")
     jwt_issuer: str = Field(default="socialcart-auth", alias="JWT_ISSUER")
     jwt_audience: str = Field(default="socialcart-api", alias="JWT_AUDIENCE")
-    access_token_expire_minutes: int = Field(default=15, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
-    refresh_token_expire_days: int = Field(default=7, alias="REFRESH_TOKEN_EXPIRE_DAYS")
-    session_idle_timeout_seconds: int = Field(default=86400, alias="SESSION_IDLE_TIMEOUT_SECONDS")
+    access_token_expire_minutes: Literal[15] = Field(default=15, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
+    refresh_token_expire_days: Literal[7] = Field(default=7, alias="REFRESH_TOKEN_EXPIRE_DAYS")
+    session_idle_timeout_seconds: Literal[86400] = Field(default=86400, alias="SESSION_IDLE_TIMEOUT_SECONDS")
     refresh_cookie_secure: bool = Field(default=False, alias="REFRESH_COOKIE_SECURE")
 
     # ── CORS ─────────────────────────────────────────────────────────────────

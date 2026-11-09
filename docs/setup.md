@@ -1,6 +1,6 @@
 # Chạy SocialCart tại local
 
-Cập nhật 2026-10-30. **Hiện có:** prototype HTML/CSS/JS; backend Gateway/auth shell, Compose, Alembic và seed/start/stop scripts; frontend React/TypeScript/MUI và auth shell. **Chưa có:** auth backend và nghiệp vụ; chưa kiểm chứng migration/seed trên MySQL thật. Xem [báo cáo trạng thái](project-status.md). Các lệnh backend dưới đây cần Python 3.11 và MySQL/Redis sẵn sàng; file tồn tại chưa có nghĩa runtime đã pass.
+Cập nhật 2026-11-09. **Hiện có:** prototype; Gateway/auth login/me/refresh/logout, Compose, Alembic và scripts; frontend React/TypeScript/MUI/auth shell. **Chưa kiểm chứng:** migration/seed/auth trên MySQL/Redis thật và browser E2E. Nghiệp vụ chưa triển khai. Xem [báo cáo trạng thái](project-status.md). Các lệnh backend dưới đây cần Python 3.11 và MySQL/Redis sẵn sàng; test mô phỏng không chứng minh runtime đã pass.
 
 ## React Native — mới có kế hoạch
 
@@ -51,7 +51,7 @@ Hiện có thể tạo cấu hình local từ mẫu:
 Copy-Item -LiteralPath '.env.example' -Destination '.env'
 ```
 
-Điền DB password, keys và secrets tại local; `.env` không commit. Dùng `.env.example` làm danh mục biến chính thức. `.env` root dùng cho backend/Compose; Vite sau BOOT-02 có `envDir: '..'`, chỉ expose `VITE_*`.
+Điền DB password, keys và secrets tại local; `.env` không commit. Dùng `.env.example` làm danh mục biến chính thức. `.env` root dùng cho backend/Compose; Vite sau BOOT-02 có `envDir: '..'`, chỉ expose `VITE_*`. `SEED_SELLER_NAME` mặc định `Seller`; seed mới dùng Argon2id, auth vẫn đọc hash bcrypt cũ. Mật khẩu seed dài 8–1024 ký tự, giữ nguyên khoảng trắng. Seed lặp không thay password/name hiện có. Chạy upgrade tới `0002_user_name` trước khi chạy auth mới.
 
 JWT dùng cặp RSA key riêng; BOOT-01 phải cung cấp `scripts/init-local-keys.py` tạo `keys/private.pem` và `keys/public.pem` nếu chưa có, không ghi đè key hiện tại. `ENCRYPTION_KEY` là hex 32 bytes và không đổi khi DB còn token đã mã hóa. Seed người bán đọc `SEED_SELLER_EMAIL`/`SEED_SELLER_PASSWORD`, không in mật khẩu. Cấu hình theo service: auth không bắt buộc Gemini/Facebook/Zalo secret; chỉ adapter được bật mới yêu cầu credential tương ứng.
 
@@ -80,7 +80,7 @@ npm.cmd --prefix frontend ci
 npm.cmd --prefix frontend run dev
 ```
 
-Mở `http://localhost:5173`. Vite lắng nghe loopback `127.0.0.1:5173`; `VITE_API_URL` mặc định `http://localhost:8000/api/v1` khi chưa có `.env`. Chỉ biến `VITE_*` được đưa vào bundle. Không dùng tài khoản mock của prototype để đăng nhập ứng dụng. Khi khởi động, UI gọi refresh cookie thật qua Gateway; backend auth hiện chưa có nên UI có thể hiển thị lỗi kiểm tra phiên và nút thử lại. Không có cơ chế đăng nhập giả hoặc bỏ qua route protection. Test frontend dùng HTTP mô phỏng có nhãn riêng.
+Mở `http://localhost:5173`. Vite lắng nghe loopback `127.0.0.1:5173`; `VITE_API_URL` mặc định `http://localhost:8000/api/v1` khi chưa có `.env`. Chỉ biến `VITE_*` được đưa vào bundle. Dùng seller từ seed, không dùng tài khoản mock prototype. UI khởi động gọi refresh cookie qua Gateway: thiếu cookie trả 401; hạ tầng auth lỗi trả 503 và có nút thử lại. Backend đã có implementation nhưng chưa kiểm browser E2E. Không có đăng nhập giả hoặc bỏ qua route protection. Test frontend dùng HTTP mô phỏng có nhãn riêng.
 
 Theme Outfit tải từ Google Fonts và có fallback Segoe UI/system khi offline. Các route nghiệp vụ có trang chờ; `/dashboard` chỉ là shell, chưa đáp ứng đầy đủ AC-29/DASH-01. Chưa nối Socket.IO hay logout nhiều tab; đây là phần AUTH-02/RT-01 tiếp theo.
 
@@ -128,6 +128,16 @@ git diff --check
 ```
 
 BOOT-02 phải cung cấp đúng các npm script trên. Backend tests cần cấu hình DB test riêng và Redis DB test; không chạy migration cleanup vào dữ liệu demo/người dùng. Kiểm tra `/health` của service đang bật: 200 khi dependency cần thiết sẵn sàng, 503 khi chưa sẵn sàng; không lộ connection string.
+
+Test mặc định dùng fakeredis/Lua và DB mock. Test integration tự skip nếu thiếu biến dưới đây; chỉ trỏ vào DB test riêng đã tạo và Redis DB 15 được dành riêng (không dùng dữ liệu app):
+
+```powershell
+$env:SC_TEST_DATABASE_URL = 'mysql+aiomysql://TEST_USER:TEST_PASSWORD@127.0.0.1:3306/socialcart_test_auth'
+$env:SC_TEST_REDIS_URL = 'redis://127.0.0.1:6379/15'
+.\.venv\Scripts\python.exe -m pytest backend/tests/test_auth_integration.py -v
+```
+
+Test integration tự upgrade Alembic tới head, tạo seller UUID riêng rồi kiểm login/me/concurrent refresh/logout/revoke qua Gateway ASGI. Không mở browser; không DROP/FLUSHDB. Chỉ xóa seller/session của test; giữ schema. SQL offline trên Windows dùng `.\.venv\Scripts\python.exe -X utf8 -m alembic -c backend/shared/db/alembic.ini upgrade head --sql`; không coi SQL offline là migration đã chạy lên DB. Lệnh integration chưa được thực thi thành công trong báo cáo hiện tại.
 
 Công cụ kiểm tra tài liệu đã có, độc lập ứng dụng: cài `scripts/requirements-docs.txt` vào virtualenv riêng rồi chạy `python scripts/validate-docs.py`. Nó kiểm OpenAPI/examples, link file local và truy vết AC; không chạy ứng dụng hay gọi provider.
 

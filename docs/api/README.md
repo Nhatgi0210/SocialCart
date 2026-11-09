@@ -1,6 +1,6 @@
 # Hợp đồng API SocialCart V1
 
-Phiên bản 1.0.0, baseline thiết kế **2026-10-19**, chưa có server implementation. [openapi.yaml](openapi.yaml) là nguồn HTTP public cho frontend và công cụ; [service-contracts.md](service-contracts.md) mô tả API nội bộ, outbox và Socket.IO. Không duy trì một bản JSON schema thủ công khác trong frontend; sinh types/client từ spec khi BOOT-02.
+Phiên bản 1.0.0, baseline thiết kế **2026-10-19**. Đến 2026-11-09 health/auth đã có implementation và test mô phỏng; chưa kiểm integration MySQL/Redis; nghiệp vụ còn là contract. Xem [bằng chứng](../project-status.md). [openapi.yaml](openapi.yaml) là nguồn HTTP public; [service-contracts.md](service-contracts.md) mô tả API nội bộ, outbox và Socket.IO. Không duy trì một bản JSON schema thủ công khác trong frontend.
 
 ## Quy ước client
 

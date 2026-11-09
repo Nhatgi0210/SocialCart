@@ -8,3 +8,5 @@ pydantic-settings==2.6.1
 sqlalchemy[asyncio]==2.0.36
 aiomysql==0.2.0
 redis[hiredis]==5.2.0
+PyJWT[crypto]==2.14.0
+cryptography==50.0.2

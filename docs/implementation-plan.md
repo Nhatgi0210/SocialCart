@@ -1,6 +1,6 @@
 # Kế hoạch triển khai MVP
 
-Cập nhật **2026-10-30**. DOC-01 có baseline; BOOT-01 đã scaffold nhưng còn kiểm chứng runtime; BOOT-02 có frontend và các kiểm tra local. Chi tiết lệnh/kết quả/giới hạn ở [trạng thái dự án](project-status.md). AUTH-01 chưa triển khai; auth shell frontend chưa chứng minh AUTH-02 end-to-end. M0 chưa hoàn tất. Thứ tự là phụ thuộc kỹ thuật, không phải cam kết thời gian. FR/AC tham chiếu [PRD](product-requirements.md); quy tắc chung ở [AGENTS](../AGENTS.md).
+Cập nhật **2026-11-09**. DOC-01 có baseline; BOOT-01 còn kiểm chứng Python 3.11/MySQL/Redis; BOOT-02 có frontend và kiểm tra local. AUTH-01 đã triển khai và kiểm HTTP mô phỏng/fakeredis, chưa chạy integration thật; AUTH-02 chưa kiểm end-to-end bằng browser. Chi tiết lệnh/kết quả/giới hạn ở [trạng thái dự án](project-status.md). M0 chưa hoàn tất. Thứ tự là phụ thuộc kỹ thuật, không phải cam kết thời gian. FR/AC tham chiếu [PRD](product-requirements.md); quy tắc chung ở [AGENTS](../AGENTS.md).
 
 ## Các mốc bàn giao
 

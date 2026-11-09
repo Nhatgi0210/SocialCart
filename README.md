@@ -9,7 +9,7 @@ FastAPI Gateway và MySQL. Người dùng chọn cập nhật tài liệu trư�
 Expo/Android là phương án đề xuất, auth native cần chốt contract.
 Xem [kế hoạch React Native](docs/mobile-plan.md) và task MOB-00–05 trong implementation-plan.
 
-Ngày 2026-10-30: có tài liệu, Concept B, prototype tĩnh và scaffold backend BOOT-01 (Gateway/auth shell, model/migration chung, Compose, scripts). Frontend BOOT-02 có React 18/TypeScript/MUI 5, router bảo vệ phiên, API client và auth shell. Các trang nghiệp vụ đang là placeholder; backend chưa có login/refresh/logout/me. M0 chưa hoàn tất. Xem [trạng thái và bằng chứng](docs/project-status.md); prototype chưa có nghiệm thu P4.5.
+Ngày 2026-11-09: có tài liệu, Concept B, prototype, scaffold BOOT-01/02 và backend AUTH-01 (login/me/refresh/logout, RS256, session/rotation/revoke Redis, Gateway protection). Backend đã kiểm bằng HTTP mô phỏng/fakeredis; chưa chạy integration MySQL/Redis hoặc browser E2E. Frontend React 18/TypeScript/MUI 5 có router bảo vệ phiên và auth shell; các trang nghiệp vụ là placeholder. M0 chưa hoàn tất. Xem [trạng thái và bằng chứng](docs/project-status.md); prototype chưa nghiệm thu P4.5.
 
 V1: Unified Inbox, khách hàng/notes, catalog đa biến thể, đơn hàng/lifecycle, FAQ/AI/handoff, kết nối nền tảng và Dashboard. Một người bán, một Page, một OA. Không Zalo cá nhân/staff/multi-tenant/payment gateway/shipping integration. PENDING không giữ kho; xác nhận trừ kho, hủy đơn đã xác nhận hoàn kho một lần.
 
@@ -21,7 +21,7 @@ Xem [AGENTS.md](AGENTS.md) cho AI coding và [setup](docs/setup.md) cho local. C
 python -m http.server 5500 --bind 127.0.0.1 --directory prototype
 ```
 
-Mở http://127.0.0.1:5500. Mock account ở prototype/mock-data.js, state reset sau reload. Frontend ứng dụng chạy bằng `npm.cmd --prefix frontend ci` rồi `npm.cmd --prefix frontend run dev`; hướng dẫn và giới hạn ở [setup](docs/setup.md). Bước tiếp theo: hoàn tất kiểm chứng BOOT-01 trên Python 3.11/MySQL/Redis và triển khai AUTH-01. `.env.example` chỉ là mẫu, không có secret thật.
+Mở http://127.0.0.1:5500. Mock account ở prototype/mock-data.js, state reset sau reload. Frontend ứng dụng chạy bằng `npm.cmd --prefix frontend ci` rồi `npm.cmd --prefix frontend run dev`; hướng dẫn và giới hạn ở [setup](docs/setup.md). Bước tiếp theo: kiểm chứng BOOT-01/AUTH-01 trên Python 3.11/MySQL/Redis và AUTH-02 qua browser. `.env.example` chỉ là mẫu, không có secret thật.
 
 ## Bản đồ tài liệu
 

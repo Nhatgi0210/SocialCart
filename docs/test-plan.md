@@ -1,6 +1,6 @@
 # Kế hoạch kiểm thử và nghiệm thu
 
-Baseline 2026-10-19. Đến 2026-10-30 đã chạy smoke tests backend và các kiểm tra frontend BOOT-02; xem [báo cáo bằng chứng](project-status.md). Chưa chạy integration MySQL/Redis, auth end-to-end hoặc provider live. Tài liệu này định nghĩa bằng chứng cần thu; kiểm tra OpenAPI/Markdown không thay cho các test bên dưới.
+Baseline 2026-10-19. Đến 2026-11-09 đã chạy backend health/auth qua Gateway ASGI, RSA, fakeredis/Lua và DB mock cùng các kiểm tra frontend BOOT-02; xem [báo cáo bằng chứng](project-status.md). Test integration opt-in ở `backend/tests/test_auth_integration.py` chưa chạy vì thiếu MySQL/Redis test; chưa kiểm browser auth end-to-end hoặc provider live. Tài liệu này định nghĩa bằng chứng cần thu; kiểm tra OpenAPI/Markdown không thay cho các test bên dưới.
 
 ## 1. Môi trường và dữ liệu
 

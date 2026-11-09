@@ -31,7 +31,7 @@ def _make_engine() -> AsyncEngine:
         pool_recycle=1800,       # tái dùng sau 30 phút
         pool_size=10,
         max_overflow=20,
-        echo=settings.app_env == "local",
+        echo=False,  # SQL parameters can contain password hashes and customer data.
     )
 
 
