@@ -1,0 +1,28 @@
+# Isolated baseline verification; never mounts the application's database volume.
+services:
+  mysql:
+    image: mysql:8.0.44@sha256:9c3380eac945af0736031b200027f581925927c81e010056214a4bd6b6693714
+    environment:
+      MYSQL_ROOT_PASSWORD: ${SC_VERIFY_MYSQL_PASSWORD:?Set a local test password}
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - '127.0.0.1:13306:3306'
+    volumes:
+      - verify_mysql:/var/lib/mysql
+    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci', '--default-time-zone=+00:00']
+    healthcheck:
+      test: ['CMD-SHELL', 'MYSQL_PWD="$$MYSQL_ROOT_PASSWORD" mysqladmin ping -h 127.0.0.1 -u root --silent']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  redis:
+    image: redis:7.4.7-alpine@sha256:02f2cc4882f8bf87c79a220ac958f58c700bdec0dfb9b9ea61b62fb0e8f1bfcf
+    ports:
+      - '127.0.0.1:16379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 3s
+      timeout: 3s
+      retries: 10
+volumes:
+  verify_mysql:

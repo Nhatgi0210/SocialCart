@@ -1,8 +1,6 @@
-version: "3.9"
-
 services:
   mysql:
-    image: mysql:8.0
+    image: mysql:8.0.44@sha256:9c3380eac945af0736031b200027f581925927c81e010056214a4bd6b6693714
     container_name: socialcart-mysql
     restart: unless-stopped
     environment:
@@ -27,7 +25,7 @@ services:
       - --explicit_defaults_for_timestamp=ON
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.4.7-alpine@sha256:02f2cc4882f8bf87c79a220ac958f58c700bdec0dfb9b9ea61b62fb0e8f1bfcf
     container_name: socialcart-redis
     restart: unless-stopped
     ports:

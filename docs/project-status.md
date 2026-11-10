@@ -1,5 +1,34 @@
 # Trạng thái dự án SocialCart
 
+## BOOT-01 / DATA-01 — kiểm chứng 2026-11-10
+
+Kết quả mới nhất cho nền tảng local; các báo cáo phía dưới giữ bằng chứng lịch sử.
+Python **3.11.18**, Node **24.14.0**, npm **11.9.0**, MySQL **8.0.44**, Redis **7.4.7**.
+Đã tạo `.venv` 3.11, khóa dependencies Windows và image digest; tách Compose kiểm thử
+13306/16379 với Compose ứng dụng 3306/6379. Wamp đang dừng, dữ liệu Wamp không sửa/xóa.
+
+- `.venv/Scripts/python.exe -X utf8 scripts/verify-foundation.py -o faulthandler_timeout=30`:
+  **51 PASS, 0 SKIP**, 26.33s. MySQL/Redis thật: auth integration, migration rỗng,
+  nâng cấp user/FAQ cũ, backfill/downgrade/upgrade, seed seller/catalog lặp, giữ hash/password,
+  17 bảng ứng dụng InnoDB, UTC, unique/FK/check và health 200/503. HTTP integration qua ASGI.
+- Node 24.14.0: `npm ci --no-audit`, lint, typecheck, **16 frontend tests**, build PASS;
+  bundle warning 503.66 kB như trước. Không chạy audit hay visual/browser E2E trong task này.
+- Compose ứng dụng healthy; `alembic upgrade head` thật tới **0003_contract_fields**.
+  Start M0 bằng script, GET qua TCP 8000/8001 đều **200**; sau đó đã dừng hai service.
+- MySQL8 Docker `socialcart_db` mới chưa seed người bán/catalog; fixture seed chỉ trong DB test.
+  Keys đã tạo local, không commit. MySQL/Redis ứng dụng vẫn chạy; hạ tầng test đã stop
+  để giảm tài nguyên, không xóa schema/volume.
+- `validate-docs.py`, SQL offline đến head và `git diff --check`: **PASS**.
+- Sửa lỗi Settings: literal duration đọc được chuỗi `.env` nhưng vẫn từ chối giá trị trái baseline.
+- Bổ sung migration `0003` và model theo contract: message error/delivery_unknown,
+  variant threshold, FAQ keywords/question length, ai_context, tổng đơn >0,
+  FK đảm bảo đơn/hội thoại cùng customer. Không đổi HTTP contract và không sửa migration cũ.
+
+BOOT-01 và baseline schema DATA-01 đã có kiểm chứng local theo phạm vi trên.
+Các transaction tồn kho/concurrency, outbox/AI workflow vẫn thuộc task nghiệp vụ tương ứng.
+**M0 chưa hoàn tất** vì chưa kiểm browser auth E2E; AUTH-02/logout nhiều tab/socket còn việc.
+Chi tiết nguồn, giới hạn, cách chạy lại và commit: [foundation-verification](foundation-verification.md).
+
 Ngày kiểm tra: **2026-11-09, Asia/Saigon**. AUTH-01 bắt đầu trên `8b8ce99`, sau đó đồng bộ hai commit GitHub tới `eeff99a` trước bàn giao. Giữ migration/name và kế hoạch React Native đã có trên remote; không thêm migration trùng. Báo cáo phân biệt code với hành vi đã được kiểm chứng; không thay nghiệm thu của người dùng. Bằng chứng 2026-11-05/2026-10-30 được giữ bên dưới.
 
 ## Bổ sung React Native 2026-11-05 — DOCUMENTATION ONLY
@@ -37,11 +66,11 @@ Chưa có `mobile/`, dependency, build, test native hoặc API native. M0 chưa 
 | Task | Trạng thái | Bằng chứng / phần còn thiếu |
 | --- | --- | --- |
 | DOC-01 | Có baseline | PRD, Feature Spec, data rules, contracts, kế hoạch và validator đã có |
-| BOOT-01 | PARTIAL | 17 models, migration tới `0002_user_name`, Compose/scripts. Đã có bằng chứng migration MySQL 9.1 ngày 2026-11-05; health contract/SQL offline kiểm lại 2026-11-09. Chưa đạt Python 3.11/MySQL 8/Redis 7 |
+| BOOT-01 | LOCAL BASELINE PASS (2026-11-10) | Python 3.11.18/MySQL 8.0.44/Redis 7.4.7, lock/digest, migration/seed/health thật; xem cập nhật mới nhất |
 | BOOT-02 | LOCAL CHECKS PASS / VISUAL NOT RUN | React 18/TypeScript/Vite/MUI 5; theme Concept B; router, Axios/Query/Zustand, memory token, refresh single-flight và loading/error/retry. Cài từ lockfile, lint/typecheck/16 tests/build pass; chưa nghiệm thu visual |
-| AUTH-01 | SIMULATED CHECKS PASS / INTEGRATION NOT RUN | login/me/refresh/logout, RS256, Redis Lua rotation/idle/revoke, Origin và Gateway protection đã có; HTTP ASGI + fakeredis/Lua, DB mock. Test MySQL/Redis opt-in chưa chạy |
+| AUTH-01 | LOCAL MYSQL/REDIS INTEGRATION PASS (2026-11-10) | HTTP ASGI với MySQL/Redis thật; chưa browser E2E |
 | AUTH-02 | PARTIAL, SIMULATED ONLY | Frontend 16 tests pass; backend đã có nhưng chưa kiểm UI→Gateway→auth→MySQL/Redis bằng browser; chưa đồng bộ logout nhiều tab/socket |
-| DATA-01 | Chưa nghiệm thu | Có bằng chứng upgrade/backfill/downgrade MySQL 9.1 ngày 2026-11-05; chưa đủ constraints/seed/transaction theo MySQL 8 baseline |
+| DATA-01 | LOCAL SCHEMA CHECKS PASS (2026-11-10) | Migration 0003, backfill/rollback/seed/constraints thật; transaction kho và workflow nghiệm thu trong task nghiệp vụ |
 | Các task nghiệp vụ, RT/AI/provider | NOT IMPLEMENTED | Frontend chỉ có placeholder, không có dữ liệu hay số liệu giả |
 | UX-01 | NOT RUN | Chưa nghiệm thu P4.5; việc chọn Concept B không thay thế review runtime |
 
@@ -104,6 +133,7 @@ Hai advisory của upstream là [redirect từ untrusted path](https://github.co
 
 ## Bước tiếp theo
 
-1. Hoàn tất BOOT-01: Python 3.11, Docker/MySQL 8/Redis 7; khóa image patch/digest; kiểm upgrade DB rỗng/có seed, seed seller idempotent và health 200/503 đúng OpenAPI. Bộ smoke test hiện tại còn import `app.main` bằng cùng tên giữa hai service nên chưa chứng minh hai health endpoint độc lập.
-2. AUTH-01: chạy integration MySQL/Redis trên Python 3.11; kiểm migration rỗng/có seed và seed CLI trên DB thật; audit dependency backend. Không mở dữ liệu nghiệp vụ trước khi có auth được kiểm chứng.
-3. AUTH-02: kiểm UI→Gateway→auth→DB và hoàn thiện logout nhiều tab/socket khi RT-01 tồn tại; giữ Dashboard là shell cho đến DASH-01.
+1. AUTH-02: kiểm browser UI→Gateway→auth→MySQL/Redis, refresh/logout/revoke; M0 chưa hoàn tất.
+2. CUST-01/INBOX-01 và PROD-01 sau khi auth UI được kiểm chứng; giữ dữ liệu demo có nhãn.
+3. ORDER-01 kiểm transaction kho/concurrency; RT-01 kiểm socket/reconnect/logout.
+4. React Native theo MOB-01/MOB-02 sau khi chốt Expo/CLI và nền tảng; không suy auth browser thành native.

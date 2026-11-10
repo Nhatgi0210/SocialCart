@@ -4,6 +4,10 @@ Hệ thống quản lý tin nhắn Facebook Page/Zalo OA và hỗ trợ chốt �
 
 ## Hiện trạng
 
+Nền tảng cập nhật 2026-11-10: Python 3.11.18, Node 24.14.0, MySQL 8.0.44/Redis 7.4.7
+và migration `0003_contract_fields`. Bộ kiểm chứng thật, cách chọn toolchain và đóng gói commit
+ở [foundation verification](docs/foundation-verification.md). Browser E2E/nghiệp vụ chưa nghiệm thu.
+
 Bổ sung 2026-11-05: dự án có kế hoạch **web React + app React Native**, dùng chung
 FastAPI Gateway và MySQL. Người dùng chọn cập nhật tài liệu trước; chưa scaffold mobile.
 Expo/Android là phương án đề xuất, auth native cần chốt contract.

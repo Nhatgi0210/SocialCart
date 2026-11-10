@@ -1,5 +1,10 @@
 # Kế hoạch triển khai MVP
 
+Cập nhật nền tảng 2026-11-10: đã chuẩn hóa môi trường và bổ sung bộ kiểm chứng thật
+BOOT-01/DATA-01 trên MySQL 8/Redis 7; xem [foundation-verification](foundation-verification.md)
+và [project-status](project-status.md). Schema mới nối tiếp AUTH-01 bằng migration `0003`.
+Đây là nghiệm thu nền tảng local; M0 còn browser/auth E2E, các task nghiệp vụ vẫn riêng.
+
 Cập nhật **2026-11-09**. DOC-01 có baseline; BOOT-01 còn kiểm chứng Python 3.11/MySQL/Redis; BOOT-02 có frontend và kiểm tra local. AUTH-01 đã triển khai và kiểm HTTP mô phỏng/fakeredis, chưa chạy integration thật; AUTH-02 chưa kiểm end-to-end bằng browser. Chi tiết lệnh/kết quả/giới hạn ở [trạng thái dự án](project-status.md). M0 chưa hoàn tất. Thứ tự là phụ thuộc kỹ thuật, không phải cam kết thời gian. FR/AC tham chiếu [PRD](product-requirements.md); quy tắc chung ở [AGENTS](../AGENTS.md).
 
 ## Các mốc bàn giao

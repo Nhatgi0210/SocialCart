@@ -29,6 +29,12 @@ Baseline kỹ thuật 2026-10-19, đọc cùng [decision log](decisions.md), [TD
 
 ## 3. Sở hữu bảng và migration
 
+Baseline schema 2026-11-10: migration `0003_contract_fields` bổ sung field theo contract,
+JSON FAQ/context, ngưỡng tồn kho không âm, tổng đơn tối thiểu 1 và FK ghép đảm bảo
+conversation thuộc customer của đơn. Alias API/DB và dữ liệu tính ở
+[foundation-verification](foundation-verification.md). Không sửa migration đã áp dụng;
+data sai constraint phải được chủ dữ liệu xử lý trước upgrade, không tự xóa/sửa để pass.
+
 | Owner | Bảng |
 | --- | --- |
 | auth | users, auth session metadata trong Redis |

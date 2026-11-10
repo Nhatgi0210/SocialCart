@@ -26,12 +26,18 @@ def test_mysql_upgrade_backfill_downgrade():
                                 "VALUES ('00000000-0000-0000-0000-000000000001',"
                                 "'migration@example.test','test-only-not-a-password',1,UTC_TIMESTAMP(),UTC_TIMESTAMP())"))
         connection.commit()
+        command.upgrade(config, "0002_user_name")
+        connection.execute(text("INSERT INTO ai_faqs (id,question,answer,is_active,created_at,updated_at) "
+                                "VALUES ('00000000-0000-0000-0000-000000000002','Old FAQ','Old answer',1,UTC_TIMESTAMP(),UTC_TIMESTAMP())"))
+        connection.commit()
         command.upgrade(config, "head")
         assert connection.execute(text("SELECT name FROM users")).scalar_one() == "Chủ shop"
         assert len(inspect(connection).get_table_names()) == 18
         columns = inspect(connection).get_columns("users")
         assert not next(c for c in columns if c["name"] == "name")["nullable"]
         assert next(c for c in columns if c["name"] == "created_at")["type"].fsp == 6
+        assert connection.execute(text("SELECT JSON_LENGTH(trigger_keywords) FROM ai_faqs")).scalar_one() == 0
+        assert next(c for c in inspect(connection).get_columns("ai_faqs") if c["name"] == "question")["type"].length == 1000
         connection.commit()
         command.downgrade(config, "base")
         assert inspect(connection).get_table_names() == ["alembic_version"]

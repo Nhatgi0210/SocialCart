@@ -1,5 +1,23 @@
 # Chạy SocialCart tại local
 
+## Baseline đã kiểm ngày 2026-11-10
+
+Python **3.11.18**, Node **24.14.0**, npm **11.9.0**, MySQL **8.0.44**, Redis **7.4.7**.
+Compose pin patch/digest. Xem [bằng chứng và cách chạy lại](foundation-verification.md).
+Backend/validator có lock `backend/requirements-dev.lock.txt` cho Windows/Python 3.11.
+Trên máy hiện tại: `. .\scripts\use-local-toolchain.ps1` chọn Python/Node đúng trong terminal,
+bật UTF-8 cho đường dẫn và thông báo tiếng Việt. Không ghi PATH hệ thống.
+Các giới hạn mô phỏng/baseline cũ ở phần dưới là lịch sử; browser E2E vẫn chưa kiểm.
+
+```powershell
+docker compose up -d --wait mysql redis
+.\.venv\Scripts\python.exe -X utf8 -m alembic -c backend/shared/db/alembic.ini upgrade head
+```
+
+Head hiện tại là `0003_contract_fields`. MySQL Docker dùng 3306; Wamp phải dùng cổng khác
+hoặc dừng trước khi chạy Compose. Database Wamp không được chuyển/xóa tự động.
+Secret, keys và thư mục cache đều ở local. Không copy `.env.example` đè `.env` đang dùng.
+
 Cập nhật 2026-11-09. **Hiện có:** prototype; Gateway/auth login/me/refresh/logout, Compose, Alembic và scripts; frontend React/TypeScript/MUI/auth shell. **Chưa kiểm chứng:** migration/seed/auth trên MySQL/Redis thật và browser E2E. Nghiệp vụ chưa triển khai. Xem [báo cáo trạng thái](project-status.md). Các lệnh backend dưới đây cần Python 3.11 và MySQL/Redis sẵn sàng; test mô phỏng không chứng minh runtime đã pass.
 
 ## React Native — mới có kế hoạch

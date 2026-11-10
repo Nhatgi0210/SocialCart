@@ -10,12 +10,19 @@ import os
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """Cấu hình chia sẻ giữa các service."""
+
+    @field_validator("access_token_expire_minutes", "refresh_token_expire_days",
+                     "session_idle_timeout_seconds", mode="before")
+    @classmethod
+    def parse_fixed_duration(cls, value):
+        # Environment and dotenv values arrive as strings; keep Literal limits.
+        return int(value) if isinstance(value, str) else value
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(__file__), "..", "..", ".env"),

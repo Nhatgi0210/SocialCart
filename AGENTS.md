@@ -37,6 +37,12 @@ Chỉ đọc thêm các mục/skill liên quan. Các skill trong `.agents/skills
 
 ## Nhịp làm việc và hoàn thành task
 
+Khi viết, review hoặc refactor code, áp dụng [Karpathy Guidelines](.agents/skills/karpathy-guidelines/SKILL.md)
+từ [multica-ai/andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills):
+nêu giả định ảnh hưởng hành vi, chọn giải pháp đơn giản, giữ thay đổi đúng phạm vi và xác định
+tiêu chí kiểm chứng. Hướng dẫn này bổ trợ quy tắc SocialCart; không thay quyết định nghiệp vụ
+hoặc buộc thêm quy trình nặng cho sửa đổi nhỏ.
+
 Làm từng task có kết quả kiểm chứng được. Giữ diff đúng phạm vi, không sửa việc của người dùng. Báo giả định ảnh hưởng hành vi trước khi thực hiện phần phụ thuộc.
 
 Một task code hoàn thành khi: hành vi đúng FR/AC; schema/migration tương thích; xử lý lỗi liên quan; kiểm tra phù hợp đã chạy; tài liệu bị ảnh hưởng được cập nhật. Báo file thay đổi, lệnh chạy, kết quả và phần chưa kiểm chứng. Không đánh dấu cả milestone hoàn tất chỉ vì đã scaffold.

@@ -36,6 +36,18 @@ def test_shared_config_extra_ignored():
     assert s.database_url == "mysql+aiomysql://x:x@localhost/x"
 
 
+def test_duration_settings_from_dotenv(tmp_path):
+    from shared.config import Settings
+    from pydantic import ValidationError
+    path = tmp_path / ".env"
+    path.write_text("ACCESS_TOKEN_EXPIRE_MINUTES=15\nREFRESH_TOKEN_EXPIRE_DAYS=7\nSESSION_IDLE_TIMEOUT_SECONDS=86400\n")
+    settings = Settings(_env_file=path)
+    assert (settings.access_token_expire_minutes, settings.refresh_token_expire_days,
+            settings.session_idle_timeout_seconds) == (15, 7, 86400)
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, ACCESS_TOKEN_EXPIRE_MINUTES="30")
+
+
 # ── shared.db.models ──────────────────────────────────────────────────────────
 
 def test_models_import():

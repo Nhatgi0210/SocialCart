@@ -15,11 +15,12 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
-    BigInteger,
+    JSON,
     Boolean,
     CheckConstraint,
     Enum,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
     Integer,
     SmallInteger,
@@ -151,6 +152,7 @@ class Conversation(Base):
     )
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    ai_context: Mapped[dict | None] = mapped_column(JSON)
     ai_generation: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     last_message_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=6))
     created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
@@ -160,6 +162,7 @@ class Conversation(Base):
 
     __table_args__ = (
         UniqueConstraint("platform", "platform_account_id", "platform_chat_id", name="uq_conversation_platform"),
+        UniqueConstraint("id", "customer_id", name="uq_conversation_customer"),
         CheckConstraint("version >= 1", name="ck_conversation_version_min"),
         CheckConstraint("ai_generation >= 0", name="ck_conversation_ai_generation_min"),
         Index("ix_conversation_customer_id", "customer_id"),
@@ -189,6 +192,9 @@ class Message(Base):
     )
     created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, onupdate=_now, nullable=False)
+
+    error_code: Mapped[str | None] = mapped_column(String(100))
+    delivery_unknown: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0", nullable=False)
 
     conversation: Mapped[Conversation] = relationship("Conversation", back_populates="messages")
 
@@ -259,6 +265,7 @@ class Variant(Base):
     product_id: Mapped[str] = mapped_column(String(36), ForeignKey("products.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     price: Mapped[int] = mapped_column(Integer, nullable=False)       # VNĐ nguyên
+    low_stock_threshold: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
     stock: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     deleted_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=6))
@@ -269,6 +276,7 @@ class Variant(Base):
 
     __table_args__ = (
         CheckConstraint("price >= 1 AND price <= 2147483647", name="ck_variant_price_range"),
+        CheckConstraint("low_stock_threshold >= 0", name="ck_variant_threshold_nonneg"),
         CheckConstraint("stock >= 0", name="ck_variant_stock_nonneg"),
         CheckConstraint("version >= 1", name="ck_variant_version_min"),
         Index("ix_variant_product_id", "product_id"),
@@ -302,7 +310,8 @@ class Order(Base):
     items: Mapped[list[OrderItem]] = relationship("OrderItem", back_populates="order", lazy="select")
 
     __table_args__ = (
-        CheckConstraint("total_amount >= 0", name="ck_order_total_nonneg"),
+        CheckConstraint("total_amount >= 1", name="ck_order_total_nonneg"),
+        ForeignKeyConstraint(["conversation_id", "customer_id"], ["conversations.id", "conversations.customer_id"], name="fk_order_conversation_customer"),
         CheckConstraint("version >= 1", name="ck_order_version_min"),
         Index("ix_order_customer_id", "customer_id"),
         Index("ix_order_status", "status"),
@@ -381,7 +390,8 @@ class AIFaq(Base):
     __tablename__ = "ai_faqs"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
-    question: Mapped[str] = mapped_column(String(500), nullable=False)
+    trigger_keywords: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    question: Mapped[str] = mapped_column(String(1000), nullable=False)
     answer: Mapped[str] = mapped_column(Text, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
