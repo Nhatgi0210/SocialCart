@@ -4,6 +4,10 @@ Hệ thống quản lý tin nhắn Facebook Page/Zalo OA và hỗ trợ chốt �
 
 ## Hiện trạng
 
+Auth web cập nhật 2026-11-10: đã kiểm trình duyệt Chromium → Gateway → Auth → MySQL/Redis,
+có reload/refresh, `/me`, xác nhận logout, revoke và đồng bộ logout nhiều tab.
+Xem [bằng chứng auth](docs/auth-verification.md). Socket disconnect chờ RT-01; Dashboard vẫn shell.
+
 Nền tảng cập nhật 2026-11-10: Python 3.11.18, Node 24.14.0, MySQL 8.0.44/Redis 7.4.7
 và migration `0003_contract_fields`. Bộ kiểm chứng thật, cách chọn toolchain và đóng gói commit
 ở [foundation verification](docs/foundation-verification.md). Browser E2E/nghiệp vụ chưa nghiệm thu.

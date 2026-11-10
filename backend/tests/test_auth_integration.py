@@ -38,7 +38,7 @@ async def test_mysql_redis_gateway_auth(monkeypatch, rsa_keys):
     # Alembic's async runner owns a separate event loop in the worker thread.
     config = Config(str(BACKEND / "shared/db/alembic.ini"))
     await asyncio.to_thread(command.upgrade, config, "head")
-    engine = create_async_engine(db_url, echo=False)
+    engine = create_async_engine(db_url, echo=False, pool_pre_ping=True)
     factory = async_sessionmaker(engine, expire_on_commit=False)
     redis = aioredis.from_url(redis_url, decode_responses=True, socket_timeout=3, socket_connect_timeout=3)
     uid = str(uuid4())

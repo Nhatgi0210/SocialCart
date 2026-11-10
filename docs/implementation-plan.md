@@ -1,5 +1,10 @@
 # Kế hoạch triển khai MVP
 
+Auth cập nhật 2026-11-10: AUTH-01 và core AUTH-02 có bằng chứng browser local
+UI→Gateway→Auth→MySQL/Redis, gồm refresh/logout nhiều tab và revoke. Xem
+[auth-verification](auth-verification.md). Phần socket disconnect chờ RT-01;
+Dashboard vẫn shell. Ưu tiên kế tiếp CUST-01/INBOX-01 và PROD-01 theo dependency.
+
 Cập nhật nền tảng 2026-11-10: đã chuẩn hóa môi trường và bổ sung bộ kiểm chứng thật
 BOOT-01/DATA-01 trên MySQL 8/Redis 7; xem [foundation-verification](foundation-verification.md)
 và [project-status](project-status.md). Schema mới nối tiếp AUTH-01 bằng migration `0003`.

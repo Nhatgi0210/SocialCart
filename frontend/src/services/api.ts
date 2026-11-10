@@ -1,6 +1,7 @@
 import axios, { AxiosHeaders, type InternalAxiosRequestConfig } from 'axios';
 import { useSession } from '../stores/session';
 import type { ApiSuccess, TokenData } from '../types/auth';
+import { announceLogout, withCookieLock } from './sessionSync';
 
 const baseURL = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace(/\/$/, '');
 const options = { baseURL, withCredentials: true, timeout: 15_000 };
@@ -13,7 +14,10 @@ let refreshFlight: Promise<TokenData> | null = null;
 export function refreshSession(): Promise<TokenData> {
   if (!refreshFlight) {
     const revision = useSession.getState().revision;
-    refreshFlight = authTransport.post<ApiSuccess<TokenData>>('/auth/refresh')
+    refreshFlight = withCookieLock(() => {
+      if (useSession.getState().revision !== revision) throw new Error('Session changed during refresh');
+      return authTransport.post<ApiSuccess<TokenData>>('/auth/refresh');
+    })
       .then(({ data }) => {
         if (useSession.getState().revision !== revision) {
           throw new Error('Session changed during refresh');
@@ -63,13 +67,19 @@ api.interceptors.response.use(undefined, async (error: unknown) => {
 
 export async function login(email: string, password: string) {
   const revision = useSession.getState().revision;
-  const { data } = await authTransport.post<ApiSuccess<TokenData>>('/auth/login', { email, password });
+  const { data } = await withCookieLock(() => authTransport.post<ApiSuccess<TokenData>>('/auth/login', { email, password }));
   if (useSession.getState().revision === revision) useSession.getState().accept(data.data);
 }
 
 export async function logout() {
-  await authTransport.post('/auth/logout');
-  useSession.getState().clear();
+  await withCookieLock(async () => {
+    const token = useSession.getState().accessToken;
+    await authTransport.post('/auth/logout', undefined, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    useSession.getState().clear();
+    announceLogout();
+  });
 }
 
 export function loginError(error: unknown): string {

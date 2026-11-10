@@ -94,6 +94,11 @@ Với retry kỹ thuật, tổng thời gian vẫn trong deadline 30 giây, khô
 
 ## 7. Phiên đăng nhập và cấu hình
 
+Browser nhiều tab: cookie mutations được serialize bằng Web Locks khi có hỗ trợ;
+single-flight vẫn áp dụng trong từng tab. Logout thành công phát tín hiệu invalidation
+qua BroadcastChannel để xóa session memory/cache ở tab cùng origin, không phát token.
+Tab focus lại gọi `/me` để kiểm phiên đã bị revoke. Socket disconnect được nối cùng RT-01.
+
 D-15 (2026-11-05): các quy tắc cookie/Origin dưới đây là contract **browser** hiện có.
 Client React Native dùng cùng bất biến dữ liệu/transaction; auth native chưa được định nghĩa
 trong OpenAPI. MOB-02 phải chốt secure storage, refresh rotation, phiên theo thiết bị và phạm vi

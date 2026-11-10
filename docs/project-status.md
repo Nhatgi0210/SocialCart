@@ -1,5 +1,28 @@
 # Trạng thái dự án SocialCart
 
+## AUTH-01 / AUTH-02 — browser local 2026-11-10
+
+Luồng React → Gateway → Auth → MySQL/Redis đã chạy bằng trình duyệt Chromium thật.
+Xem [auth-verification](auth-verification.md) để phân biệt browser, ASGI và clock test.
+
+- Dùng lại bốn API AUTH-01. Bổ sung Web Locks cho cookie shared giữa tab,
+  BroadcastChannel logout, kiểm `/me` khi focus và dialog xác nhận đăng xuất.
+  Không truyền token qua channel/storage; logout gửi Bearer để server blacklist jti hiện tại.
+- Sửa runtime pool_pre_ping bằng pin PyMySQL 1.1.1; cả integration auth/foundation
+  bật pre-ping để không bỏ lọt lỗi checkout lần hai. Seed đóng pool đúng vòng đời.
+- Browser PASS: protected deep link, sai/đúng password, `/me`, reload giữ phiên,
+  hai tab refresh đồng thời, hủy/xác nhận logout, hai tab về login, cookie xóa,
+  access cũ 401, 401→refresh→retry thành công, Redis down→error→retry phục hồi.
+- Browser xác nhận HttpOnly/Lax/Path `/api/v1/auth` và browser storage rỗng;
+  Secure=false chỉ cho HTTP dev. Seller local từ MySQL; credentials trong `.env` ignored.
+- Backend: **51 PASS, 0 SKIP**, 23.83s qua verify-foundation trên MySQL8/Redis7 thật,
+  có login/me/rotation/logout/revoke, seed và health. Frontend **21 tests PASS**,
+  lint/typecheck/build PASS; bundle warning 511.77 kB. Validator tài liệu và diff check PASS.
+
+Core auth web/M0 đã có bằng chứng local xuyên suốt; chưa nghiệm thu Dashboard nghiệp vụ,
+provider hoặc native. AUTH-02 logout/disconnect socket còn phụ thuộc RT-01 chưa triển khai.
+Không gộp trạng thái này thành DONE toàn sản phẩm hay AC-29 Dashboard đầy đủ.
+
 ## BOOT-01 / DATA-01 — kiểm chứng 2026-11-10
 
 Kết quả mới nhất cho nền tảng local; các báo cáo phía dưới giữ bằng chứng lịch sử.
@@ -69,7 +92,7 @@ Chưa có `mobile/`, dependency, build, test native hoặc API native. M0 chưa 
 | BOOT-01 | LOCAL BASELINE PASS (2026-11-10) | Python 3.11.18/MySQL 8.0.44/Redis 7.4.7, lock/digest, migration/seed/health thật; xem cập nhật mới nhất |
 | BOOT-02 | LOCAL CHECKS PASS / VISUAL NOT RUN | React 18/TypeScript/Vite/MUI 5; theme Concept B; router, Axios/Query/Zustand, memory token, refresh single-flight và loading/error/retry. Cài từ lockfile, lint/typecheck/16 tests/build pass; chưa nghiệm thu visual |
 | AUTH-01 | LOCAL MYSQL/REDIS INTEGRATION PASS (2026-11-10) | HTTP ASGI với MySQL/Redis thật; chưa browser E2E |
-| AUTH-02 | PARTIAL, SIMULATED ONLY | Frontend 16 tests pass; backend đã có nhưng chưa kiểm UI→Gateway→auth→MySQL/Redis bằng browser; chưa đồng bộ logout nhiều tab/socket |
+| AUTH-02 | CORE WEB BROWSER PASS (2026-11-10) | Chromium + MySQL/Redis thật; logout nhiều tab/refresh/revoke/recovery pass; socket disconnect chờ RT-01, Dashboard shell |
 | DATA-01 | LOCAL SCHEMA CHECKS PASS (2026-11-10) | Migration 0003, backfill/rollback/seed/constraints thật; transaction kho và workflow nghiệm thu trong task nghiệp vụ |
 | Các task nghiệp vụ, RT/AI/provider | NOT IMPLEMENTED | Frontend chỉ có placeholder, không có dữ liệu hay số liệu giả |
 | UX-01 | NOT RUN | Chưa nghiệm thu P4.5; việc chọn Concept B không thay thế review runtime |

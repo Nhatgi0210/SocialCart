@@ -7,6 +7,19 @@ import { makeRouter } from './router';
 import { theme } from './theme';
 import { queryClient } from './services/queryClient';
 import { useSession } from './stores/session';
+import { startSessionSync } from './services/sessionSync';
+import { api } from './services/api';
+
+const stopSessionSync = startSessionSync();
+// A suspended tab can miss an invalidation. Check its server session on return.
+const checkOnResume = () => {
+  if (useSession.getState().status === 'authenticated') void api.get('/auth/me').catch(() => undefined);
+};
+window.addEventListener('focus', checkOnResume);
+if (import.meta.hot) import.meta.hot.dispose(() => {
+  stopSessionSync();
+  window.removeEventListener('focus', checkOnResume);
+});
 
 // Drop cached seller data as soon as the session identity changes or is lost.
 useSession.subscribe((state, previous) => {

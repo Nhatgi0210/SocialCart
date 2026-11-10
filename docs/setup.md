@@ -1,5 +1,10 @@
 # Chạy SocialCart tại local
 
+Auth web đã kiểm browser local ngày 2026-11-10; xem [auth-verification](auth-verification.md).
+Sau pull lượt auth này, cài lại `backend/requirements-dev.lock.txt` để lấy PyMySQL 1.1.1
+đã khóa tương thích pre-ping. Credentials seller nằm trong `.env`; không dùng mock account.
+Khôi phục phiên và logout nhiều tab đã có trên Chromium localhost; socket chờ RT-01.
+
 ## Baseline đã kiểm ngày 2026-11-10
 
 Python **3.11.18**, Node **24.14.0**, npm **11.9.0**, MySQL **8.0.44**, Redis **7.4.7**.

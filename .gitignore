@@ -48,6 +48,8 @@ keys/
 logs/
 test-results/
 playwright-report/
+.playwright-cli/
+output/playwright/
 .pytest_cache/
 .coverage
 htmlcov/

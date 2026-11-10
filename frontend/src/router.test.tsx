@@ -90,7 +90,13 @@ describe('Auth shell (simulated HTTP)', () => {
     expect(screen.getByLabelText('Test pathname')).toHaveTextContent('/dashboard');
     expect(screen.getByText(/Chủ shop thử nghiệm/)).toBeVisible();
     expect(screen.getByText('Không gian làm việc đang được chuẩn bị')).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Đăng xuất' }));
+    await user.click(await screen.findByRole('button', { name: 'Đăng xuất' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('Bạn có chắc muốn đăng xuất?');
+    expect(auth.history.post.filter((r) => r.url === '/auth/logout')).toHaveLength(0);
+    await user.click(screen.getByRole('button', { name: 'Ở lại' }));
+    expect(useSession.getState().status).toBe('authenticated');
+    await user.click(await screen.findByRole('button', { name: 'Đăng xuất' }));
+    await user.click(screen.getByRole('button', { name: 'Xác nhận đăng xuất' }));
     await waitFor(() => expect(screen.getByLabelText('Test pathname')).toHaveTextContent('/login'));
     expect(useSession.getState().accessToken).toBeNull();
   });

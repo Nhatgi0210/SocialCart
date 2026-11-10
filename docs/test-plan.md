@@ -1,5 +1,10 @@
 # Kế hoạch kiểm thử và nghiệm thu
 
+Bằng chứng auth browser ngày 2026-11-10 ở [auth-verification](auth-verification.md):
+login sai/đúng, cookie, reload, `/me`, refresh hai tab, confirm/cancel logout,
+access cũ bị revoke và Redis down/retry. Browser Chromium thật, HTTP không mock;
+expiry/idle dùng clock tests, không tuyên bố đã chờ 15 phút/24 giờ trong browser.
+
 Bổ sung 2026-11-10: bộ kiểm chứng nền tảng thật chạy bằng
 `python scripts/verify-foundation.py` sau khi bật Compose test riêng.
 Kiểm migration rỗng/có seed/rollback, schema, seed lặp, unique/FK/check,

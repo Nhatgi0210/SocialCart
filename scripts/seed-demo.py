@@ -157,10 +157,13 @@ async def main(args: argparse.Namespace) -> None:
     get_engine()
     factory = get_session_factory()
 
-    async with factory() as session:
-        await seed_seller(session)
-        if args.all:
-            await seed_demo_catalog(session)
+    try:
+        async with factory() as session:
+            await seed_seller(session)
+            if args.all:
+                await seed_demo_catalog(session)
+    finally:
+        await get_engine().dispose()
 
     print("Seed hoàn tất.")
 

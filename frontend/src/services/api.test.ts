@@ -1,5 +1,5 @@
 import MockAdapter from 'axios-mock-adapter';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { api, authTransport, login, logout, refreshSession } from './api';
 import { useSession } from '../stores/session';
 import { tokenData } from '../test/fixtures';
@@ -11,7 +11,7 @@ beforeEach(() => {
   backend = new MockAdapter(api);
   auth = new MockAdapter(authTransport);
 });
-afterEach(() => { backend.restore(); auth.restore(); });
+afterEach(() => { backend.restore(); auth.restore(); vi.unstubAllGlobals(); });
 
 describe('Gateway API client (simulated HTTP)', () => {
   it('uses the Gateway prefix once, cookie credentials and memory-only login', async () => {
@@ -82,5 +82,31 @@ describe('Gateway API client (simulated HTTP)', () => {
     auth.onPost('/auth/logout').reply(503);
     await expect(logout()).rejects.toThrow();
     expect(useSession.getState().status).toBe('authenticated');
+  });
+
+  it('includes the memory access token when revoking the cookie session', async () => {
+    useSession.getState().accept(tokenData);
+    auth.onPost('/auth/logout').reply((config) => {
+      expect(config.headers?.Authorization).toBe(`Bearer ${tokenData.access_token}`);
+      return [204];
+    });
+    await logout();
+    expect(useSession.getState().status).toBe('anonymous');
+  });
+
+  it('does not send a refresh queued before a remote logout', async () => {
+    useSession.getState().accept(tokenData);
+    let release!: () => void;
+    const waiting = new Promise<void>((resolve) => { release = resolve; });
+    vi.stubGlobal('navigator', { locks: { request: async (_name: string, operation: () => Promise<unknown>) => {
+      await waiting;
+      return operation();
+    } } });
+    const result = expect(refreshSession()).rejects.toThrow('Session changed');
+    useSession.getState().clear();
+    release();
+    await result;
+    expect(auth.history.post).toHaveLength(0);
+    expect(useSession.getState().status).toBe('anonymous');
   });
 });

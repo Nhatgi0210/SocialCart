@@ -26,7 +26,7 @@ async def test_real_seed_schema_and_health(monkeypatch):
     url = make_url(raw)
     assert url.drivername == "mysql+aiomysql" and url.database.startswith("socialcart_test_")
     assert make_url(cache).database == "15"
-    engine = create_async_engine(raw)
+    engine = create_async_engine(raw, pool_pre_ping=True)
     factory = async_sessionmaker(engine, expire_on_commit=False)
     redis = aioredis.from_url(cache, socket_connect_timeout=1, socket_timeout=1)
     bad_redis = aioredis.from_url("redis://127.0.0.1:1/15", socket_connect_timeout=1, socket_timeout=1)
