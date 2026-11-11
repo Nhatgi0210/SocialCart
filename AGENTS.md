@@ -8,7 +8,7 @@ chưa scaffold `mobile/`. Web React/MUI giữ nguyên; app dự kiến dùng chu
 Không dùng MUI/DOM trong native, không nâng major web theo mobile; auth cookie/Origin hiện tại
 là browser contract, MOB-02 phải chốt auth native trước implementation. Không đặt secret trong EXPO_PUBLIC_*.
 
-Repository có tài liệu, prototype tĩnh, scaffold BOOT-01/02 và backend AUTH-01 và core AUTH-02 đã kiểm browser Chromium với MySQL/Redis thật ngày 2026-11-10; socket logout chờ RT-01. Nghiệp vụ chưa triển khai. Xem `docs/project-status.md` để biết bằng chứng và giới hạn. Không mô tả endpoint, migration, script hay kiểm thử là đã chạy nếu chưa có bằng chứng thực thi.
+Repository có tài liệu, prototype tĩnh, scaffold BOOT-01/02 và backend AUTH-01 và core AUTH-02 đã kiểm browser Chromium với MySQL/Redis thật ngày 2026-11-10; socket logout chờ RT-01. CUST-01 và phạm vi đọc/đổi trạng thái INBOX-01 đã kiểm local với dữ liệu demo MySQL ngày 2026-11-11. Xem `docs/project-status.md` để biết bằng chứng và giới hạn. Không mô tả endpoint, migration, script hay kiểm thử là đã chạy nếu chưa có bằng chứng thực thi.
 
 V1 phục vụ một người bán, một Facebook Page và một Zalo OA. Không thêm staff, multi-tenant, Zalo cá nhân, cổng thanh toán hay tích hợp vận chuyển. AI chỉ tạo/sửa đơn `PENDING`; người bán xác nhận đơn.
 

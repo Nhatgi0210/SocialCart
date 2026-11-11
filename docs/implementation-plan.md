@@ -1,5 +1,9 @@
 # Kế hoạch triển khai MVP
 
+CUST-01 và phạm vi đọc/đổi trạng thái của INBOX-01 đã kiểm với MySQL/Redis local ngày
+2026-11-11. Bước kế tiếp là PROD-01 và RT-01 theo phụ thuộc. SEND-01, webhook và AI worker
+tiếp tục hoàn thiện hành vi gửi/nhận và tự động trả lời. Xem [bằng chứng](project-status.md).
+
 Auth cập nhật 2026-11-10: AUTH-01 và core AUTH-02 có bằng chứng browser local
 UI→Gateway→Auth→MySQL/Redis, gồm refresh/logout nhiều tab và revoke. Xem
 [auth-verification](auth-verification.md). Phần socket disconnect chờ RT-01;

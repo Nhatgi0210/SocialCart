@@ -10,6 +10,13 @@ JSON success/error envelope như public API. UUID định dạng chuẩn, idempo
 
 ## 2. Operation nội bộ tối thiểu
 
+CUST-01 đã có `POST /internal/customers/upsert`. Response là
+`{"success":true,"data":{"customer":{...},"created":true}}`, với `customer`
+theo schema Customer và `created=false` khi tuple platform/account/user đã tồn tại.
+Tên bỏ trống giữ nguyên tên cũ. Upsert dùng unique key MySQL để xử lý request đồng thời.
+Gateway từ chối route này. Cần cấu hình token ở service gọi và customer-service.
+Luồng tiếp nhận từ nền tảng sẽ gọi upsert khi triển khai webhook.
+
 | Owner / operation | Input bắt buộc | Output và side effect |
 | --- | --- | --- |
 | customer `POST /internal/customers/upsert` | platform, platform_account_id, platform_user_id; name optional | Customer + created boolean; unique tuple, idempotent |

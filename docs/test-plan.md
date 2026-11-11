@@ -1,5 +1,12 @@
 # Kế hoạch kiểm thử và nghiệm thu
 
+CUST-01/INBOX-01 dùng `backend/tests/test_inbox_integration.py` qua
+`scripts/verify-foundation.py`. Test dùng schema MySQL cô lập và Redis DB 15.
+Kiểm quyền public/internal, upsert đồng thời, phân trang, ghi chú và xung đột version.
+Checklist trình duyệt kiểm mở hội thoại, cập nhật đã đọc, ghi chú qua reload, tiếp quản,
+bộ lọc, tin nhắn phân trang và điều hướng màn hình hẹp. Kiểm retry giao diện bằng HTTP
+503 mô phỏng. Trạng thái thực thi ghi tại [project-status](project-status.md).
+
 Bằng chứng auth browser ngày 2026-11-10 ở [auth-verification](auth-verification.md):
 login sai/đúng, cookie, reload, `/me`, refresh hai tab, confirm/cancel logout,
 access cũ bị revoke và Redis down/retry. Browser Chromium thật, HTTP không mock;

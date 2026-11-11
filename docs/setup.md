@@ -1,5 +1,30 @@
 # Chạy SocialCart tại local
 
+## Khách hàng và Inbox với dữ liệu demo
+
+Sau khi cấu hình MySQL/Redis local, cài dependencies và tạo RSA key theo hướng dẫn dưới,
+chạy từ root trong PowerShell:
+
+```powershell
+. .\scripts\use-local-toolchain.ps1
+python -X utf8 -m alembic -c backend/shared/db/alembic.ini upgrade head
+python -X utf8 scripts/seed-demo.py --seller-only
+python -X utf8 scripts/seed-inbox-demo.py
+.\scripts\start-services.ps1 -Milestone M1
+npm.cmd --prefix frontend run dev
+```
+
+Đăng nhập tại [localhost:5173](http://localhost:5173) bằng người bán đã seed.
+Vào **Khách hàng** hoặc **Hội thoại** để xem dữ liệu MySQL. Seed Inbox yêu cầu
+`APP_ENV=local` và tạo 3 hồ sơ có nhãn `[Demo]`, 12 hội thoại và 44 tin nhắn mẫu.
+Chạy lại giữ nguyên ghi chú và trạng thái người bán đã chỉnh. Nếu MySQL local đã chiếm
+cổng 3306, cấu hình `DATABASE_URL` cho DB local đó và chỉ bật Redis qua Compose.
+
+Service khách hàng chạy cổng 8003 và hội thoại chạy cổng 8002. UI gọi Gateway cổng 8000.
+Endpoint upsert nội bộ cần `INTERNAL_SERVICE_TOKEN` ở backend. Demo đọc tin, lưu ghi chú
+và đổi trạng thái trực tiếp trên MySQL. Gửi tin qua nền tảng, AI worker và realtime thuộc
+SEND-01, AI-01 và RT-01.
+
 Auth web đã kiểm browser local ngày 2026-11-10; xem [auth-verification](auth-verification.md).
 Sau pull lượt auth này, cài lại `backend/requirements-dev.lock.txt` để lấy PyMySQL 1.1.1
 đã khóa tương thích pre-ping. Credentials seller nằm trong `.env`; không dùng mock account.

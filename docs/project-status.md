@@ -1,5 +1,26 @@
 # Trạng thái dự án SocialCart
 
+## CUST-01 / INBOX-01 — local 2026-11-11
+
+- Hai service phục vụ danh sách/chi tiết khách, ghi chú, hội thoại, tin nhắn, bộ lọc,
+  phân trang, đã đọc, trạng thái xử lý và tiếp quản/bật lại AI. Upsert nội bộ cần token
+  và giữ một hồ sơ cho mỗi tuple platform/account/user. Schema tiếp tục dùng migration 0003.
+- `scripts/seed-inbox-demo.py` tạo 3 khách có nhãn demo, 12 hội thoại và 44 tin nhắn
+  trong MySQL local. Seed lặp giữ ghi chú và trạng thái đã chỉnh.
+- `python -X utf8 scripts/verify-foundation.py -o faulthandler_timeout=30` đạt **52 pass**.
+  Ca mới đi qua Gateway ASGI và MySQL/Redis thật, gồm upsert đồng thời, ghi chú lưu DB,
+  GET không đổi đã đọc, PATCH idempotent, phân trang và 409 cho version cũ.
+- Chromium qua Gateway TCP với DB test riêng đạt đăng nhập, hồ sơ khách, ghi chú qua reload,
+  danh sách và tin nhắn phân trang, lọc, đã đọc, tiếp quản/bật lại AI và đổi trạng thái.
+  Kiểm desktop 1440px và mobile web 390px, gồm panel hồ sơ, nút quay về và khôi phục focus.
+  Kiểm empty theo bộ lọc và retry sau HTTP 503 do Playwright mô phỏng.
+- Frontend lint, typecheck, **21 tests** và build pass. Vite báo chunk 563.43 kB.
+  Validator OpenAPI/tài liệu và `git diff --check` pass.
+
+CUST-01 đạt phạm vi local. INBOX-01 đạt đọc/đổi trạng thái local. Tự động tạo hồ sơ từ
+tin thật, gửi/retry qua nền tảng, AI worker và socket sẽ kiểm theo các task tích hợp.
+Xem [cách chạy demo](setup.md#khách-hàng-và-inbox-với-dữ-liệu-demo).
+
 ## AUTH-01 / AUTH-02 — browser local 2026-11-10
 
 Luồng React → Gateway → Auth → MySQL/Redis đã chạy bằng trình duyệt Chromium thật.
@@ -94,7 +115,9 @@ Chưa có `mobile/`, dependency, build, test native hoặc API native. M0 chưa 
 | AUTH-01 | LOCAL MYSQL/REDIS INTEGRATION PASS (2026-11-10) | HTTP ASGI với MySQL/Redis thật; chưa browser E2E |
 | AUTH-02 | CORE WEB BROWSER PASS (2026-11-10) | Chromium + MySQL/Redis thật; logout nhiều tab/refresh/revoke/recovery pass; socket disconnect chờ RT-01, Dashboard shell |
 | DATA-01 | LOCAL SCHEMA CHECKS PASS (2026-11-10) | Migration 0003, backfill/rollback/seed/constraints thật; transaction kho và workflow nghiệm thu trong task nghiệp vụ |
-| Các task nghiệp vụ, RT/AI/provider | NOT IMPLEMENTED | Frontend chỉ có placeholder, không có dữ liệu hay số liệu giả |
+| CUST-01 | LOCAL PASS | API, hồ sơ/ghi chú và upsert nội bộ đã kiểm với MySQL |
+| INBOX-01 | LOCAL READ/STATE PASS | Inbox, lịch sử, lọc/phân trang, đọc và tiếp quản. Gửi/nhận live, AI worker và realtime theo các task tích hợp |
+| Catalog, đơn hàng, RT/AI/provider | NOT IMPLEMENTED | Theo các task tương ứng |
 | UX-01 | NOT RUN | Chưa nghiệm thu P4.5; việc chọn Concept B không thay thế review runtime |
 
 **M0 chưa hoàn tất.** Chưa có bằng chứng auth với MySQL/Redis thật hoặc provider live; bằng chứng migration MySQL 9.1 trước đó không thay kiểm baseline MySQL 8.
@@ -157,6 +180,6 @@ Hai advisory của upstream là [redirect từ untrusted path](https://github.co
 ## Bước tiếp theo
 
 1. AUTH-02: kiểm browser UI→Gateway→auth→MySQL/Redis, refresh/logout/revoke; M0 chưa hoàn tất.
-2. CUST-01/INBOX-01 và PROD-01 sau khi auth UI được kiểm chứng; giữ dữ liệu demo có nhãn.
+2. PROD-01 tiếp theo phần Inbox local. Chuẩn bị RT-01 và SEND-01 theo phụ thuộc.
 3. ORDER-01 kiểm transaction kho/concurrency; RT-01 kiểm socket/reconnect/logout.
 4. React Native theo MOB-01/MOB-02 sau khi chốt Expo/CLI và nền tảng; không suy auth browser thành native.
