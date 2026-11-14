@@ -6,6 +6,7 @@ yarn-error.log*
 pnpm-debug.log*
 .pnpm-store/
 .cache/
+data/product-images/
 
 # Python / Virtual Environment
 __pycache__/

@@ -239,7 +239,7 @@ class Product(Base):
     __tablename__ = "products"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
-    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
     image_url: Mapped[str | None] = mapped_column(String(1000))
     status: Mapped[str] = mapped_column(
@@ -327,7 +327,7 @@ class OrderItem(Base):
     order_id: Mapped[str] = mapped_column(String(36), ForeignKey("orders.id", ondelete="CASCADE"), nullable=False)
     variant_id: Mapped[str] = mapped_column(String(36), ForeignKey("variants.id"), nullable=False)
     # Snapshot tên/giá tại thời điểm tạo đơn
-    product_name_snapshot: Mapped[str] = mapped_column(String(100), nullable=False)
+    product_name_snapshot: Mapped[str] = mapped_column(String(200), nullable=False)
     variant_name_snapshot: Mapped[str] = mapped_column(String(100), nullable=False)
     unit_price: Mapped[int] = mapped_column(Integer, nullable=False)   # VNĐ snapshot
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)

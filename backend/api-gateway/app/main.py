@@ -11,6 +11,7 @@ from shared.auth import AuthError, Sessions, error_body
 from shared.config import settings
 from shared.db.session import db_lifespan
 from shared.health import readiness
+from shared.product_images import IMAGE_FILENAME, IMAGE_REQUEST_MAX_BYTES, IMAGE_ROUTE
 
 _redis = None
 
@@ -94,10 +95,19 @@ async def _proxy(request: Request, upstream_url: str) -> Response:
     target = f"{upstream_url}{request.url.path}"
     if request.url.query:
         target += f"?{request.url.query}"
+    if request.method == "POST" and request.url.path.rstrip("/") == IMAGE_ROUTE:
+        body = bytearray()
+        async for chunk in request.stream():
+            if len(body) + len(chunk) > IMAGE_REQUEST_MAX_BYTES:
+                raise AuthError(413, "IMAGE_TOO_LARGE", "Ảnh được giới hạn ở 5 MiB")
+            body.extend(chunk)
+        content = bytes(body)
+    else:
+        content = await request.body()
     async with httpx.AsyncClient(timeout=30, follow_redirects=False) as client:
         upstream = await client.request(request.method, target,
                                         headers=filtered_headers(request.headers, request=True),
-                                        content=await request.body())
+                                        content=content)
     response = Response(content=upstream.content, status_code=upstream.status_code)
     # Preserve repeated Set-Cookie headers and recalculate length after decompression.
     for key, value in filtered_headers(upstream.headers):
@@ -112,7 +122,10 @@ async def gateway_proxy(request: Request, full_path: str):
     upstream = _resolve_upstream(path)
     if upstream is None:
         return JSONResponse(status_code=404, content=error_body("NOT_FOUND", "Route not found"))
-    if (request.method, path) not in _PUBLIC and not path.startswith("/webhooks/"):
+    public_image = request.method == "GET" and path.startswith(IMAGE_ROUTE + "/") and IMAGE_FILENAME.fullmatch(
+        path[len(IMAGE_ROUTE) + 1:]
+    )
+    if (request.method, path) not in _PUBLIC and not path.startswith("/webhooks/") and not public_image:
         await Sessions(get_redis()).authorize(request.headers.get("authorization"))
     try:
         return await _proxy(request, upstream)

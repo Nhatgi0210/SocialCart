@@ -27,7 +27,7 @@ Luồng tiếp nhận từ nền tảng sẽ gọi upsert khi triển khai webho
 | order `POST /internal/orders` | body như OrderCreate, actor AI, source_message_id/action_id và expected_generation | Order PENDING, created_by AI; idempotency, validate catalog; thực hiện trong serialized AI action workflow |
 | order `PATCH /internal/orders/{id}` | body như OrderUpdate + actor AI + action_id và expected_generation | Chỉ PENDING; version/stock/snapshot theo data-rules; không tự confirm |
 | platform `POST /internal/messages/{message_id}/dispatch` | message_id, conversation_id, content, platform, account_id, recipient_id | Kết quả accepted + provider_message_id hoặc error với certainty; timeout không rõ phải có `delivery_unknown=true`; dedupe message ID, không gửi khi đã SENT |
-| product `GET /internal/catalog` | active_only=true; paging | Product + variants chưa xóa, giá/kho hiện tại; không coi cache là kiểm tra kho cuối cùng |
+| product `GET /internal/catalog` | Bearer `INTERNAL_SERVICE_TOKEN`; `active_only=true` mặc định; `page`, `limit` | Envelope phân trang như `GET /api/v1/products`. Chỉ gồm sản phẩm có biến thể chưa xóa, giá/kho hiện tại. Xác nhận đơn kiểm lại tồn trong transaction. |
 | ai `GET /internal/ai-config` | — | FAQs, timeout, payment template hiện hành; chỉ service được phép gọi |
 
 Các JSON shape customer/conversation/order/message tái sử dụng component trong public OpenAPI; không định nghĩa lại kiểu ID/enum. Input webhook riêng có `account_id`, mapper sang model `platform_account_id`. Invalid returns 422, stale 409, missing 404, auth 401/403, dependency 503. Các operation trên là yêu cầu cho task owner, không phải endpoint đã hoạt động.

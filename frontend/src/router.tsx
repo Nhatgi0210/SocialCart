@@ -5,6 +5,7 @@ import { LoginPage } from './pages/LoginPage';
 import { WorkspacePage } from './pages/WorkspacePage';
 import { CustomerDetailPage, CustomersPage } from './pages/CustomersPage';
 import { InboxPage } from './pages/InboxPage';
+import { NewProductPage, ProductDetailPage, ProductsPage } from './pages/ProductsPage';
 
 // Exported for MemoryRouter tests; no fake authenticated preview route.
 export const routes = createRoutesFromElements(
@@ -17,7 +18,9 @@ export const routes = createRoutesFromElements(
         <Route path="inbox" element={<InboxPage />} />
         <Route path="customers" element={<CustomersPage />} />
         <Route path="customers/:id" element={<CustomerDetailPage />} />
-        <Route path="products" element={<WorkspacePage title="Sản phẩm" />} />
+        <Route path="products" element={<ProductsPage />} />
+        <Route path="products/new" element={<NewProductPage />} />
+        <Route path="products/:id" element={<ProductDetailPage />} />
         <Route path="orders" element={<WorkspacePage title="Đơn hàng" />} />
         <Route path="orders/:id" element={<WorkspacePage title="Chi tiết đơn hàng" />} />
         <Route path="settings" element={<WorkspacePage title="Cài đặt" />} />

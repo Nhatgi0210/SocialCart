@@ -61,6 +61,10 @@ class Settings(BaseSettings):
 
     # ── Service-to-service ───────────────────────────────────────────────────
     internal_service_token: str = Field(default="", alias="INTERNAL_SERVICE_TOKEN")
+    product_image_dir: str = Field(default="./data/product-images", alias="PRODUCT_IMAGE_DIR")
+    product_image_public_base_url: str = Field(
+        default="http://localhost:8000/api/v1/products/images", alias="PRODUCT_IMAGE_PUBLIC_BASE_URL"
+    )
 
     # ── Platform flags (service chỉ đọc khi cần) ────────────────────────────
     facebook_enabled: bool = Field(default=False, alias="FACEBOOK_ENABLED")

@@ -994,7 +994,7 @@ paths:
       - AC-14
       - AC-14b
       - AC-14c
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       parameters:
       - $ref: '#/components/parameters/Page'
       - $ref: '#/components/parameters/Limit'
@@ -1019,7 +1019,7 @@ paths:
           type: boolean
       responses:
         '200':
-          description: Contract response; not evidence of a running service.
+          description: Response returned by the local service.
           content:
             application/json:
               schema:
@@ -1067,7 +1067,7 @@ paths:
       x-requirements:
       - AC-13
       - AC-13b
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       requestBody:
         required: true
         content:
@@ -1082,7 +1082,7 @@ paths:
                 stock: 10
       responses:
         '201':
-          description: Contract response; not evidence of a running service.
+          description: Response returned by the local service.
           content:
             application/json:
               schema:
@@ -1128,12 +1128,12 @@ paths:
       x-task: PROD-01
       x-requirements:
       - AC-13
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       description: JPEG/PNG/WebP only, <=5 MiB, validate actual bytes; random filename, no path traversal.
         Return configured local static URL.
       responses:
         '201':
-          description: Contract response; not evidence of a running service.
+          description: Response returned by the local service.
           content:
             application/json:
               schema:
@@ -1144,6 +1144,12 @@ paths:
                   image_url: https://example.test/demo
         '400':
           $ref: '#/components/responses/400'
+        '413':
+          description: Image or multipart request exceeds the upload limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '422':
           $ref: '#/components/responses/422'
         '429':
@@ -1169,6 +1175,45 @@ paths:
                   format: binary
               required:
               - file
+  /api/v1/products/images/{filename}:
+    get:
+      operationId: getProductImage
+      tags:
+      - Products
+      summary: Tải ảnh sản phẩm đã lưu
+      x-task: PROD-01
+      x-requirements:
+      - AC-13
+      x-implementation-status: local-demo-tested
+      security: []
+      parameters:
+      - name: filename
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[0-9a-f]{32}[.](jpg|png|webp)$'
+        example: 7f20695fd9e0428a9e5779ee5c5f189f.png
+      responses:
+        '200':
+          description: Image bytes.
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/404'
+        '503':
+          $ref: '#/components/responses/503'
   /api/v1/products/{id}:
     get:
       operationId: getProduct
@@ -1178,7 +1223,7 @@ paths:
       x-task: PROD-01
       x-requirements:
       - AC-13
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       parameters:
       - name: id
         in: path
@@ -1189,7 +1234,7 @@ paths:
           example: 550e8400-e29b-41d4-a716-000000000001
       responses:
         '200':
-          description: Contract response; not evidence of a running service.
+          description: Response returned by the local service.
           content:
             application/json:
               schema:
@@ -1234,7 +1279,7 @@ paths:
       x-task: PROD-01
       x-requirements:
       - AC-13
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       description: Existing catalog uses PUT; supplied editable fields update, omitted fields unchanged.
         Cannot activate without a valid nondeleted variant.
       parameters:
@@ -1255,7 +1300,7 @@ paths:
               status: INACTIVE
       responses:
         '200':
-          description: Contract response; not evidence of a running service.
+          description: Response returned by the local service.
           content:
             application/json:
               schema:
@@ -1302,7 +1347,7 @@ paths:
       x-task: PROD-01
       x-requirements:
       - AC-13
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       parameters:
       - name: id
         in: path
@@ -1339,7 +1384,7 @@ paths:
       x-task: PROD-01
       x-requirements:
       - AC-13b
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       parameters:
       - name: id
         in: path
@@ -1361,7 +1406,7 @@ paths:
               low_stock_threshold: 0
       responses:
         '201':
-          description: Contract response; not evidence of a running service.
+          description: Response returned by the local service.
           content:
             application/json:
               schema:
@@ -1402,7 +1447,7 @@ paths:
       x-requirements:
       - AC-13b
       - AC-14b
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       description: Editable supplied fields update; row lock and expected_version required for manual
         stock writes. No order snapshot repricing.
       parameters:
@@ -1431,7 +1476,7 @@ paths:
               stock: 12
       responses:
         '200':
-          description: Contract response; not evidence of a running service.
+          description: Response returned by the local service.
           content:
             application/json:
               schema:
@@ -1471,7 +1516,7 @@ paths:
       x-requirements:
       - AC-13b
       - AC-13c
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       description: Last variant deletion makes product INACTIVE; historical order item retained.
       parameters:
       - name: id
@@ -3233,6 +3278,7 @@ components:
         image_url:
           type: string
           format: uri
+          nullable: true
           maxLength: 500
         status:
           type: string

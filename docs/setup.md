@@ -1,5 +1,40 @@
 # Chạy SocialCart tại local
 
+## Sản phẩm và tồn kho với dữ liệu demo
+
+Từ root repository, với `.env` local đã trỏ vào MySQL/Redis và Node theo
+[`.node-version`](../.node-version), chạy trong PowerShell:
+
+```powershell
+. .\scripts\use-local-toolchain.ps1
+python -m pip install -r backend/requirements-dev.lock.txt
+docker compose up -d --wait mysql redis
+python scripts/init-local-keys.py
+python -X utf8 -m alembic -c backend/shared/db/alembic.ini upgrade head
+python -X utf8 scripts/seed-demo.py --all
+.\scripts\start-services.ps1 -Milestone M0
+.\scripts\start-services.ps1 -Service product-service
+npm.cmd --prefix frontend ci
+npm.cmd --prefix frontend run dev
+```
+
+Nếu `.venv` tạo bằng uv, có thể thay dòng pip bằng
+`uv pip install --python .venv/Scripts/python.exe -r backend/requirements-dev.lock.txt`.
+Nếu dùng MySQL riêng qua Workbench, đặt `DATABASE_URL` cho schema local và chỉ
+bật dịch vụ `redis` bằng Compose. Alembic nâng lên `0004_product_name_length`.
+Seed `--all` tạo người bán từ cấu hình `SEED_SELLER_*` và thêm catalog mẫu khi
+bảng sản phẩm còn rỗng. Có thể dùng `--seller-only` để tự tạo catalog từ UI.
+
+Đăng nhập tại [localhost:5173/products](http://localhost:5173/products). Vào **Sản phẩm**
+và tạo **Áo demo** với ảnh PNG, biến thể **Size M**, giá 150.000 VNĐ, tồn 10 và ngưỡng 2.
+Tải lại trang để kiểm ảnh và tổng tồn. Sửa tồn thành 2 rồi 0 để thấy nhãn sắp hết và hết hàng.
+Xóa biến thể duy nhất để kiểm sản phẩm tự chuyển **Ngừng bán**. Thêm biến thể mới rồi đổi
+trạng thái thành **Đang bán** trong **Sửa sản phẩm**. Cuối cùng xóa sản phẩm và kiểm danh sách.
+
+API đi qua Gateway cổng 8000. Ảnh JPEG/PNG/WebP tối đa 5 MiB lưu trong
+`PRODUCT_IMAGE_DIR` và tải qua `PRODUCT_IMAGE_PUBLIC_BASE_URL` (mặc định localhost).
+Dừng bằng Ctrl+C ở terminal Vite và `.\scripts\stop-services.ps1` cho backend.
+
 ## Khách hàng và Inbox với dữ liệu demo
 
 Sau khi cấu hình MySQL/Redis local, cài dependencies và tạo RSA key theo hướng dẫn dưới,
@@ -44,7 +79,7 @@ docker compose up -d --wait mysql redis
 .\.venv\Scripts\python.exe -X utf8 -m alembic -c backend/shared/db/alembic.ini upgrade head
 ```
 
-Head hiện tại là `0003_contract_fields`. MySQL Docker dùng 3306; Wamp phải dùng cổng khác
+Head hiện tại là `0004_product_name_length`. MySQL Docker dùng 3306; Wamp phải dùng cổng khác
 hoặc dừng trước khi chạy Compose. Database Wamp không được chuyển/xóa tự động.
 Secret, keys và thư mục cache đều ở local. Không copy `.env.example` đè `.env` đang dùng.
 

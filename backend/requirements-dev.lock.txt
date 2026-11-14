@@ -78,3 +78,5 @@ watchfiles==1.3.0
 wcwidth==0.9.4
 websockets==17.4
 wsproto==1.3.2
+pillow==13.0.0
+python-multipart==0.0.33

@@ -265,7 +265,7 @@ Nếu request không có session hoặc session đã hết hạn → chuyển h�
 
 - BR-PROD-01: Sản phẩm có các trường: tên, mô tả, ảnh, trạng thái (đang bán / ngừng bán).
 - BR-PROD-02: Mỗi sản phẩm **phải có ít nhất 1 biến thể** mới được đặt trạng thái "đang bán".
-- BR-PROD-03: Mỗi biến thể có: tên, giá (≥ 0), tồn kho (≥ 0).
+- BR-PROD-03: Mỗi biến thể có tên, giá nguyên (≥ 1 VNĐ) và tồn kho nguyên (≥ 0).
 - BR-PROD-04: Tồn kho được quản lý **theo từng biến thể**, không theo sản phẩm.
 - BR-PROD-05: Nếu tất cả biến thể bị xóa → sản phẩm tự động chuyển sang "ngừng bán".
 - BR-PROD-06: AI chỉ sử dụng sản phẩm có trạng thái "đang bán" để tư vấn.
@@ -282,7 +282,7 @@ Nếu request không có session hoặc session đã hết hạn → chuyển h�
 **Error Flow:**
 - Thiếu tên sản phẩm → lỗi validation: *"Tên sản phẩm là bắt buộc."*
 - Không có biến thể → lỗi: *"Sản phẩm cần ít nhất 1 biến thể."*
-- Giá biến thể < 0 → lỗi: *"Giá không được âm."*
+- Giá biến thể < 1 VNĐ → lỗi validation.
 - Tồn kho < 0 → lỗi: *"Số lượng tồn kho không được âm."*
 
 **Validation:**
@@ -290,9 +290,9 @@ Nếu request không có session hoặc session đã hết hạn → chuyển h�
 |--------|---------|
 | Tên sản phẩm | Bắt buộc, tối đa 200 ký tự |
 | Mô tả | Tùy chọn |
-| Ảnh | Tùy chọn, hỗ trợ JPG/PNG, tối đa 5MB |
+| Ảnh | Tùy chọn, hỗ trợ JPEG/PNG/WebP, tối đa 5 MiB |
 | Biến thể - Tên | Bắt buộc, tối đa 100 ký tự |
-| Biến thể - Giá | Bắt buộc, số nguyên ≥ 0 (VNĐ) |
+| Biến thể - Giá | Bắt buộc, số nguyên ≥ 1 (VNĐ) |
 | Biến thể - Tồn kho | Bắt buộc, số nguyên ≥ 0 |
 
 ### 5.3. Sửa sản phẩm

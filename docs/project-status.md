@@ -1,5 +1,23 @@
 # Trạng thái dự án SocialCart
 
+## PROD-01 — local 2026-11-14
+
+- Product service qua Gateway phục vụ CRUD sản phẩm, biến thể, giá, tồn kho và ảnh.
+  Xóa mềm giữ tham chiếu đơn hàng. Xóa biến thể cuối tự chuyển sản phẩm sang ngừng bán.
+  Catalog nội bộ mặc định chỉ trả sản phẩm đang bán có biến thể, yêu cầu token nội bộ.
+- Migration `0004_product_name_length` mở rộng tên sản phẩm và snapshot tên đơn lên
+  200 ký tự. Bộ kiểm chứng `python -X utf8 scripts/verify-foundation.py -o faulthandler_timeout=30`
+  đạt **53 pass** trên MySQL 8.0.44 và Redis. Ca catalog kiểm upload hợp lệ và lỗi,
+  bộ lọc/phân trang, tranh chấp phiên bản trả 409 và giữ snapshot khi xóa mềm.
+- Chromium qua Gateway TCP với DB riêng đã kiểm tạo sản phẩm có ảnh PNG, reload,
+  sửa tên, giá và tồn kho, tìm kiếm, nhãn hết hàng, xóa biến thể cuối, thêm biến thể
+  và xóa mềm sản phẩm. Đã thử chi tiết ở chiều rộng 390px.
+- Frontend lint, typecheck, **21 tests** và build pass. Vite cảnh báo bundle
+  584,21 kB trước gzip. Validator OpenAPI/tài liệu và `git diff --check` pass.
+
+Ảnh demo lưu trên filesystem local. Trừ/hoàn tồn khi xác nhận/hủy đơn thuộc ORDER-01.
+Việc AI tư vấn bằng catalog thuộc luồng tích hợp AI. Xem [cách chạy demo](setup.md#sản-phẩm-và-tồn-kho-với-dữ-liệu-demo).
+
 ## CUST-01 / INBOX-01 — local 2026-11-11
 
 - Hai service phục vụ danh sách/chi tiết khách, ghi chú, hội thoại, tin nhắn, bộ lọc,
