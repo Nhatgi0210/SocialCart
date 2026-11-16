@@ -1,6 +1,9 @@
 # API nội bộ, outbox và realtime
 
-Baseline 2026-10-19; chưa có implementation. Dùng enum/ID trong [data-rules](../data-rules.md). Tài liệu này sở hữu giao tiếp không public; [OpenAPI](openapi.yaml) sở hữu HTTP client.
+Baseline 2026-10-19; RT-01 đã có transport/outbox local ngày 2026-11-16, xem
+[bằng chứng và giới hạn](../realtime-verification.md). Các operation nội bộ chưa có
+ghi chú implementation vẫn là contract. Dùng enum/ID trong [data-rules](../data-rules.md).
+Tài liệu này sở hữu giao tiếp không public; [OpenAPI](openapi.yaml) sở hữu HTTP client.
 
 ## 1. Ranh giới và auth
 
@@ -46,6 +49,22 @@ Outbox publisher đánh dấu sent sau broker acceptance; crash sau publish có 
 - Chỉ một người bán: server tự join room seller từ JWT. Client event `conversation:join` nhận `{conversation_id}`; kiểm UUID/resource tồn tại, không cho tự chọn seller room.
 - Client không gửi nghiệp vụ qua socket; gửi tin/toggle/order vẫn dùng HTTP có auth/idempotency/version.
 
+RT-01 kiểm phiên khi handshake, trước mỗi lần phát và mỗi giây khi socket mở.
+Kiểm tra nền không cập nhật `last_seen`; socket mở không giữ phiên hoạt động vô hạn.
+Redis auth lỗi thì đóng socket. Client dùng HTTP refresh single-flight khi server
+ngắt hoặc từ chối token; tối đa một lần refresh liên tiếp trước một kết nối thành công.
+Lỗi mạng dùng backoff Socket.IO; lỗi service từ chối handshake thử lại sau 5 giây.
+Logout tại tab xóa socket/listener ngay; revoke tại server được guard phát hiện ở
+vòng kiểm tra tiếp theo, với timeout Redis tối đa 3 giây.
+
+`realtime_outbox` lưu event ID/type/data/created_at, attempt_count, next_attempt_at
+và sent_at; service sở hữu nghiệp vụ ghi cùng transaction, realtime-service chỉ
+dispatch. Dispatcher khóa một hàng bằng `FOR UPDATE SKIP LOCKED`, publish Redis
+rồi mới đánh dấu sent. Lỗi Redis giữ pending, hẹn thử lại sau 5 giây. Crash sau publish
+có thể phát lại cùng event ID. Broker chấp nhận không có subscriber vẫn là publish
+thành công; consumer phục hồi bằng API. Chạy một process realtime local; nhiều node
+Socket.IO/load balancer chưa được kiểm chứng.
+
 Envelope chung:
 
 ```json
@@ -69,8 +88,16 @@ Envelope chung:
 | `order:created` | order_id, conversation_id, version | Refetch order list/customer panel |
 | `order:updated` | order_id, conversation_id, version | Refetch detail, stock và stats |
 | `dashboard:stats:updated` | changed_at | Refetch Dashboard |
+| `realtime:resync` | object rỗng | Server phát khi subscribe/resubscribe Redis; refetch toàn bộ query đang dùng |
 
 `conversation_id` trong order event có thể null chỉ nếu hợp đồng tạo đơn sau này cho phép ngoài chat; hiện OrderCreate yêu cầu conversation nên luôn là UUID. Mỗi consumer bỏ event_id đã xử lý; nếu nhận version cũ không ghi đè state mới. Reconnect, focus sau offline và phát hiện gap đều refetch; không cam kết replay Pub/Sub. Không gửi access/refresh/platform token hoặc payload khách đầy đủ trong event invalidation.
+
+Client giữ tối đa 1000 event ID và 1000 version mới nhất trong memory; event chỉ
+invalidate query, không ghi payload vào cache. Badge menu Hội thoại dùng tổng số
+hội thoại chưa đọc từ `GET /api/v1/conversations?is_read=false&limit=1` (`meta.total`).
+`message:new` và `conversation:updated` invalidate cả query badge, kể cả khi không ở Inbox.
+Producer hiện có: PATCH read/status/ai-status chỉ ghi event khi dữ liệu thực sự đổi.
+Producer message/order/dashboard sẽ nối trong SEND/webhook/ORDER/DASH; chưa có live evidence.
 
 ## 5. Structured output của AI adapter
 

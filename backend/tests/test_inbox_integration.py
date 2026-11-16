@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from shared.auth import Sessions, issue_access, session_key
 from shared.config import settings
-from shared.db.models import Conversation
+from shared.db.models import Conversation, RealtimeOutbox
 from shared.db.session import get_session
 from tests.conftest import BACKEND, load_service
 from tests.test_auth import rsa_keys  # noqa: F401
@@ -102,12 +102,15 @@ async def test_customer_and_inbox_through_gateway(monkeypatch, rsa_keys):
             assert conversation["id"] != second["data"][0]["id"]
             path = root + "/" + conversation["id"]
             assert (await client.get(path)).json()["data"]["is_read"] is False
+            unread = (await client.get(root, params={"is_read": False, "limit": 1})).json()
+            assert unread["meta"]["total"] == 9 and unread["data"][0]["is_read"] is False
             messages = (await client.get(path + "/messages", params={"page": 2})).json()
             assert messages["meta"]["total"] == 22 and len(messages["data"]) == 2
             assert messages["data"][0]["created_at"] < messages["data"][1]["created_at"]
             assert (await client.patch(path + "/read", json={"is_read": 1})).status_code == 422
             read = (await client.patch(path + "/read", json={"is_read": True})).json()["data"]
             assert read["is_read"] is True and read["ai_status"] == conversation["ai_status"]
+            assert (await client.get(root, params={"is_read": False, "limit": 1})).json()["meta"]["total"] == 8
             assert (await client.patch(path + "/read", json={"is_read": True})).json()["data"]["version"] == read["version"]
             assert (await client.patch(path + "/ai-status", json={
                 "ai_status": "SELLER_HANDLING", "expected_version": conversation["version"],
@@ -123,6 +126,10 @@ async def test_customer_and_inbox_through_gateway(monkeypatch, rsa_keys):
             async with factory() as db:
                 row = await db.scalar(select(Conversation).where(Conversation.id == conversation["id"]))
                 assert row.ai_generation == 1 and row.is_read and row.status == "RESOLVED"
+                events = (await db.scalars(select(RealtimeOutbox))).all()
+                versions = sorted(event.data["version"] for event in events
+                                  if event.data.get("conversation_id") == conversation["id"])
+                assert versions == [read["version"], takeover["version"], changed["version"]]
             assert (await client.get(root, params={"limit": 101})).status_code == 422
             assert (await client.get(root + "/" + str(uuid4()) + "/messages")).status_code == 404
 

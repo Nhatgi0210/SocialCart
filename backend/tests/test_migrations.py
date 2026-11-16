@@ -32,7 +32,7 @@ def test_mysql_upgrade_backfill_downgrade():
         connection.commit()
         command.upgrade(config, "head")
         assert connection.execute(text("SELECT name FROM users")).scalar_one() == "Chủ shop"
-        assert len(inspect(connection).get_table_names()) == 18
+        assert len(inspect(connection).get_table_names()) == 19
         columns = inspect(connection).get_columns("users")
         assert not next(c for c in columns if c["name"] == "name")["nullable"]
         assert next(c for c in columns if c["name"] == "created_at")["type"].fsp == 6
@@ -42,6 +42,6 @@ def test_mysql_upgrade_backfill_downgrade():
         command.downgrade(config, "base")
         assert inspect(connection).get_table_names() == ["alembic_version"]
         command.upgrade(config, "head")
-        assert len(inspect(connection).get_table_names()) == 18
+        assert len(inspect(connection).get_table_names()) == 19
         connection.commit()
     engine.dispose()

@@ -55,7 +55,7 @@ def test_models_import():
     from shared.db.models import (
         User, PlatformConnection,
         Customer, CustomerNote,
-        Conversation, Message, ConversationOutbox,
+        Conversation, Message, ConversationOutbox, RealtimeOutbox,
         Product, Variant,
         Order, OrderItem, InventoryMovement, RequestIdempotency,
         AIFaq, AIConfig,
@@ -64,11 +64,11 @@ def test_models_import():
     # Kiểm tra tablename không trùng
     table_names = {m.__tablename__ for m in [
         User, PlatformConnection, Customer, CustomerNote,
-        Conversation, Message, ConversationOutbox,
+        Conversation, Message, ConversationOutbox, RealtimeOutbox,
         Product, Variant, Order, OrderItem, InventoryMovement, RequestIdempotency,
         AIFaq, AIConfig, WebhookReceipt, WebhookOutbox,
     ]}
-    assert len(table_names) == 17, f"Có tablename trùng: {table_names}"
+    assert len(table_names) == 18, f"Có tablename trùng: {table_names}"
 
 
 def test_user_model_fields():

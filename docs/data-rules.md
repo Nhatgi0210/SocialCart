@@ -45,6 +45,7 @@ data sai constraint phải được chủ dữ liệu xử lý trước upgrade,
 | order | orders, order_items, inventory_movements, request_idempotency |
 | ai | ai_faqs, ai_config; context hội thoại cập nhật qua conversation-service |
 | webhook | webhook_receipts, webhook_outbox |
+| realtime | realtime_outbox: service nghiệp vụ ghi cùng transaction; realtime-service chỉ dispatch/sent marker |
 
 Dashboard chỉ đọc. Realtime chuyển sự kiện. Tất cả model/migration tập trung `backend/shared/db/`; service thông thường ghi bảng của mình, không tạo bảng độc lập lúc startup. Migration duy nhất chạy trước service, kiểm tra upgrade trên DB rỗng và DB có seed.
 
@@ -83,6 +84,9 @@ Chỉ sửa nội dung khi `PENDING`, yêu cầu `expected_version`. Khi thay it
 - Outgoing POST tạo message `SENDING`; chỉ `SENT` sau provider xác nhận nhận yêu cầu, không đồng nghĩa khách đã đọc. Provider reject → `FAILED`; không mất text. Retry dùng cùng message ID qua endpoint retry, không tạo bubble khác.
 - Timeout kết quả gửi không rõ: không tự retry mù gây gửi trùng; reconcile theo khả năng provider, hoặc thông báo chưa xác định và cho người bán xử lý. Không cam kết exactly-once delivery bên ngoài khi provider không hỗ trợ idempotency.
 - Sự kiện phát sau commit. Redis Pub/Sub không lưu lịch sử; reconnect phải tải lại API. Dedupe theo event ID/message ID. Sự kiện không thay thế DB.
+- RT-01 dùng migration `0005_realtime_outbox`, tách khỏi outbox gửi nền tảng.
+  `sent_at=null` là pending; lỗi Redis tăng số lần thử và hẹn lại sau 5 giây.
+  Subscribe/resubscribe phát `realtime:resync` để bù tín hiệu đã mất; không replay lịch sử.
 
 ## 6. AI và tiếp quản
 
@@ -97,7 +101,8 @@ Với retry kỹ thuật, tổng thời gian vẫn trong deadline 30 giây, khô
 Browser nhiều tab: cookie mutations được serialize bằng Web Locks khi có hỗ trợ;
 single-flight vẫn áp dụng trong từng tab. Logout thành công phát tín hiệu invalidation
 qua BroadcastChannel để xóa session memory/cache ở tab cùng origin, không phát token.
-Tab focus lại gọi `/me` để kiểm phiên đã bị revoke. Socket disconnect được nối cùng RT-01.
+Tab focus lại gọi `/me` để kiểm phiên đã bị revoke. RT-01 xóa socket cùng session;
+server kiểm revoke/hết hạn khi phát và bằng guard mỗi giây, không gia hạn idle bằng guard.
 
 D-15 (2026-11-05): các quy tắc cookie/Origin dưới đây là contract **browser** hiện có.
 Client React Native dùng cùng bất biến dữ liệu/transaction; auth native chưa được định nghĩa

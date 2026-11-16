@@ -21,7 +21,8 @@ npm.cmd --prefix frontend run dev
 Nếu `.venv` tạo bằng uv, có thể thay dòng pip bằng
 `uv pip install --python .venv/Scripts/python.exe -r backend/requirements-dev.lock.txt`.
 Nếu dùng MySQL riêng qua Workbench, đặt `DATABASE_URL` cho schema local và chỉ
-bật dịch vụ `redis` bằng Compose. Alembic nâng lên `0004_product_name_length`.
+bật dịch vụ `redis` bằng Compose. Alembic nâng lên `0005_realtime_outbox`, gồm cả
+thay đổi độ dài tên sản phẩm ở `0004_product_name_length`.
 Seed `--all` tạo người bán từ cấu hình `SEED_SELLER_*` và thêm catalog mẫu khi
 bảng sản phẩm còn rỗng. Có thể dùng `--seller-only` để tự tạo catalog từ UI.
 
@@ -58,12 +59,33 @@ cổng 3306, cấu hình `DATABASE_URL` cho DB local đó và chỉ bật Redis 
 Service khách hàng chạy cổng 8003 và hội thoại chạy cổng 8002. UI gọi Gateway cổng 8000.
 Endpoint upsert nội bộ cần `INTERNAL_SERVICE_TOKEN` ở backend. Demo đọc tin, lưu ghi chú
 và đổi trạng thái trực tiếp trên MySQL. Gửi tin qua nền tảng, AI worker và realtime thuộc
-SEND-01, AI-01 và RT-01.
+SEND-01 và AI-01. RT-01 bổ sung cập nhật trạng thái trực tiếp; xem phần dưới.
+
+## Realtime Inbox — RT-01
+
+Sau migration và seed Inbox ở trên, `start-services.ps1 -Milestone M1` chạy cả
+`realtime-service` tại loopback cổng 8009. Nếu M1 đang chạy từ bản cũ, dừng rồi chạy
+lại các service để nạp code mới. Đặt `VITE_SOCKET_URL=http://localhost:8009` cùng
+hostname với UI/API; origin UI phải có trong `CORS_ALLOWED_ORIGINS`.
+Frontend cần `npm.cmd --prefix frontend ci` để lấy Socket.IO client đã khóa.
+
+Migration head là `0005_realtime_outbox`. Realtime tự chạy dispatcher và subscriber;
+không cần Celery cho RT-01. Redis mất kết nối không rollback thay đổi Inbox đã commit:
+outbox giữ pending, thử lại sau 5 giây; khi reconnect client refetch API. Badge menu
+Hội thoại lấy số hội thoại chưa đọc từ API, không cộng số lần nhận event.
+Order/message/dashboard producer sẽ nối ở task tương ứng.
+
+Kiểm thủ công còn cần chạy: mở Inbox ở hai tab, đổi trạng thái/tiếp quản tại tab A,
+xác nhận tab B cập nhật không F5; ngắt/phục hồi realtime và kiểm cảnh báo/tải lại;
+logout và kiểm cả hai tab về login. Đối chiếu DB/outbox và không dùng provider thật.
+Lượt 2026-11-16 đã kiểm transport tự động và client mô phỏng, **chưa kiểm browser**.
+Xem [lệnh, kết quả và giới hạn](realtime-verification.md).
 
 Auth web đã kiểm browser local ngày 2026-11-10; xem [auth-verification](auth-verification.md).
 Sau pull lượt auth này, cài lại `backend/requirements-dev.lock.txt` để lấy PyMySQL 1.1.1
 đã khóa tương thích pre-ping. Credentials seller nằm trong `.env`; không dùng mock account.
-Khôi phục phiên và logout nhiều tab đã có trên Chromium localhost; socket chờ RT-01.
+Khôi phục phiên và logout nhiều tab đã có trên Chromium localhost; RT-01 có kiểm
+socket logout qua TCP riêng, chưa chạy lại browser nhiều tab với realtime.
 
 ## Baseline đã kiểm ngày 2026-11-10
 
@@ -79,7 +101,7 @@ docker compose up -d --wait mysql redis
 .\.venv\Scripts\python.exe -X utf8 -m alembic -c backend/shared/db/alembic.ini upgrade head
 ```
 
-Head hiện tại là `0004_product_name_length`. MySQL Docker dùng 3306; Wamp phải dùng cổng khác
+Head hiện tại là `0005_realtime_outbox`. MySQL Docker dùng 3306; Wamp phải dùng cổng khác
 hoặc dừng trước khi chạy Compose. Database Wamp không được chuyển/xóa tự động.
 Secret, keys và thư mục cache đều ở local. Không copy `.env.example` đè `.env` đang dùng.
 
@@ -165,7 +187,9 @@ npm.cmd --prefix frontend run dev
 
 Mở `http://localhost:5173`. Vite lắng nghe loopback `127.0.0.1:5173`; `VITE_API_URL` mặc định `http://localhost:8000/api/v1` khi chưa có `.env`. Chỉ biến `VITE_*` được đưa vào bundle. Dùng seller từ seed, không dùng tài khoản mock prototype. UI khởi động gọi refresh cookie qua Gateway: thiếu cookie trả 401; hạ tầng auth lỗi trả 503 và có nút thử lại. Backend đã có implementation nhưng chưa kiểm browser E2E. Không có đăng nhập giả hoặc bỏ qua route protection. Test frontend dùng HTTP mô phỏng có nhãn riêng.
 
-Theme Outfit tải từ Google Fonts và có fallback Segoe UI/system khi offline. Các route nghiệp vụ có trang chờ; `/dashboard` chỉ là shell, chưa đáp ứng đầy đủ AC-29/DASH-01. Chưa nối Socket.IO hay logout nhiều tab; đây là phần AUTH-02/RT-01 tiếp theo.
+Theme Outfit tải từ Google Fonts và có fallback Segoe UI/system khi offline.
+`/dashboard` vẫn là shell, chưa đáp ứng đầy đủ AC-29/DASH-01. Socket.IO đã nối RT-01;
+evidence transport và phần browser còn thiếu ở báo cáo realtime.
 
 ## 5. Khởi động sau BOOT
 

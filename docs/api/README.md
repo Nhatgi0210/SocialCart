@@ -25,6 +25,12 @@ Webhook path trong spec chỉ mô tả ACK, xác minh và raw payload boundary. 
 
 ## Ví dụ công việc và lỗi
 
+RT-01 thêm query `is_read` cho danh sách hội thoại. Ví dụ
+`GET /api/v1/conversations?is_read=false&limit=1` trả tối đa một hội thoại chưa đọc,
+`meta.total` là tổng phù hợp để hiển thị badge nav. PATCH read/status/ai-status tạo
+invalidation outbox cùng transaction; idempotent no-op không phát event mới.
+Socket.IO và `realtime:resync` theo [service-contracts §4](service-contracts.md#4-socketio-contract-v1).
+
 Đơn hai sản phẩm dùng UUID variant và quantity, server tính giá. Confirm `PENDING` với `expected_version=1`: thành công trả `CONFIRMED`, version 2; thiếu hàng trả `409 INSUFFICIENT_STOCK`, không đổi kho/đơn. Người bán tắt AI: PATCH ai-status `SELLER_HANDLING`; worker cũ bị fence theo ai_generation.
 
 Ví dụ request/response và error có trong OpenAPI. Không có secret thật; token dạng minh họa không dùng xác thực được. Có thể import spec vào Postman sau này. Chưa tạo collection/workspace/cloud mock vì chưa có API chạy; khi cần runnable assertions, sinh collection từ spec rồi giữ scripts kiểm thử trong Git, không sửa hai hợp đồng độc lập.

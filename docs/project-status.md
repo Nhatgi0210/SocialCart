@@ -1,5 +1,27 @@
 # Trạng thái dự án SocialCart
 
+## RT-01 — local transport/client 2026-11-16
+
+- Có `realtime-service` Socket.IO :8009, JWT/session auth, guard revoke/expiry và
+  fail closed khi Redis lỗi. Guard không giữ phiên idle. Client cleanup khi logout,
+  refresh HTTP có giới hạn, dedupe/version/gap và refetch khi reconnect/focus/resync.
+- Migration `0005_realtime_outbox` thêm outbox invalidation riêng; PATCH read/status/
+  ai-status ghi cùng transaction khi thực sự đổi. MySQL lock dispatcher, Redis retry
+  sau 5 giây; sent marker sau publish acceptance. Outbox nền tảng giữ riêng.
+- Badge nav lấy tổng hội thoại chưa đọc từ API query `is_read=false`, đã đồng bộ
+  OpenAPI. Frontend lint/typecheck/**27 tests**/build pass; Vite warning 635,93 kB.
+- Python **3.11.15** trong `.cache/rt-venv` (giữ `.venv` 3.13.3 hiện có), MySQL
+  **8.0.44**, Redis **7.4.7** riêng: **63 backend tests PASS, 0 SKIP**. Gồm transaction
+  outbox/concurrent dispatcher, Inbox HTTP ASGI → MySQL → Redis → Socket.IO TCP,
+  ngắt/phục hồi Pub/Sub và logout/expiry. Xem [bằng chứng](realtime-verification.md).
+- **Browser realtime NOT RUN:** browser host/native pipe của phiên này không khả dụng.
+  Client DOM/socket mock không thay browser hai tab/mobile. Chưa có producer
+  message/order/dashboard hay provider live; không đánh dấu toàn RT/M1/AC-27 hoàn tất.
+
+Task nghiệp vụ tiếp theo đủ phụ thuộc: **ORDER-01**. Kiểm browser RT-01 khi công cụ
+trình duyệt hoạt động lại. Validator contract/tài liệu và `git diff --check` pass.
+Đã dừng hạ tầng verify, giữ volume/schema độc lập với database ứng dụng.
+
 ## PROD-01 — local 2026-11-14
 
 - Product service qua Gateway phục vụ CRUD sản phẩm, biến thể, giá, tồn kho và ảnh.
@@ -135,7 +157,9 @@ Chưa có `mobile/`, dependency, build, test native hoặc API native. M0 chưa 
 | DATA-01 | LOCAL SCHEMA CHECKS PASS (2026-11-10) | Migration 0003, backfill/rollback/seed/constraints thật; transaction kho và workflow nghiệm thu trong task nghiệp vụ |
 | CUST-01 | LOCAL PASS | API, hồ sơ/ghi chú và upsert nội bộ đã kiểm với MySQL |
 | INBOX-01 | LOCAL READ/STATE PASS | Inbox, lịch sử, lọc/phân trang, đọc và tiếp quản. Gửi/nhận live, AI worker và realtime theo các task tích hợp |
-| Catalog, đơn hàng, RT/AI/provider | NOT IMPLEMENTED | Theo các task tương ứng |
+| PROD-01 | LOCAL BROWSER PASS (2026-11-14) | CRUD catalog/ảnh/tồn kho qua Chromium và MySQL/Redis; xem báo cáo đầu trang |
+| RT-01 | LOCAL TRANSPORT/CLIENT PASS (2026-11-16) / BROWSER NOT RUN | Outbox, TCP Socket.IO, auth/revoke, Pub/Sub recovery và client mock; xem realtime-verification |
+| Đơn hàng, AI/provider | NOT IMPLEMENTED | Theo các task tương ứng |
 | UX-01 | NOT RUN | Chưa nghiệm thu P4.5; việc chọn Concept B không thay thế review runtime |
 
 **M0 chưa hoàn tất.** Chưa có bằng chứng auth với MySQL/Redis thật hoặc provider live; bằng chứng migration MySQL 9.1 trước đó không thay kiểm baseline MySQL 8.

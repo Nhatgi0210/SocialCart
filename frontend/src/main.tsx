@@ -9,8 +9,10 @@ import { queryClient } from './services/queryClient';
 import { useSession } from './stores/session';
 import { startSessionSync } from './services/sessionSync';
 import { api } from './services/api';
+import { startRealtime } from './socket/realtime';
 
 const stopSessionSync = startSessionSync();
+const stopRealtime = startRealtime(queryClient);
 // A suspended tab can miss an invalidation. Check its server session on return.
 const checkOnResume = () => {
   if (useSession.getState().status === 'authenticated') void api.get('/auth/me').catch(() => undefined);
@@ -18,6 +20,7 @@ const checkOnResume = () => {
 window.addEventListener('focus', checkOnResume);
 if (import.meta.hot) import.meta.hot.dispose(() => {
   stopSessionSync();
+  stopRealtime();
   window.removeEventListener('focus', checkOnResume);
 });
 

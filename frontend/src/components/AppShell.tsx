@@ -1,15 +1,24 @@
 import { useState } from 'react';
-import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Stack, Typography } from '@mui/material';
+import { Alert, Badge, Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Stack, Typography } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
 import { NavLink, Outlet } from 'react-router-dom';
 import { Brand } from './Brand';
 import { logout } from '../services/api';
 import { queryClient } from '../services/queryClient';
 import { useSession } from '../stores/session';
+import { useRealtime } from '../socket/realtime';
+import { inboxGet, type Conversation, type PageResult } from '../services/inbox';
 
 const links = [['/dashboard', 'Tổng quan'], ['/inbox', 'Hội thoại'], ['/customers', 'Khách hàng'], ['/products', 'Sản phẩm'], ['/orders', 'Đơn hàng'], ['/settings', 'Cài đặt']];
 
 export function AppShell() {
   const user = useSession((s) => s.user);
+  const realtimeStatus = useRealtime((s) => s.status);
+  const unread = useQuery({
+    queryKey: ['conversations', 'unread-count'],
+    queryFn: ({ signal }) => inboxGet<PageResult<Conversation>>('/conversations', signal, { is_read: false, limit: 1 }),
+  });
+  const unreadCount = unread.data?.meta.total ?? 0;
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -47,11 +56,18 @@ export function AppShell() {
     </Dialog>
     <Box sx={{ display: { md: 'grid' }, gridTemplateColumns: '224px minmax(0, 1fr)' }}>
       <Stack component="nav" aria-label="Điều hướng chính" direction={{ xs: 'row', md: 'column' }} gap={1} sx={{ p: 2, overflowX: 'auto', borderRight: { md: '1px solid' }, borderColor: { md: 'divider' } }}>
-        {links.map(([path, label]) => <Button key={path} component={NavLink} to={path} sx={{ justifyContent: 'flex-start', whiteSpace: 'nowrap', px: 2, color: 'text.secondary', '&.active': { bgcolor: '#e9f5f1', color: 'primary.dark' } }}>{label}</Button>)}
+        {links.map(([path, label]) => <Button key={path} component={NavLink} to={path}
+          aria-label={path === '/inbox' && unreadCount ? `Hội thoại, ${unreadCount} chưa đọc` : label}
+          sx={{ justifyContent: 'flex-start', whiteSpace: 'nowrap', px: 2, color: 'text.secondary', '&.active': { bgcolor: '#e9f5f1', color: 'primary.dark' } }}>
+          {path === '/inbox' ? <Badge badgeContent={unreadCount} color="primary" sx={{ '& .MuiBadge-badge': { right: -12 } }}>{label}</Badge> : label}
+        </Button>)}
       </Stack>
       <Box component="main" id="main-content" tabIndex={-1} sx={{ p: { xs: 3, md: 5 }, maxWidth: 1120, width: '100%' }}>
         <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>{user?.name} · {user?.email}</Typography>
         <Divider sx={{ my: 3 }} />
+        {realtimeStatus === 'offline' && <Alert severity="warning" sx={{ mb: 2 }}>
+          Mất kết nối cập nhật trực tiếp. Dữ liệu sẽ được tải lại khi kết nối phục hồi.
+        </Alert>}
         <Outlet />
       </Box>
     </Box>

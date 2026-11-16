@@ -27,6 +27,7 @@ celery==5.4.0
 
 # ── Socket.IO (RT-01) ────────────────────────────────────────────────────────
 python-socketio==5.11.4
+aiohttp==3.13.2  # Socket.IO TCP integration test client
 
 # ── Dev / test tools ─────────────────────────────────────────────────────────
 pytest==8.3.3

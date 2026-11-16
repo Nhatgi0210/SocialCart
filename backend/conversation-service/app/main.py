@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, select
 
 from shared.auth import AuthError
-from shared.db.models import Conversation, Customer, Message
+from shared.db.models import Conversation, Customer, Message, RealtimeOutbox
 from shared.inbox_http import DB, Limit, Page, Platform, customer_data, inbox_service, paged, success, utc
 
 app, seller = inbox_service("conversation-service")
@@ -72,10 +72,11 @@ async def read_summary(db: DB, id: UUID):
 @router.get("")
 async def list_conversations(db: DB, page: Page = 1, limit: Limit = 20, platform: Platform | None = None,
                              status: Status | None = None, ai_status: AIStatus | None = None,
-                             customer_id: UUID | None = None):
+                             customer_id: UUID | None = None, is_read: bool | None = None):
     filters = []
     for column, value in ((Conversation.platform, platform), (Conversation.status, status),
-                          (Conversation.ai_status, ai_status), (Conversation.customer_id, customer_id)):
+                          (Conversation.ai_status, ai_status), (Conversation.customer_id, customer_id),
+                          (Conversation.is_read, is_read)):
         if value is not None:
             filters.append(column == (str(value) if isinstance(value, UUID) else value))
     total = await db.scalar(select(func.count()).select_from(Conversation).where(*filters))
@@ -96,6 +97,7 @@ async def mark_read(id: UUID, body: ReadUpdate, db: DB):
     if not conversation.is_read:
         conversation.is_read = body.is_read
         conversation.version += 1
+        queue_update(db, conversation)
     await db.commit()
     return await read_summary(db, id)
 
@@ -105,6 +107,12 @@ def check_version(conversation: Conversation, expected: int):
         raise AuthError(409, "VERSION_CONFLICT", "Hội thoại đã thay đổi. Vui lòng tải lại.")
 
 
+def queue_update(db, conversation):
+    db.add(RealtimeOutbox(event_type="conversation:updated", data={
+        "conversation_id": conversation.id, "version": conversation.version,
+    }))
+
+
 @router.patch("/{id}/status")
 async def set_status(id: UUID, body: StatusUpdate, db: DB):
     conversation = await find_conversation(db, id, lock=True)
@@ -112,6 +120,7 @@ async def set_status(id: UUID, body: StatusUpdate, db: DB):
     if conversation.status != body.status:
         conversation.status = body.status
         conversation.version += 1
+        queue_update(db, conversation)
     await db.commit()
     return await read_summary(db, id)
 
@@ -124,6 +133,7 @@ async def set_ai_status(id: UUID, body: AIUpdate, db: DB):
         conversation.ai_status = body.ai_status
         conversation.ai_generation += 1
         conversation.version += 1
+        queue_update(db, conversation)
     await db.commit()
     return await read_summary(db, id)
 

@@ -244,6 +244,7 @@ paths:
       x-requirements:
       - AC-04
       - AC-06
+      - AC-28
       x-implementation-status: local-demo-tested
       parameters:
       - $ref: '#/components/parameters/Page'
@@ -274,6 +275,13 @@ paths:
           - AI_HANDLING
           - NEEDS_SELLER
           - SELLER_HANDLING
+      - name: is_read
+        in: query
+        required: false
+        description: Lọc hội thoại theo đã đọc. Badge dùng is_read=false&limit=1 và meta.total.
+        schema:
+          type: boolean
+          example: false
       - name: customer_id
         in: query
         required: false

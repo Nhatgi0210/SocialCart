@@ -1,5 +1,13 @@
 # Kế hoạch kiểm thử và nghiệm thu
 
+RT-01 ngày 2026-11-16: `backend/tests/test_realtime.py` kiểm schema, passive session,
+outbox unit và TCP/RSA/fakeredis. `test_realtime_integration.py` kiểm MySQL row lock,
+publish retry, HTTP Inbox → DB/outbox → Redis → TCP socket, Redis subscriber recovery
+và logout với Redis thật. Frontend `socket/realtime.test.ts` và `AppShell.test.tsx`
+kiểm dedupe/gap/refetch/logout/refresh bound/badge qua mock. Thêm `is_read` filter
+và no-op không phát event trong integration Inbox. Kết quả/giới hạn ở
+[realtime-verification](realtime-verification.md); browser hai tab/mobile **NOT RUN**.
+
 CUST-01/INBOX-01 dùng `backend/tests/test_inbox_integration.py` qua
 `scripts/verify-foundation.py`. Test dùng schema MySQL cô lập và Redis DB 15.
 Kiểm quyền public/internal, upsert đồng thời, phân trang, ghi chú và xung đột version.

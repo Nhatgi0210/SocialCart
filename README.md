@@ -4,9 +4,15 @@ Hệ thống quản lý tin nhắn Facebook Page/Zalo OA và hỗ trợ chốt �
 
 ## Hiện trạng
 
+RT-01 cập nhật 2026-11-16: có Socket.IO/outbox, session guard, client reconnect/refetch
+và badge Hội thoại chưa đọc. **63 backend tests** với MySQL/Redis và **27 frontend tests**
+pass; browser realtime chưa chạy do browser host không khả dụng.
+Xem [bằng chứng RT-01](docs/realtime-verification.md). ORDER-01 đủ phụ thuộc để làm tiếp.
+
 Auth web cập nhật 2026-11-10: đã kiểm trình duyệt Chromium → Gateway → Auth → MySQL/Redis,
 có reload/refresh, `/me`, xác nhận logout, revoke và đồng bộ logout nhiều tab.
-Xem [bằng chứng auth](docs/auth-verification.md). Socket disconnect chờ RT-01; Dashboard vẫn shell.
+Xem [bằng chứng auth](docs/auth-verification.md). Socket disconnect đã có transport
+evidence RT-01; kiểm lại browser realtime còn thiếu. Dashboard vẫn shell.
 
 Nền tảng cập nhật 2026-11-10: Python 3.11.18, Node 24.14.0, MySQL 8.0.44/Redis 7.4.7
 và migration `0003_contract_fields`. Bộ kiểm chứng thật, cách chọn toolchain và đóng gói commit

@@ -115,11 +115,14 @@ _LOOKUP = _CHECK + """
 if redis.call('HGET', KEYS[1], 'refresh_hash') ~= ARGV[3] then return {} end
 return {uid}
 """
-_TOUCH = _CHECK + """
+_VALIDATE = _CHECK + """
 if uid ~= ARGV[3] or redis.call('EXISTS', KEYS[2]) == 1 then return {} end
+"""
+_TOUCH = _VALIDATE + """
 redis.call('HSET', KEYS[1], 'last_seen', ARGV[1])
 return {uid}
 """
+_PASSIVE = _VALIDATE + "return {uid}"
 _LOGOUT = """
 if redis.call('HGET', KEYS[1], 'refresh_hash') ~= ARGV[1] then return 0 end
 redis.call('DEL', KEYS[1])
@@ -168,13 +171,13 @@ class Sessions:
             raise unauthorized()
         return result[0]
 
-    async def authorize(self, authorization: str | None) -> dict:
+    async def authorize(self, authorization: str | None, *, touch: bool = True) -> dict:
         scheme, _, token = (authorization or "").partition(" ")
         if scheme.lower() != "bearer" or not token:
             raise unauthorized()
         claims = decode_access(token)
         try:
-            result = await self.redis.eval(_TOUCH, 2, session_key(claims["sid"]),
+            result = await self.redis.eval(_TOUCH if touch else _PASSIVE, 2, session_key(claims["sid"]),
                                            f"sc:blacklist:{claims['jti']}", now(), 86400, claims["sub"])
         except RedisError:
             raise unavailable() from None

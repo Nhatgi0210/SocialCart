@@ -1,4 +1,7 @@
+aiohappyeyeballs==2.7.1
+aiohttp==3.13.2
 aiomysql==0.2.0
+aiosignal==1.4.0
 aiosqlite==0.20.0
 alembic==1.14.0
 amqp==5.4.2
@@ -22,6 +25,7 @@ cryptography==50.0.2
 dnspython==2.9.2
 email-validator==2.3.0
 factory-boy==3.3.1
+frozenlist==1.8.0
 faker==40.52.0
 fakeredis==2.32.1
 fastapi==0.115.5
@@ -41,12 +45,14 @@ lazy-object-proxy==1.13.0
 lupa==2.8
 mako==1.4.3
 markupsafe==3.0.4
+multidict==6.9.1
 openapi-schema-validator==0.9.0
 openapi-spec-validator==0.9.0
 packaging==26.3
 pathable==0.6.0
 pluggy==1.7.0
 prompt-toolkit==3.0.53
+propcache==0.5.4
 pycparser==3.12
 pydantic==2.10.3
 pydantic-core==2.27.1
@@ -78,5 +84,6 @@ watchfiles==1.3.0
 wcwidth==0.9.4
 websockets==17.4
 wsproto==1.3.2
+yarl==1.25.1
 pillow==13.0.0
 python-multipart==0.0.33

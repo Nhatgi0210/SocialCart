@@ -211,6 +211,25 @@ class Message(Base):
     )
 
 
+class RealtimeOutbox(Base):
+    """Invalidations committed atomically with their owning service's mutation."""
+    __tablename__ = "realtime_outbox"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    event_type: Mapped[str] = mapped_column(String(40), nullable=False)
+    data: Mapped[dict] = mapped_column(JSON, nullable=False)
+    attempt_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    next_attempt_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=6))
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
+    sent_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=6))
+
+    __table_args__ = (
+        Index("ix_realtime_outbox_pending", "sent_at", "next_attempt_at", "created_at"),
+        CheckConstraint("attempt_count >= 0", name="ck_realtime_attempts_nonneg"),
+        {"mysql_engine": "InnoDB"},
+    )
+
+
 class ConversationOutbox(Base):
     """Outbox bền vững cho outgoing message; worker dispatch đến platform."""
     __tablename__ = "conversation_outbox"

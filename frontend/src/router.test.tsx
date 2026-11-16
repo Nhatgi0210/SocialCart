@@ -2,28 +2,34 @@ import { StrictMode } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, useLocation, useRoutes } from 'react-router-dom';
 import MockAdapter from 'axios-mock-adapter';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { routes } from './router';
 import { theme } from './theme';
 import { useSession } from './stores/session';
-import { authTransport } from './services/api';
+import { api, authTransport } from './services/api';
 import { tokenData } from './test/fixtures';
 
 let auth: MockAdapter;
+let business: MockAdapter;
+let client: QueryClient;
 beforeEach(() => {
   useSession.getState().clear();
   auth = new MockAdapter(authTransport);
+  business = new MockAdapter(api);
+  business.onGet('/conversations').reply(200, { success: true, data: [], meta: { page: 1, limit: 1, total: 0 } });
+  client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 });
-afterEach(() => auth.restore());
+afterEach(() => { auth.restore(); business.restore(); client.clear(); });
 
 function open(path: string) {
-  render(<StrictMode><ThemeProvider theme={theme}>
+  render(<StrictMode><QueryClientProvider client={client}><ThemeProvider theme={theme}>
     <MemoryRouter initialEntries={[path]} future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
       <RouteView />
     </MemoryRouter>
-  </ThemeProvider></StrictMode>);
+  </ThemeProvider></QueryClientProvider></StrictMode>);
 }
 
 function RouteView() {
