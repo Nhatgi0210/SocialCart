@@ -1,5 +1,26 @@
 # Trạng thái dự án SocialCart
 
+## ORDER-01 — local 2026-11-17
+
+- Order-service phục vụ danh sách/lọc, chi tiết, tạo và sửa đơn chờ, cùng các
+  bước xác nhận, giao, hoàn thành và hủy. React mở form tạo từ Hội thoại,
+  liên kết hai chiều với chi tiết đơn và cập nhật qua RT-01.
+- MySQL giữ snapshot tên/giá theo dòng. Sửa số lượng giữ snapshot cũ, biến thể
+  thêm lấy giá danh mục hiện tại. Xác nhận/hủy dùng cùng transaction với biến
+  động kho, ledger, bản ghi idempotency và outbox. `0006_order_idempotency_response`
+  mở rộng cột lưu response cho đơn có nhiều dòng.
+- Backend **64 test pass** qua `scripts/verify-foundation.py` với MySQL 8/Redis 7
+  riêng. Ca ORDER-01 kiểm hai đơn tranh biến thể cuối, replay đồng thời,
+  hoàn kho khi hủy, phiên bản cũ, snapshot sau đổi tên/giá hoặc xóa mềm
+  và replay response lớn hơn 64 KiB.
+- Chromium đã kiểm tạo từ Inbox, sửa số lượng/ghi chú, cập nhật tab thứ hai,
+  xác nhận/giao/hủy, reload và lọc đơn. Ở 390px đã kiểm tạo, xác nhận, giao và hoàn thành.
+  Frontend lint, typecheck, **28 test** và build pass. Vite cảnh báo bundle khoảng
+  697 kB. Validator tài liệu và `git diff --check` pass.
+
+Luồng do AI tự tạo/sửa và gửi tóm tắt qua nền tảng thuộc các task tích hợp.
+Xem [cách chạy demo](setup.md#đơn-hàng-với-dữ-liệu-demo).
+
 ## RT-01 — local transport/client 2026-11-16
 
 - Có `realtime-service` Socket.IO :8009, JWT/session auth, guard revoke/expiry và

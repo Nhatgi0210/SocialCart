@@ -16,6 +16,8 @@ Xem `docs/realtime-verification.md`; không coi đây là nghiệm thu toàn M1 
 
 V1 phục vụ một người bán, một Facebook Page và một Zalo OA. Không thêm staff, multi-tenant, Zalo cá nhân, cổng thanh toán hay tích hợp vận chuyển. AI chỉ tạo/sửa đơn `PENDING`; người bán xác nhận đơn.
 
+ORDER-01 đã kiểm luồng đơn của người bán và transaction tồn kho trên MySQL thật ngày 2026-11-17.
+
 ## Đọc tài liệu theo nhiệm vụ
 
 1. [Quyết định và nguồn ưu tiên](docs/decisions.md): đọc trước khi xử lý mâu thuẫn.

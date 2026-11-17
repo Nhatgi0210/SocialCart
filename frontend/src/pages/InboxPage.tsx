@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import { CustomerProfile } from '../components/CustomerProfile';
+import { ConversationOrders } from '../components/ConversationOrders';
 import { InboxQueryState } from '../components/InboxQueryState';
 import { api } from '../services/api';
 import {
@@ -116,7 +117,11 @@ function Chat({ id, back }: { id: string; back: () => void }) {
     </Paper>
     {conversation && !detail.isError && <Paper id="inbox-customer-profile" component="aside" aria-label="Thông tin khách"
       variant="outlined" sx={{ p: 2, minWidth: 0, display: { xs: showProfile ? 'block' : 'none', lg: 'block' } }}>
-      <CustomerProfile key={conversation.customer.id} id={conversation.customer.id} />
+      <Stack spacing={2}>
+        <ConversationOrders key={conversation.id} conversation={conversation} />
+        <Divider />
+        <CustomerProfile key={conversation.customer.id} id={conversation.customer.id} />
+      </Stack>
     </Paper>}
   </Box>;
 }

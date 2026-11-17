@@ -87,6 +87,9 @@ Envelope chung:
 | `conversation:updated` | conversation_id, version | Refetch status, AI, unread và recency |
 | `order:created` | order_id, conversation_id, version | Refetch order list/customer panel |
 | `order:updated` | order_id, conversation_id, version | Refetch detail, stock và stats |
+
+ORDER-01 ghi `order:created` và `order:updated` vào `realtime_outbox` trong
+transaction nghiệp vụ. Replay request cùng Idempotency-Key trả response đã lưu.
 | `dashboard:stats:updated` | changed_at | Refetch Dashboard |
 | `realtime:resync` | object rỗng | Server phát khi subscribe/resubscribe Redis; refetch toàn bộ query đang dùng |
 

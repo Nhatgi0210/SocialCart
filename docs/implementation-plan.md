@@ -5,7 +5,7 @@ CUST-01 và phạm vi đọc/đổi trạng thái INBOX-01 đã kiểm local ng�
 RT-01 đã triển khai core outbox/Socket.IO và client ngày 2026-11-16; kiểm chứng
 transport MySQL/Redis thật và test client ở [realtime-verification](realtime-verification.md).
 Browser runtime chưa chạy do browser host không khả dụng; chưa đóng toàn M1/AC-28.
-ORDER-01 là task nghiệp vụ tiếp theo đủ phụ thuộc.
+ORDER-01 đã kiểm luồng người bán và transaction tồn kho local ngày 2026-11-17.
 SEND-01, webhook và AI worker tiếp tục hoàn thiện hành vi gửi/nhận và tự động trả lời.
 Xem [bằng chứng](project-status.md).
 

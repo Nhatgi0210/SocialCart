@@ -58,7 +58,7 @@ def inbox_service(name: str):
         return await readiness(name, redis)
 
     async def seller(authorization: Annotated[str | None, Header()] = None):
-        await Sessions(redis).authorize(authorization)
+        return await Sessions(redis).authorize(authorization)
 
     return app, seller
 

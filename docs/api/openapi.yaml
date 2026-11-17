@@ -1569,7 +1569,7 @@ paths:
       x-task: ORDER-01
       x-requirements:
       - AC-23
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       parameters:
       - $ref: '#/components/parameters/Page'
       - $ref: '#/components/parameters/Limit'
@@ -1600,7 +1600,7 @@ paths:
           example: 550e8400-e29b-41d4-a716-000000000001
       responses:
         '200':
-          description: Contract response; not evidence of a running service.
+          description: Response returned by the local service.
           content:
             application/json:
               schema:
@@ -1655,7 +1655,7 @@ paths:
       x-requirements:
       - AC-25
       - AC-26
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       description: Server snapshots catalog prices, calculates total, validates customer-conversation
         relation; created_by=SELLER. Duplicate variants merge. Stock check does not reserve.
       parameters:
@@ -1677,7 +1677,7 @@ paths:
                 quantity: 2
       responses:
         '201':
-          description: Contract response; not evidence of a running service.
+          description: Response returned by the local service.
           content:
             application/json:
               schema:
@@ -1731,7 +1731,7 @@ paths:
       x-requirements:
       - AC-22b
       - AC-26
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       parameters:
       - name: id
         in: path
@@ -1742,7 +1742,7 @@ paths:
           example: 550e8400-e29b-41d4-a716-000000000001
       responses:
         '200':
-          description: Contract response; not evidence of a running service.
+          description: Response returned by the local service.
           content:
             application/json:
               schema:
@@ -1794,7 +1794,7 @@ paths:
       x-task: ORDER-01
       x-requirements:
       - AC-21c
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       description: 403/409 cannot be used to bypass pending-only rule; retain existing item snapshots;
         new variants get current price. AI calls internal authenticated counterpart.
       parameters:
@@ -1817,7 +1817,7 @@ paths:
               address: Địa chỉ minh họa đã sửa
       responses:
         '200':
-          description: Contract response; not evidence of a running service.
+          description: Response returned by the local service.
           content:
             application/json:
               schema:
@@ -1873,7 +1873,7 @@ paths:
       x-requirements:
       - AC-24
       - AC-24b
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       description: PENDING→CONFIRMED/CANCELLED; CONFIRMED→SHIPPING/CANCELLED; SHIPPING→COMPLETED/CANCELLED.
         No terminal changes. Confirm locks stock; cancellation restores once.
       parameters:
@@ -1896,7 +1896,7 @@ paths:
               expected_version: 1
       responses:
         '200':
-          description: Contract response; not evidence of a running service.
+          description: Response returned by the local service.
           content:
             application/json:
               schema:
@@ -3515,6 +3515,8 @@ components:
           maxLength: 36
         conversation_id:
           type: string
+          nullable: true
+          description: Legacy orders may have no value. Newly created orders require this field.
           format: uuid
           example: 550e8400-e29b-41d4-a716-000000000001
         customer_id:
@@ -3536,15 +3538,21 @@ components:
           - SELLER
         customer_name:
           type: string
+          nullable: true
+          description: Legacy orders may have no value. Newly created orders require this field.
           minLength: 1
           pattern: .*\S.*
           maxLength: 100
         phone_number:
           type: string
+          nullable: true
+          description: Legacy orders may have no value. Newly created orders require this field.
           pattern: ^[0-9]{10,11}$
           maxLength: 11
         address:
           type: string
+          nullable: true
+          description: Legacy orders may have no value. Newly created orders require this field.
           minLength: 1
           pattern: .*\S.*
           maxLength: 500

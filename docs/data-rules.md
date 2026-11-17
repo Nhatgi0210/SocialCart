@@ -75,6 +75,10 @@ Các chuyển khác trả `409 INVALID_TRANSITION`. Đơn `COMPLETED`/`CANCELLED
 
 Tạo/sửa/xác nhận/hủy: lock order (nếu có), lock variant theo thứ tự UUID tăng dần; kiểm tra version rồi ghi toàn bộ trong transaction. Riêng mutation từ AI phải khóa conversation và kiểm expected_generation trước lock order, theo thứ tự conversation → order → variants. Deadlock retry hữu hạn với cùng key, không lặp side effect bên ngoài. Thiếu kho trả `409 INSUFFICIENT_STOCK`, rollback cả đơn lẫn kho. Hai đơn chờ có thể cùng tham chiếu hàng cuối; chỉ một đơn xác nhận thành công.
 
+Order-service khóa các product theo UUID trước khi khóa variant, cùng thứ tự với cập nhật catalog.
+Xác nhận kiểm biến thể còn bán. Hủy lấy lượng hoàn từ các dòng DEDUCT, kể cả biến thể
+đã xóa mềm sau xác nhận. Cache idempotency ghi cùng transaction và giữ response ít nhất 24 giờ.
+
 Chỉ sửa nội dung khi `PENDING`, yêu cầu `expected_version`. Khi thay items: merge variant trùng, dùng giá snapshot cho variant đã có, giá catalog hiện tại cho variant mới; không tự đổi giá dòng cũ khi chỉ sửa địa chỉ/số lượng. AI cập nhật qua order-service, không ghi SQL theo output model. Sửa đơn và publish event sau commit. Gửi tóm tắt khách sau khi cập nhật thành công; gửi lỗi không rollback đơn đã commit.
 
 ## 5. Tin nhắn, webhook và realtime

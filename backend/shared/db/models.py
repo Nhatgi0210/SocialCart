@@ -28,7 +28,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.mysql import DATETIME
+from sqlalchemy.dialects.mysql import DATETIME, MEDIUMTEXT
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -392,7 +392,7 @@ class RequestIdempotency(Base):
     key: Mapped[str] = mapped_column(String(255), nullable=False)        # client-supplied key
     request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     resource_id: Mapped[str | None] = mapped_column(String(36))
-    response_body: Mapped[str | None] = mapped_column(Text)              # JSON của response
+    response_body: Mapped[str | None] = mapped_column(Text().with_variant(MEDIUMTEXT(), "mysql"))
     expires_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), nullable=False)  # TTL >= 24h
     created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
 

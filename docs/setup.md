@@ -1,5 +1,32 @@
 # Chạy SocialCart tại local
 
+## Đơn hàng với dữ liệu demo
+
+Với MySQL/Redis, `.env` và RSA key đã cấu hình, chạy từ root trong PowerShell.
+Nếu DB từng chạy RT-01 local với `published_at`, xem mục đồng bộ schema bên dưới
+để đổi sang `sent_at` trước khi nâng migration:
+
+```powershell
+. .\scripts\use-local-toolchain.ps1
+python -X utf8 -m alembic -c backend/shared/db/alembic.ini upgrade head
+python -X utf8 scripts/seed-demo.py --all
+python -X utf8 scripts/seed-inbox-demo.py
+.\scripts\stop-services.ps1
+.\scripts\start-services.ps1 -Milestone M2
+npm.cmd --prefix frontend run dev
+```
+
+M2 bật Gateway, Auth, Khách hàng, Hội thoại, Sản phẩm, Đơn hàng và Realtime.
+Kiểm order-service qua [localhost:8005/health](http://localhost:8005/health).
+
+1. Mở [Hội thoại](http://localhost:5173/inbox), chọn một cuộc chat demo và nhấn
+   **Tạo đơn hàng thủ công** trong panel thông tin. Trên màn hình nhỏ, mở **Thông tin khách**.
+2. Điền số điện thoại demo `0900000000`, địa chỉ và chọn một biến thể. Lưu rồi kiểm đơn
+   **Chờ xác nhận**. Sửa số lượng trong chi tiết và kiểm tồn hiện tại ở mục **Sản phẩm**.
+3. Xác nhận đơn rồi kiểm tồn đã giảm theo số lượng. Chuyển sang **Đang giao** rồi
+   **Hủy đơn** để thấy tồn được hoàn. Với đơn khác, thử **Hoàn thành đơn** sau khi chuyển giao.
+4. Thử đổi tên hoặc giá trong **Sản phẩm** và mở lại đơn cũ để kiểm snapshot.
+
 ## Sản phẩm và tồn kho với dữ liệu demo
 
 Từ root repository, với `.env` local đã trỏ vào MySQL/Redis và Node theo
@@ -21,8 +48,8 @@ npm.cmd --prefix frontend run dev
 Nếu `.venv` tạo bằng uv, có thể thay dòng pip bằng
 `uv pip install --python .venv/Scripts/python.exe -r backend/requirements-dev.lock.txt`.
 Nếu dùng MySQL riêng qua Workbench, đặt `DATABASE_URL` cho schema local và chỉ
-bật dịch vụ `redis` bằng Compose. Alembic nâng lên `0005_realtime_outbox`, gồm cả
-thay đổi độ dài tên sản phẩm ở `0004_product_name_length`.
+bật dịch vụ `redis` bằng Compose. Alembic nâng tới revision hiện hành, gồm cả thay đổi
+độ dài tên sản phẩm ở `0004_product_name_length`.
 Seed `--all` tạo người bán từ cấu hình `SEED_SELLER_*` và thêm catalog mẫu khi
 bảng sản phẩm còn rỗng. Có thể dùng `--seller-only` để tự tạo catalog từ UI.
 
@@ -69,11 +96,11 @@ lại các service để nạp code mới. Đặt `VITE_SOCKET_URL=http://localh
 hostname với UI/API; origin UI phải có trong `CORS_ALLOWED_ORIGINS`.
 Frontend cần `npm.cmd --prefix frontend ci` để lấy Socket.IO client đã khóa.
 
-Migration head là `0005_realtime_outbox`. Realtime tự chạy dispatcher và subscriber;
+Migration `0005_realtime_outbox` tạo bảng outbox. Realtime tự chạy dispatcher và subscriber;
 không cần Celery cho RT-01. Redis mất kết nối không rollback thay đổi Inbox đã commit:
 outbox giữ pending, thử lại sau 5 giây; khi reconnect client refetch API. Badge menu
 Hội thoại lấy số hội thoại chưa đọc từ API, không cộng số lần nhận event.
-Producer đơn hàng, tin thật và Dashboard sẽ nối ở các task tương ứng. Để tạo tin đến
+Đơn hàng phát sự kiện sau commit. Producer tin thật và Dashboard sẽ nối ở các task tương ứng. Để tạo tin đến
 giả lập cho hội thoại của [Demo] Minh và kiểm badge/reconnect, chạy từ root sau khi
 seed Inbox (chỉ `APP_ENV=local`):
 
@@ -130,7 +157,7 @@ docker compose up -d --wait mysql redis
 .\.venv\Scripts\python.exe -X utf8 -m alembic -c backend/shared/db/alembic.ini upgrade head
 ```
 
-Head hiện tại là `0005_realtime_outbox`. MySQL Docker dùng 3306; Wamp phải dùng cổng khác
+Head hiện tại là `0006_order_idempotency_response`. MySQL Docker dùng 3306; Wamp phải dùng cổng khác
 hoặc dừng trước khi chạy Compose. Database Wamp không được chuyển/xóa tự động.
 Secret, keys và thư mục cache đều ở local. Không copy `.env.example` đè `.env` đang dùng.
 
