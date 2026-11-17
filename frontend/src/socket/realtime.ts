@@ -1,5 +1,5 @@
 import { io } from 'socket.io-client';
-import type { QueryClient } from '@tanstack/react-query';
+import type { QueryClient, QueryKey } from '@tanstack/react-query';
 import { create } from 'zustand';
 import { refreshSession } from '../services/api';
 import { useSession } from '../stores/session';
@@ -11,7 +11,13 @@ const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 export function eventConsumer(client: QueryClient) {
   const seen = new Set<string>();
   const versions = new Map<string, number>();
-  const resync = () => { void client.invalidateQueries(); };
+  const newMessages = new Set<string>();
+  const invalidate = (queryKey?: QueryKey) => {
+    // The first fetch can still be returning a snapshot from before the event.
+    void client.cancelQueries({ queryKey, predicate: (query) => query.state.data === undefined });
+    void (queryKey ? client.invalidateQueries({ queryKey }) : client.invalidateQueries());
+  };
+  const resync = () => invalidate();
   return {
     resync,
     receive(name: string, raw: unknown) {
@@ -31,6 +37,11 @@ export function eventConsumer(client: QueryClient) {
       if (seen.has(event.event_id)) return;
       seen.add(event.event_id);
       if (seen.size > 1000) seen.delete(seen.values().next().value!);
+      if (name === 'message:new' && typeof data.message_id === 'string') {
+        if (newMessages.has(data.message_id)) return;
+        newMessages.add(data.message_id);
+        if (newMessages.size > 1000) newMessages.delete(newMessages.values().next().value!);
+      }
       if (versioned) {
         const key = name.startsWith('order:') ? `order:${data.order_id}` : `conversation:${data.conversation_id}`;
         const previous = versions.get(key);
@@ -44,7 +55,7 @@ export function eventConsumer(client: QueryClient) {
       const keys: unknown[][] = [['conversations'], ['conversation', data.conversation_id]];
       if (name.startsWith('message:')) keys.push(['messages', data.conversation_id]);
       if (name.startsWith('order:')) keys.push(['orders'], ['order', data.order_id], ['products'], ['product'], ['customer'], ['dashboard']);
-      keys.forEach((queryKey) => { void client.invalidateQueries({ queryKey }); });
+      keys.forEach((queryKey) => invalidate(queryKey));
     },
   };
 }

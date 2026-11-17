@@ -1,4 +1,4 @@
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { tokenData } from '../test/fixtures';
 import { useSession } from '../stores/session';
@@ -59,6 +59,30 @@ describe('Realtime invalidation', () => {
     expect(invalidate).toHaveBeenCalledWith();
     expect(client.getQueryData(['conversation', conversationId])).toEqual({ version: 9 });
     client.clear();
+  });
+
+  it('dedupes a new message across event IDs and replaces an initial fetch that started before commit', async () => {
+    const client = new QueryClient();
+    const key = ['messages', conversationId];
+    const queryFn = vi.fn()
+      .mockImplementationOnce(() => new Promise(() => undefined))
+      .mockResolvedValueOnce(['committed message']);
+    const observer = new QueryObserver(client, { queryKey: key, queryFn });
+    const unsubscribe = observer.subscribe(() => undefined);
+    try {
+      const invalidate = vi.spyOn(client, 'invalidateQueries');
+      const consumer = eventConsumer(client);
+      const data = { conversation_id: conversationId, message_id: '550e8400-e29b-41d4-a716-446655440003' };
+      consumer.receive('message:new', { ...event(1), event_type: 'message:new', data });
+      consumer.receive('message:new', { ...event(1), event_type: 'message:new', data });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(queryFn).toHaveBeenCalledTimes(2);
+      expect(invalidate).toHaveBeenCalledTimes(3);
+      expect(client.getQueryData(key)).toEqual(['committed message']);
+    } finally {
+      unsubscribe();
+      client.clear();
+    }
   });
 
   it('ignores malformed IDs, recovers unsupported schemas and refetches on broker resubscription', () => {

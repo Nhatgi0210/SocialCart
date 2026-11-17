@@ -73,7 +73,15 @@ Migration head là `0005_realtime_outbox`. Realtime tự chạy dispatcher và s
 không cần Celery cho RT-01. Redis mất kết nối không rollback thay đổi Inbox đã commit:
 outbox giữ pending, thử lại sau 5 giây; khi reconnect client refetch API. Badge menu
 Hội thoại lấy số hội thoại chưa đọc từ API, không cộng số lần nhận event.
-Order/message/dashboard producer sẽ nối ở task tương ứng.
+Producer đơn hàng, tin thật và Dashboard sẽ nối ở các task tương ứng. Để tạo tin đến
+giả lập cho hội thoại của [Demo] Minh và kiểm badge/reconnect, chạy từ root sau khi
+seed Inbox (chỉ `APP_ENV=local`):
+
+```powershell
+python -X utf8 scripts/seed-inbox-demo.py --message "Tin nhắn thử realtime"
+```
+
+Nếu hội thoại đã chưa đọc, mở lại hội thoại để đánh dấu đã đọc rồi thử lại.
 
 Kiểm thủ công còn cần chạy: mở Inbox ở hai tab, đổi trạng thái/tiếp quản tại tab A,
 xác nhận tab B cập nhật không F5; ngắt/phục hồi realtime và kiểm cảnh báo/tải lại;
@@ -86,6 +94,27 @@ Sau pull lượt auth này, cài lại `backend/requirements-dev.lock.txt` để
 đã khóa tương thích pre-ping. Credentials seller nằm trong `.env`; không dùng mock account.
 Khôi phục phiên và logout nhiều tab đã có trên Chromium localhost; RT-01 có kiểm
 socket logout qua TCP riêng, chưa chạy lại browser nhiều tab với realtime.
+
+### Đồng bộ nếu đã chạy bản RT-01 local trước commit cfc1afb
+
+Trong đúng schema trỏ bởi `DATABASE_URL`, chạy `SELECT version_num FROM alembic_version;`
+trong Workbench. Nếu revision là `0004_product_name_length`, chạy `alembic upgrade head`
+theo bước trên. Nếu revision là `0005_realtime_outbox`, chạy
+`SHOW COLUMNS FROM realtime_outbox;`. Cột `sent_at` cho biết schema đã theo bản trên main.
+
+Chỉ khi revision là `0005_realtime_outbox` và cột là `published_at` từ bản local,
+dừng service, sao lưu DB và chạy một lần câu SQL sau. Hai bản dùng cùng revision nên
+Alembic không tự phát hiện khác biệt. Câu SQL giữ các hàng và giá trị thời điểm đã publish.
+
+```sql
+ALTER TABLE realtime_outbox
+  RENAME COLUMN published_at TO sent_at,
+  DROP INDEX ix_realtime_outbox_pending,
+  ADD INDEX ix_realtime_outbox_pending (sent_at, next_attempt_at, created_at),
+  ADD CONSTRAINT ck_realtime_attempts_nonneg CHECK (attempt_count >= 0);
+```
+
+Kiểm tra lại cột `sent_at` rồi khởi động service theo hướng dẫn ở trên.
 
 ## Baseline đã kiểm ngày 2026-11-10
 
