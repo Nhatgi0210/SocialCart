@@ -1,5 +1,12 @@
 # Kế hoạch kiểm thử và nghiệm thu
 
+Kiểm local ngày 2026-11-18 cho CFG-01/SEND-01/FB-01/ZALO-01 nằm trong
+`backend/tests/test_platform_pipeline.py` và `test_provider_adapters.py`.
+Provider dùng HTTP mock. MySQL/Redis thật kiểm receipt/outbox, OAuth state/revoke,
+retry, kết quả không xác định và rotation token. Browser đã kiểm Cài đặt và
+send/FAILED/retry ở 390px. Checklist live và nguồn chính thức ở
+[platform-integration](platform-integration.md); tài khoản test chưa có.
+
 RT-01 ngày 2026-11-16: `backend/tests/test_realtime.py` kiểm schema, passive session,
 outbox unit và TCP/RSA/fakeredis. `test_realtime_integration.py` kiểm MySQL row lock,
 publish retry, HTTP Inbox → DB/outbox → Redis → TCP socket, Redis subscriber recovery

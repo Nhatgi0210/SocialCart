@@ -1,18 +1,36 @@
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, select
 
 from shared.auth import AuthError
-from shared.db.models import Conversation, Customer, Message, RealtimeOutbox
+from shared.db.models import Conversation, ConversationOutbox, Customer, Message, RealtimeOutbox
 from shared.inbox_http import DB, Limit, Page, Platform, customer_data, inbox_service, paged, success, utc
+from shared.idempotency import run_mutation
+from app.delivery import message_data, outgoing_worker
+from app.incoming import register_incoming
 
-app, seller = inbox_service("conversation-service")
+app, seller = inbox_service("conversation-service", background=(outgoing_worker,))
+register_incoming(app)
 router = APIRouter(prefix="/api/v1/conversations", dependencies=[Depends(seller)])
 Status = Literal["NEW", "IN_PROGRESS", "RESOLVED"]
 AIStatus = Literal["AI_HANDLING", "NEEDS_SELLER", "SELLER_HANDLING"]
+Key = Annotated[str, Header(alias="Idempotency-Key", min_length=8, max_length=100)]
+Seller = Annotated[dict, Depends(seller)]
+
+
+class MessageCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    content: Annotated[str, Field(min_length=1, max_length=2000)]
+
+    @field_validator("content")
+    @classmethod
+    def nonblank(cls, value):
+        if not value.strip():
+            raise ValueError("Message is blank")
+        return value
 
 
 class ReadUpdate(BaseModel):
@@ -150,6 +168,52 @@ async def list_messages(id: UUID, db: DB, page: Page = 1, limit: Limit = 20):
         "status": row.status, "platform_msg_id": row.platform_msg_id, "error_code": row.error_code,
         "delivery_unknown": row.delivery_unknown, "created_at": utc(row.created_at),
     } for row in rows], page, limit, total)
+
+
+@router.post("/{id}/messages", status_code=202)
+async def send_message(id: UUID, body: MessageCreate, key: Key, actor: Seller, db: DB):
+    async def mutate():
+        conv = await find_conversation(db, id, lock=True)
+        row = Message(conversation_id=conv.id, platform=conv.platform, platform_account_id=conv.platform_account_id,
+                      sender="SELLER", content=body.content, status="SENDING")
+        db.add(row)
+        conv.ai_status = "SELLER_HANDLING"
+        conv.ai_generation += 1
+        conv.version += 1
+        queue_update(db, conv)
+        await db.flush()
+        db.add(ConversationOutbox(conversation_id=conv.id, message_id=row.id))
+        db.add(RealtimeOutbox(event_type="message:new", data={"conversation_id": conv.id, "message_id": row.id}))
+        return success(message_data(row))
+
+    return await run_mutation(db, actor["sub"], "message.send", key, {"id": str(id), **body.model_dump()}, mutate)
+
+
+@router.post("/{id}/messages/{message_id}/retry", status_code=202)
+async def retry_message(id: UUID, message_id: UUID, key: Key, actor: Seller, db: DB):
+    async def mutate():
+        conv = await find_conversation(db, id, lock=True)
+        job = await db.scalar(select(ConversationOutbox).where(ConversationOutbox.message_id == str(message_id)).with_for_update())
+        row = await db.get(Message, str(message_id), with_for_update=True)
+        if row is None or row.conversation_id != conv.id or job is None:
+            raise AuthError(404, "NOT_FOUND", "Không tìm thấy tin cần gửi lại")
+        if row.delivery_unknown:
+            raise AuthError(409, "DELIVERY_UNKNOWN", "Chưa xác định kết quả gửi. Kiểm tra trên nền tảng trước khi gửi tin mới")
+        if row.status != "FAILED":
+            raise AuthError(409, "INVALID_TRANSITION", "Chỉ gửi lại tin đã thất bại")
+        row.status, row.error_code = "SENDING", None
+        job.status, job.attempt_count, job.next_attempt_at = "PENDING", 0, None
+        conv.ai_status = "SELLER_HANDLING"
+        conv.ai_generation += 1
+        conv.version += 1
+        queue_update(db, conv)
+        db.add(RealtimeOutbox(event_type="message:updated", data={
+            "conversation_id": conv.id, "message_id": row.id, "status": row.status,
+        }))
+        await db.flush()
+        return success(message_data(row))
+
+    return await run_mutation(db, actor["sub"], "message.retry", key, {"id": str(id), "message_id": str(message_id)}, mutate)
 
 
 app.include_router(router)

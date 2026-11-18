@@ -23,7 +23,7 @@ from shared.auth import Sessions, issue_access, session_key
 from shared.db.models import Conversation, Customer, RealtimeOutbox
 from shared.db.session import get_session
 from shared.realtime import CHANNEL, Event, dispatch_one, envelope
-from tests.conftest import BACKEND
+from tests.conftest import BACKEND, load_service
 from tests.test_auth import rsa_keys  # noqa: F401
 
 
@@ -104,9 +104,7 @@ async def test_real_inbox_mutation_to_tcp_socket_and_pubsub_recovery(monkeypatch
         yield  # The test owns and disposes the real MySQL pool below.
 
     monkeypatch.setattr(module, "db_lifespan", database_lifespan)
-    inbox_spec = importlib.util.spec_from_file_location("realtime_inbox_main", BACKEND / "conversation-service/app/main.py")
-    inbox = importlib.util.module_from_spec(inbox_spec)
-    inbox_spec.loader.exec_module(inbox)
+    inbox = load_service("conversation-service", fresh=True)
     async def db_session():
         async with factory() as db:
             yield db

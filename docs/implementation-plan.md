@@ -1,5 +1,10 @@
 # Kế hoạch triển khai MVP
 
+CFG-01 có cấu hình và UI đã kiểm local ngày 2026-11-18. SEND-01 có luồng bền vững
+và kiểm thử provider mô phỏng. INT-01, FB-01 và ZALO-01 có adapter/OAuth/webhook,
+còn kiểm live sau khi có App/Page/OA test và URL HTTPS. Xem
+[chuẩn bị tích hợp](platform-integration.md) và [bằng chứng](project-status.md).
+
 PROD-01 đã kiểm qua Chromium và MySQL/Redis local ngày 2026-11-14.
 CUST-01 và phạm vi đọc/đổi trạng thái INBOX-01 đã kiểm local ngày 2026-11-11.
 RT-01 đã triển khai core outbox/Socket.IO và client ngày 2026-11-16; kiểm chứng

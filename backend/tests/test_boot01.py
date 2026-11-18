@@ -59,16 +59,16 @@ def test_models_import():
         Product, Variant,
         Order, OrderItem, InventoryMovement, RequestIdempotency,
         AIFaq, AIConfig,
-        WebhookReceipt, WebhookOutbox,
+        WebhookReceipt, WebhookOutbox, PlatformDispatch,
     )
     # Kiểm tra tablename không trùng
     table_names = {m.__tablename__ for m in [
         User, PlatformConnection, Customer, CustomerNote,
         Conversation, Message, ConversationOutbox, RealtimeOutbox,
         Product, Variant, Order, OrderItem, InventoryMovement, RequestIdempotency,
-        AIFaq, AIConfig, WebhookReceipt, WebhookOutbox,
+        AIFaq, AIConfig, WebhookReceipt, WebhookOutbox, PlatformDispatch,
     ]}
-    assert len(table_names) == 18, f"Có tablename trùng: {table_names}"
+    assert len(table_names) == 19, f"Có tablename trùng: {table_names}"
 
 
 def test_user_model_fields():

@@ -38,11 +38,12 @@ data sai constraint phải được chủ dữ liệu xử lý trước upgrade,
 | Owner | Bảng |
 | --- | --- |
 | auth | users, auth session metadata trong Redis |
-| platform | platform_connections |
+| platform | platform_connections, platform_dispatches; claim trước provider I/O và giữ kết quả từng attempt |
 | customer | customers, customer_notes |
 | conversation | conversations, messages, conversation_outbox |
 | product | products, variants |
-| order | orders, order_items, inventory_movements, request_idempotency |
+| order | orders, order_items, inventory_movements |
+| service thực hiện mutation | request_idempotency qua helper chung, ghi cùng transaction nghiệp vụ |
 | ai | ai_faqs, ai_config; context hội thoại cập nhật qua conversation-service |
 | webhook | webhook_receipts, webhook_outbox |
 | realtime | realtime_outbox: service nghiệp vụ ghi cùng transaction; realtime-service chỉ dispatch/sent marker |

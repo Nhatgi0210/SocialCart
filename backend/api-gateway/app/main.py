@@ -63,13 +63,14 @@ _ROUTE_MAP = {
     "/api/v1/customers": settings.customer_service_url,
     "/api/v1/products": settings.product_service_url,
     "/api/v1/orders": settings.order_service_url,
-    "/api/v1/ai": settings.ai_service_url,
+    "/api/v1/ai-config": settings.ai_service_url,
     "/api/v1/connections": settings.platform_service_url,
     "/api/v1/dashboard": settings.dashboard_service_url,
     "/api/v1/settings": settings.ai_service_url,
     "/webhooks": settings.webhook_service_url,
 }
 _PUBLIC = {("POST", f"/api/v1/auth/{action}") for action in ("login", "refresh", "logout")}
+_PUBLIC |= {("GET", f"/api/v1/connections/{platform}/oauth/callback") for platform in ("facebook", "zalo")}
 _HOP = {"connection", "keep-alive", "transfer-encoding", "te", "upgrade", "trailer",
         "proxy-authorization", "proxy-authenticate"}
 
@@ -95,11 +96,12 @@ async def _proxy(request: Request, upstream_url: str) -> Response:
     target = f"{upstream_url}{request.url.path}"
     if request.url.query:
         target += f"?{request.url.query}"
-    if request.method == "POST" and request.url.path.rstrip("/") == IMAGE_ROUTE:
+    webhook = request.url.path.startswith("/webhooks/")
+    if webhook or (request.method == "POST" and request.url.path.rstrip("/") == IMAGE_ROUTE):
         body = bytearray()
         async for chunk in request.stream():
-            if len(body) + len(chunk) > IMAGE_REQUEST_MAX_BYTES:
-                raise AuthError(413, "IMAGE_TOO_LARGE", "Ảnh được giới hạn ở 5 MiB")
+            if len(body) + len(chunk) > (1024 * 1024 if webhook else IMAGE_REQUEST_MAX_BYTES):
+                raise AuthError(413, "PAYLOAD_TOO_LARGE" if webhook else "IMAGE_TOO_LARGE", "Nội dung vượt giới hạn")
             body.extend(chunk)
         content = bytes(body)
     else:

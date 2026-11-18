@@ -1,5 +1,7 @@
 """HTTP conventions shared by the customer and conversation services."""
 from contextlib import asynccontextmanager
+import asyncio
+import logging
 from datetime import datetime, timezone
 from secrets import compare_digest
 from typing import Annotated, Literal
@@ -8,6 +10,7 @@ from fastapi import Depends, FastAPI, Header, Query
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
+from redis.exceptions import RedisError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.exceptions import HTTPException
@@ -24,24 +27,34 @@ Page = Annotated[int, Query(ge=1, le=2147483647)]
 Limit = Annotated[int, Query(ge=1, le=100)]
 
 
-def inbox_service(name: str):
+def inbox_service(name: str, *, background=()):
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         async with db_lifespan():
+            tasks = [asyncio.create_task(run()) for run in background]
             try:
                 yield
             finally:
+                for task in tasks:
+                    task.cancel()
+                await asyncio.gather(*tasks, return_exceptions=True)
                 await redis.aclose()
 
     redis = Redis.from_url(settings.redis_url, decode_responses=True, socket_connect_timeout=3, socket_timeout=3)
     app = FastAPI(title=name, lifespan=lifespan)
+    app.state.redis = redis
 
     @app.exception_handler(AuthError)
     async def auth_error(_request, exc):
         return JSONResponse(error_body(exc.code, exc.message), status_code=exc.status)
 
     @app.exception_handler(SQLAlchemyError)
-    async def database_error(_request, _exc):
+    async def database_error(_request, exc):
+        logging.getLogger(name).error("Database request failed (%s)", type(exc).__name__)
+        return JSONResponse(error_body("SERVICE_UNAVAILABLE", "Dịch vụ dữ liệu tạm thời không sẵn sàng"), status_code=503)
+
+    @app.exception_handler(RedisError)
+    async def redis_error(_request, _exc):
         return await auth_error(_request, unavailable())
 
     @app.exception_handler(RequestValidationError)

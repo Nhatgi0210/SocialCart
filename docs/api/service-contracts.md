@@ -29,13 +29,19 @@ Luồng tiếp nhận từ nền tảng sẽ gọi upsert khi triển khai webho
 | conversation `POST /internal/conversations/{id}/ai-actions` | incoming_message_id, expected_generation, action_id, reply hoặc handoff_reason | Fence worker; action_id/incoming unique, lưu reply SENDING + outbox send hoặc handoff không gửi; không nhận action confirm order |
 | order `POST /internal/orders` | body như OrderCreate, actor AI, source_message_id/action_id và expected_generation | Order PENDING, created_by AI; idempotency, validate catalog; thực hiện trong serialized AI action workflow |
 | order `PATCH /internal/orders/{id}` | body như OrderUpdate + actor AI + action_id và expected_generation | Chỉ PENDING; version/stock/snapshot theo data-rules; không tự confirm |
-| platform `POST /internal/messages/{message_id}/dispatch` | message_id, conversation_id, content, platform, account_id, recipient_id | Kết quả accepted + provider_message_id hoặc error với certainty; timeout không rõ phải có `delivery_unknown=true`; dedupe message ID, không gửi khi đã SENT |
+| platform `POST /internal/messages/{message_id}/dispatch` | body `{attempt_id: UUID}`; message_id từ path | Server đọc message/conversation/customer và account từ DB. Kết quả accepted + provider_message_id hoặc error_code + delivery_unknown. Claim attempt được lưu bền vững trước khi gọi provider, replay trả kết quả cũ hoặc unknown. |
 | product `GET /internal/catalog` | Bearer `INTERNAL_SERVICE_TOKEN`; `active_only=true` mặc định; `page`, `limit` | Envelope phân trang như `GET /api/v1/products`. Chỉ gồm sản phẩm có biến thể chưa xóa, giá/kho hiện tại. Xác nhận đơn kiểm lại tồn trong transaction. |
 | ai `GET /internal/ai-config` | — | FAQs, timeout, payment template hiện hành; chỉ service được phép gọi |
 
 Các JSON shape customer/conversation/order/message tái sử dụng component trong public OpenAPI; không định nghĩa lại kiểu ID/enum. Input webhook riêng có `account_id`, mapper sang model `platform_account_id`. Invalid returns 422, stale 409, missing 404, auth 401/403, dependency 503. Các operation trên là yêu cầu cho task owner, không phải endpoint đã hoạt động.
 
 ## 3. Độ bền và thứ tự workflow
+
+CFG-01 có `GET /internal/ai-config` với cấu hình và FAQ đang active.
+Incoming endpoint đã triển khai cho worker webhook. Khi nhận tin trong phạm vi hiện tại,
+`AI_HANDLING` chuyển `NEEDS_SELLER` đến khi AI-01 có worker thật.
+Outgoing endpoint của Hội thoại lưu message/outbox và takeover cùng transaction.
+Retry dùng cùng message ID, từ chối khi delivery_unknown=true.
 
 Receipt + webhook outbox commit trước ACK. Incoming-message transaction + conversation outbox commit trước publish. Celery/dispatch có thể chạy nhiều lần; unique constraint và action key chống side effect trùng. Redis Pub/Sub có thể mất event; không dùng làm bằng chứng persist/queue durable.
 

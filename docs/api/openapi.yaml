@@ -662,7 +662,7 @@ paths:
       x-task: SEND-01
       x-requirements:
       - AC-07
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       description: 'Server sets sender=SELLER, status=SENDING; only provider acceptance changes to SENT.
         Seller reply takes over: sets SELLER_HANDLING and increments ai_generation atomically before dispatch.'
       parameters:
@@ -684,7 +684,7 @@ paths:
               content: Shop đã nhận thông tin của bạn.
       responses:
         '202':
-          description: Contract response; not evidence of a running service.
+          description: Local implementation. Provider calls verified with simulated responses.
           content:
             application/json:
               schema:
@@ -726,7 +726,7 @@ paths:
       x-task: SEND-01
       x-requirements:
       - AC-07
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       description: 409 unless FAILED and safe to retry. delivery_unknown requires reconciliation; never
         blindly resend.
       parameters:
@@ -747,7 +747,7 @@ paths:
       - $ref: '#/components/parameters/IdempotencyKey'
       responses:
         '202':
-          description: Contract response; not evidence of a running service.
+          description: Local implementation. Provider calls verified with simulated responses.
           content:
             application/json:
               schema:
@@ -1992,10 +1992,10 @@ paths:
       - AC-01
       - AC-02
       - AC-03
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       responses:
         '200':
-          description: Contract response; not evidence of a running service.
+          description: Local implementation. Provider calls verified with simulated responses.
           content:
             application/json:
               schema:
@@ -2025,7 +2025,7 @@ paths:
       x-requirements:
       - AC-01
       - AC-02
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       description: Creates one-time state bound to current session and allowlisted callback. URL platform
         is facebook/zalo; JSON platform enum is FACEBOOK/ZALO. Provider adapter returns authorization
         URL.
@@ -2040,7 +2040,7 @@ paths:
           - zalo
       responses:
         '200':
-          description: Contract response; not evidence of a running service.
+          description: Local implementation. Provider calls verified with simulated responses.
           content:
             application/json:
               schema:
@@ -2075,7 +2075,7 @@ paths:
       x-requirements:
       - AC-01
       - AC-02
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       description: 'Public callback: state one-time/expiring and bound to authenticated initiating session;
         code required unless provider returns error. No access bearer required. Do not return provider
         tokens.'
@@ -2139,7 +2139,7 @@ paths:
       x-task: INT-01
       x-requirements:
       - AC-03
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       parameters:
       - name: platform
         in: path
@@ -2178,10 +2178,10 @@ paths:
       x-requirements:
       - AC-19b
       - AC-21b
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       responses:
         '200':
-          description: Contract response; not evidence of a running service.
+          description: Local implementation. Provider calls verified with simulated responses.
           content:
             application/json:
               schema:
@@ -2212,7 +2212,7 @@ paths:
       x-requirements:
       - AC-19b
       - AC-21b
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       description: Supplied fields update; template null removes configured bank, never exposes Gemini/platform
         credentials.
       requestBody:
@@ -2226,7 +2226,7 @@ paths:
               payment_template: null
       responses:
         '200':
-          description: Contract response; not evidence of a running service.
+          description: Local implementation. Provider calls verified with simulated responses.
           content:
             application/json:
               schema:
@@ -2259,13 +2259,13 @@ paths:
       x-task: CFG-01
       x-requirements:
       - AC-17
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       parameters:
       - $ref: '#/components/parameters/Page'
       - $ref: '#/components/parameters/Limit'
       responses:
         '200':
-          description: Contract response; not evidence of a running service.
+          description: Local implementation. Provider calls verified with simulated responses.
           content:
             application/json:
               schema:
@@ -2297,7 +2297,7 @@ paths:
       x-task: CFG-01
       x-requirements:
       - AC-17
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       requestBody:
         required: true
         content:
@@ -2311,7 +2311,7 @@ paths:
               - giao hàng
       responses:
         '201':
-          description: Contract response; not evidence of a running service.
+          description: Local implementation. Provider calls verified with simulated responses.
           content:
             application/json:
               schema:
@@ -2346,7 +2346,7 @@ paths:
       x-task: CFG-01
       x-requirements:
       - AC-17
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       parameters:
       - name: id
         in: path
@@ -2368,7 +2368,7 @@ paths:
               - giao hàng
       responses:
         '200':
-          description: Contract response; not evidence of a running service.
+          description: Local implementation. Provider calls verified with simulated responses.
           content:
             application/json:
               schema:
@@ -2404,7 +2404,7 @@ paths:
       x-task: CFG-01
       x-requirements:
       - AC-17
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       parameters:
       - name: id
         in: path
@@ -2441,7 +2441,7 @@ paths:
       x-task: FB-01
       x-requirements:
       - AC-01
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       description: Compare FB_WEBHOOK_VERIFY_TOKEN. Echo original challenge string as text/plain, not
         integer or JSON.
       parameters:
@@ -2489,7 +2489,7 @@ paths:
       x-task: FB-01
       x-requirements:
       - AC-01
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       description: Raw body/signature verification required. Validate vendor payload using current provider
         docs in INT-01. Commit unique receipt+outbox before ACK; duplicate returns 200, DB unavailable
         503. No inline Gemini call.
@@ -2505,7 +2505,7 @@ paths:
               entry: []
       responses:
         '200':
-          description: Contract response; not evidence of a running service.
+          description: Local implementation. Provider calls verified with simulated responses.
           content:
             application/json:
               schema:
@@ -2541,7 +2541,7 @@ paths:
       x-task: ZALO-01
       x-requirements:
       - AC-02
-      x-implementation-status: not-implemented
+      x-implementation-status: local-demo-tested
       description: Raw body/signature verification required. Validate vendor payload using current provider
         docs in INT-01. Commit unique receipt+outbox before ACK; duplicate returns 200, DB unavailable
         503. No inline Gemini call.
@@ -2557,7 +2557,7 @@ paths:
               entry: []
       responses:
         '200':
-          description: Contract response; not evidence of a running service.
+          description: Local implementation. Provider calls verified with simulated responses.
           content:
             application/json:
               schema:
@@ -3150,7 +3150,7 @@ components:
           type: string
           minLength: 1
           pattern: .*\S.*
-          maxLength: 10000
+          maxLength: 2000
       required:
       - content
     VariantInput:

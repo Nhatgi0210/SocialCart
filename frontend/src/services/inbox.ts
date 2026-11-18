@@ -36,6 +36,7 @@ export interface Message {
   sender: 'CUSTOMER' | 'AI' | 'SELLER';
   status: 'SENDING' | 'SENT' | 'FAILED';
   delivery_unknown: boolean;
+  error_code?: string | null;
   created_at: string;
 }
 export interface Result<T> { success: true; data: T }

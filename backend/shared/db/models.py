@@ -77,6 +77,7 @@ class PlatformConnection(Base):
     encrypted_access_token: Mapped[str | None] = mapped_column(Text)
     encrypted_refresh_token: Mapped[str | None] = mapped_column(Text)
     token_expires_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=6))
+    last_error_code: Mapped[str | None] = mapped_column(String(100))
     status: Mapped[str] = mapped_column(
         Enum("CONNECTED", "DISCONNECTED", "ERROR", name="connection_status_enum"),
         default="DISCONNECTED",
@@ -86,6 +87,7 @@ class PlatformConnection(Base):
     updated_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, onupdate=_now, nullable=False)
 
     __table_args__ = (
+        UniqueConstraint("platform", name="uq_platform_single"),
         UniqueConstraint("platform", "account_id", name="uq_platform_connection_account"),
         {"mysql_engine": "InnoDB"},
     )
@@ -442,7 +444,7 @@ class WebhookReceipt(Base):
     platform: Mapped[str] = mapped_column(Enum("FACEBOOK", "ZALO", name="platform_enum5"), nullable=False)
     account_id: Mapped[str] = mapped_column(String(255), nullable=False)
     event_id: Mapped[str] = mapped_column(String(255), nullable=False)
-    raw_payload: Mapped[str] = mapped_column(Text, nullable=False)
+    raw_payload: Mapped[str] = mapped_column(Text().with_variant(MEDIUMTEXT(), "mysql"), nullable=False)
     processed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)
 
@@ -454,10 +456,11 @@ class WebhookReceipt(Base):
 
 
 class WebhookOutbox(Base):
-    """Outbox cho outgoing webhook từ system sang platform (nếu cần)."""
+    """Durable work created after receiving a verified provider event."""
     __tablename__ = "webhook_outbox"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    receipt_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("webhook_receipts.id"), unique=True)
     platform: Mapped[str] = mapped_column(Enum("FACEBOOK", "ZALO", name="platform_enum6"), nullable=False)
     payload: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(
@@ -473,3 +476,13 @@ class WebhookOutbox(Base):
         Index("ix_webhook_outbox_status_next", "status", "next_attempt_at"),
         {"mysql_engine": "InnoDB"},
     )
+
+
+class PlatformDispatch(Base):
+    """Persist the point beyond which a provider request may have been sent."""
+    __tablename__ = "platform_dispatches"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    message_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    result: Mapped[dict | None] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6), default=_now, nullable=False)

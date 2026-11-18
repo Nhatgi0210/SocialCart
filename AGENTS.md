@@ -18,6 +18,11 @@ V1 phục vụ một người bán, một Facebook Page và một Zalo OA. Khôn
 
 ORDER-01 đã kiểm luồng đơn của người bán và transaction tồn kho trên MySQL thật ngày 2026-11-17.
 
+CFG-01 đã kiểm local ngày 2026-11-18. SEND-01 có outbox và UI, FB-01/ZALO-01 có
+adapter/OAuth/webhook kiểm với provider mô phỏng. Người dùng chưa có tài khoản test,
+quyền hoặc callback HTTPS nên INT-01/FB-01/ZALO-01 live còn chờ. Đọc
+`docs/platform-integration.md` trước khi bật adapter. Tin đến dùng NEEDS_SELLER đến khi AI-01 có worker.
+
 ## Đọc tài liệu theo nhiệm vụ
 
 1. [Quyết định và nguồn ưu tiên](docs/decisions.md): đọc trước khi xử lý mâu thuẫn.

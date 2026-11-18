@@ -1,5 +1,10 @@
 # Chạy SocialCart tại local
 
+## Cài đặt và tích hợp nền tảng
+
+FAQ, template thanh toán, timeout và các service nhận/gửi ở mốc M3. Xem
+[hướng dẫn cấu hình, tài khoản/quyền và callback](platform-integration.md).
+
 ## Đơn hàng với dữ liệu demo
 
 Với MySQL/Redis, `.env` và RSA key đã cấu hình, chạy từ root trong PowerShell.
@@ -157,7 +162,7 @@ docker compose up -d --wait mysql redis
 .\.venv\Scripts\python.exe -X utf8 -m alembic -c backend/shared/db/alembic.ini upgrade head
 ```
 
-Head hiện tại là `0006_order_idempotency_response`. MySQL Docker dùng 3306; Wamp phải dùng cổng khác
+Head hiện tại là `0007_platform_delivery`. MySQL Docker dùng 3306; Wamp phải dùng cổng khác
 hoặc dừng trước khi chạy Compose. Database Wamp không được chuyển/xóa tự động.
 Secret, keys và thư mục cache đều ở local. Không copy `.env.example` đè `.env` đang dùng.
 

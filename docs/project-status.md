@@ -1,5 +1,33 @@
 # Trạng thái dự án SocialCart
 
+## CFG-01 và nền tích hợp — local 2026-11-18
+
+- Cài đặt React có CRUD FAQ, ngân hàng và timeout thu thập đơn 1–72 giờ.
+  Ai-service lưu cấu hình MySQL và cung cấp API nội bộ đọc FAQ/cấu hình.
+- Inbox có gửi và thử lại tin văn bản. Message, takeover và outbox ghi cùng transaction.
+  Worker ghi claim bền vững trước provider I/O. Kết quả không xác định chặn retry tự động,
+  lỗi chắc chắn chưa mở được kết nối thử tối đa ba lần, provider reject giữ FAILED và nội dung.
+- Webhook-service kiểm HMAC Meta và chữ ký Zalo trên raw bytes, ACK sau receipt/job commit.
+  Worker qua customer-service và conversation-service để chống trùng và phát RT-01.
+  Tin đến chuyển NEEDS_SELLER đến khi AI-01 có worker thật. Attachment hiện là dòng mô tả.
+- Platform-service có OAuth state dùng một lần gắn phiên seller, PKCE Zalo,
+  chọn Page/OA đã cấu hình, mã hóa AES-256-GCM, disconnect và refresh token Zalo.
+  Migration mới `0007_platform_delivery`. Cập nhật Gateway và script M3.
+- `python -X utf8 scripts/verify-foundation.py --tb=short -o faulthandler_timeout=30`
+  đạt **67 pass**, 54,70 giây, với MySQL 8.0.44/Redis 7.4.7 riêng. Test provider dùng
+  HTTP mock. Đã kiểm OAuth state/revoke, mã hóa token, thiếu chữ ký, raw bị sửa, DB down,
+  receipt trùng, job phục hồi, retry không nhân bubble, claim trước crash và refresh token.
+- Chromium qua TCP/MySQL/Redis đã kiểm FAQ tạo/sửa/xóa và reload, bank/timeout persist,
+  báo thiếu cấu hình kết nối, gửi/FAILED/thử lại bằng cùng message ID và bố cục 390px.
+  Frontend **28 tests**, lint/typecheck/build pass. Vite cảnh báo chunk 705,76 kB.
+  Backend có 9 deprecation warnings Uvicorn/websockets như baseline.
+  Validator OpenAPI/tài liệu và `git diff --check` pass.
+
+Người dùng xác nhận chưa có App/Page/OA test hoặc callback HTTPS. **INT-01, FB-01,
+ZALO-01 live còn chờ tài khoản/quyền**, gồm đối chiếu link cấp quyền và header Zalo
+thật, nhận/gửi tin thật, token refresh thật và thời gian end-to-end. Gemini chưa có
+key/model, AI-01/02 còn riêng. Xem [hướng dẫn chuẩn bị](platform-integration.md).
+
 ## ORDER-01 — local 2026-11-17
 
 - Order-service phục vụ danh sách/lọc, chi tiết, tạo và sửa đơn chờ, cùng các

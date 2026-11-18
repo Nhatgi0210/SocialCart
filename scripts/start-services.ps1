@@ -9,7 +9,7 @@
     M0: api-gateway, auth-service
     M1: + conversation-service, customer-service, realtime-service
     M2: + product-service, order-service
-    (M3+ cần INT-01 và EXT credentials)
+    M3: + ai-service (config), webhook-service, platform-service
 
     Log: logs/<service-name>.log
     PID: logs/pids/<service-name>.pid
@@ -17,13 +17,13 @@
     Dừng: .\scripts\stop-services.ps1 (hoặc Ctrl+C nếu chạy foreground)
 
 .PARAMETER Milestone
-    Mốc triển khai: M0, M1, M2 (mặc định M0)
+    Mốc triển khai: M0, M1, M2, M3 (mặc định M0)
 
 .PARAMETER Service
     Chạy một service cụ thể theo tên (e.g. auth-service)
 #>
 param(
-    [ValidateSet("M0","M1","M2")]
+    [ValidateSet("M0","M1","M2","M3")]
     [string]$Milestone = "M0",
     [string]$Service = ""
 )
@@ -65,6 +65,7 @@ $MilestoneServices = @{
     "M0" = @("api-gateway", "auth-service")
     "M1" = @("api-gateway", "auth-service", "conversation-service", "customer-service", "realtime-service")
     "M2" = @("api-gateway", "auth-service", "conversation-service", "customer-service", "product-service", "order-service", "realtime-service")
+    "M3" = @("api-gateway", "auth-service", "conversation-service", "customer-service", "product-service", "order-service", "realtime-service", "ai-service", "webhook-service", "platform-service")
 }
 
 $ToStart = if ($Service) { @($Service) } else { $MilestoneServices[$Milestone] }
@@ -99,7 +100,7 @@ foreach ($svc in $ToStart) {
     $startArgs = @{
         FilePath         = $VenvPy
         ArgumentList     = @(
-            "-m", "uvicorn", "app.main:app",
+            "-m", "uvicorn", "app.main:app", "--no-access-log",
             "--app-dir", ('"{0}"' -f $SvcDir),
             "--host", "127.0.0.1",
             "--port", "$port"

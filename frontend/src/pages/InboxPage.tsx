@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import { CustomerProfile } from '../components/CustomerProfile';
 import { ConversationOrders } from '../components/ConversationOrders';
+import { MessageComposer, MessageRetry } from '../components/MessageComposer';
 import { InboxQueryState } from '../components/InboxQueryState';
 import { api } from '../services/api';
 import {
@@ -107,11 +108,18 @@ function Chat({ id, back }: { id: string; back: () => void }) {
                   color={message.status === 'FAILED' ? 'error' : 'text.secondary'}>
                   {message.delivery_unknown ? 'Chưa xác nhận được kết quả gửi' : message.status === 'FAILED' ? 'Gửi thất bại' : 'Đang gửi'}
                 </Typography>}
+                {message.delivery_unknown && message.status === 'FAILED' && <Typography variant="body2" color="warning.main">
+                  Kiểm tra tin trên Facebook/Zalo trước khi gửi tin mới.
+                </Typography>}
+                {message.status === 'FAILED' && message.error_code === 'PLATFORM_DISCONNECTED' &&
+                  <Typography variant="body2" color="text.secondary">Kết nối Facebook/Zalo trong Cài đặt trước khi gửi lại.</Typography>}
+                <MessageRetry message={message} conversationId={id} />
               </Box>)}
             </Stack>
             {list.meta.total > list.meta.limit && <Pagination aria-label="Phân trang tin nhắn" page={page}
               count={Math.ceil(list.meta.total / list.meta.limit)} onChange={(_, next) => setPage(next)} />}
           </>}
+          <MessageComposer conversationId={id} sent={() => setPage(Math.max(1, Math.ceil(((list?.meta.total ?? 0) + 1) / 20)))} />
         </>}
       </Stack>
     </Paper>

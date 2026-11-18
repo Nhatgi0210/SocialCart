@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Header
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
-from app.idempotency import run_mutation
+from shared.idempotency import run_mutation
 from app.inventory import deduct_stock, restore_stock, save_items
 from app.schemas import ChangeStatus, CreateOrder, EditOrder, OrderStatus
 from shared.auth import AuthError
